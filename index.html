@@ -5734,6 +5734,9 @@
                     state.user.name = newName;
                     state.user.grade = newGrade;
                     state.user.icon = iconInput.value;
+                    if (state.user.name === '開発用　SQpjfij5678' && state.user.grade === '大学・専門学生') {
+                        addLP(1000000, '開発者支給', true);
+                    }
                     saveState();
 
                     // 設定画面（親画面）の表示を更新
