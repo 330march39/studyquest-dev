@@ -4076,10 +4076,11 @@
             saveState();
         };
             
+            // ▼▼▼ renderHomeTasks 関数全体を書き換え ▼▼▼
             const renderHomeTasks = () => {
                 if (!homeTaskListEl) return;
             
-                // --- 1. 空の状態 (Empty State) の改善 ---
+                // 1. 空の状態 (Empty State)
                 if (!state.tasks || state.tasks.length === 0) {
                     homeTaskListEl.innerHTML = `
                         <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
@@ -4095,14 +4096,42 @@
                     
                     state.tasks.forEach((task, index) => {
                         const isCompleted = task.completed || false;
-                        const textStyle = isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200';
+                        
+                        // 完了時のスタイル定義
                         const bgStyle = isCompleted ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
+                        const numBgStyle = isCompleted ? 'background-color: #9ca3af;' : 'background-color: var(--primary-color);'; // 完了:グレー, 未完了:テーマ色
+                        const textColor = isCompleted ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200';
+                        const subTextColor = isCompleted ? 'text-gray-300 dark:text-gray-600 line-through' : 'text-gray-400 dark:text-gray-400';
             
                         const taskEl = document.createElement('div');
                         taskEl.setAttribute('data-id', task.id);
-                        taskEl.className = `task-item swipe-container relative overflow-hidden group`;
+                        
+                        // ★高さ固定の肝: h-[72px] (約4.5rem) を指定して高さを完全に固定する
+                        taskEl.className = `task-item swipe-container relative overflow-hidden group h-[72px] w-full`;
             
-                        // --- 2. 番号の色をテーマカラーに反映 (style="color: var(--primary-color)") ---
+                        // --- 2. テキスト解析 (サブタイトル処理) ---
+                        // 全角・半角スペースで分割
+                        const match = task.text.match(/^(.+?)[\s　]+(.+)$/);
+                        let displayHTML = '';
+            
+                        if (match) {
+                            // [メインタイトル + サブタイトル]
+                            displayHTML = `
+                                <div class="flex flex-col justify-center h-full pointer-events-none">
+                                    <span class="text-sm font-bold leading-tight ${textColor} mb-0.5 truncate">${match[1]}</span>
+                                    <span class="text-[10px] font-bold leading-tight ${subTextColor} truncate">${match[2]}</span>
+                                </div>
+                            `;
+                        } else {
+                            // [1行のみ]
+                            displayHTML = `
+                                <div class="flex items-center h-full pointer-events-none">
+                                    <span class="text-sm font-bold leading-tight ${textColor} truncate">${task.text}</span>
+                                </div>
+                            `;
+                        }
+            
+                        // --- 3. HTML構築 ---
                         taskEl.innerHTML = `
                             <div class="swipe-actions">
                                 <button class="btn-complete swipe-btn bg-gray-300 dark:bg-gray-600 w-[70px]">
@@ -4113,14 +4142,28 @@
                                 </button>
                             </div>
             
-                            <div class="swipe-content flex items-center p-4 relative z-10 transition-colors ${bgStyle}">
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3">
-                                    <span class="font-bold text-sm" style="color: ${isCompleted ? '#9ca3af' : 'var(--primary-color)'}">${index + 1}</span>
+                            <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full transition-colors ${bgStyle}">
+                                
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3 shadow-sm transition-colors"
+                                     style="${numBgStyle}">
+                                    <span class="font-bold text-sm text-white">${index + 1}</span>
                                 </div>
                                 
-                                <input type="text" value="${task.text}" class="task-text-input flex-grow min-w-0 bg-transparent border-none focus:outline-none font-bold text-sm ${textStyle}" ${isCompleted ? 'disabled' : ''}>
+                                <div class="flex-grow min-w-0 relative h-full">
+                                    
+                                    <div class="task-view-layer absolute inset-0 cursor-text select-none"
+                                         onclick="if(!${isCompleted}) { this.classList.add('opacity-0', 'pointer-events-none'); this.nextElementSibling.classList.remove('opacity-0', 'pointer-events-none'); this.nextElementSibling.focus(); }">
+                                        ${displayHTML}
+                                    </div>
+            
+                                    <input type="text" value="${task.text}" 
+                                        class="task-edit-input absolute inset-0 w-full h-full bg-transparent border-none outline-none font-bold text-sm text-gray-800 dark:text-gray-200 opacity-0 pointer-events-none transition-opacity"
+                                        onblur="this.classList.add('opacity-0', 'pointer-events-none'); this.previousElementSibling.classList.remove('opacity-0', 'pointer-events-none');"
+                                        onkeypress="if(event.key === 'Enter') this.blur();"
+                                        ${isCompleted ? 'disabled' : ''}>
+                                </div>
                                 
-                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none">
+                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none h-10 w-10 flex items-center justify-center">
                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                                 </button>
                             </div>
@@ -4128,7 +4171,9 @@
                         
                         homeTaskListEl.appendChild(taskEl);
                         
-                        // スワイプ等のイベント設定（既存のロジックと同じ）
+                        // --- 4. イベント設定 ---
+                        
+                        // スワイプ機能
                         new SwipeHandler(taskEl, {
                             onComplete: () => {
                                 const taskToUpdate = state.tasks.find(t => t.id === task.id);
@@ -4141,22 +4186,26 @@
                             onDelete: () => {
                                 state.tasks = state.tasks.filter(t => t.id !== task.id);
                                 saveState();
-                                setTimeout(renderHomeTasks, 100);
+                                // アニメーションのため少し待つ
+                                setTimeout(renderHomeTasks, 300);
                                 showToast('タスクを削除しました');
                             }
                         });
             
-                        taskEl.querySelector('.task-text-input').addEventListener('change', (e) => {
+                        // テキスト変更保存
+                        const input = taskEl.querySelector('.task-edit-input');
+                        input.addEventListener('change', (e) => {
                             const taskToUpdate = state.tasks.find(t => t.id === task.id);
                             if (taskToUpdate) {
                                 taskToUpdate.text = e.target.value;
                                 saveState();
+                                renderHomeTasks(); // 再描画してサブタイトル表示を反映
                             }
                         });
                     });
                 }
                 
-                // 入力欄横の番号も更新
+                // 入力欄横の番号も更新 (+)
                 if(newTaskNumberEl) newTaskNumberEl.textContent = "+";
                 
                 // アイコン生成
@@ -4165,6 +4214,7 @@
                     attrs: { class: "w-5 h-5" }
                 });
             };
+            // ▲▲▲ 変更ここまで ▲▲▲
 
             document.body.addEventListener('click', e => {
                 const quizCard = e.target.closest('.quiz-card');
