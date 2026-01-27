@@ -2227,7 +2227,7 @@
                 // ▼▼▼ 追加: バナーデータ ▼▼▼
                 banners: [
                     { id: 1, url: 'banner_1_1.png', link: '' }, // 画像パスを修正してください
-                    { id: 2, url: 'banner_2.png', link: 'page:settings-page' },
+                    { id: 2, url: 'banner_2.png', link: 'action:feedback' },
                     { id: 3, url: 'banner_3.png', link: 'item:game:just100' }
                 ],
                 
@@ -3100,40 +3100,61 @@
                                 if (bannerInterval) clearInterval(bannerInterval);
                                 bannerInterval = setInterval(autoScroll, 4000);
                             }, { passive: true });
-                            // ▼▼▼ 追加: バナークリック時の遷移処理 ▼▼▼
+                            // ▼▼▼ 修正: バナークリック時の遷移処理 (階層移動・アクション対応版) ▼▼▼
                             bannerContainer.addEventListener('click', (e) => {
-                                // クリックされたバナー要素を取得
                                 const item = e.target.closest('.banner-item');
                                 if (!item) return;
 
-                                // リンク情報を取得
                                 const linkData = item.dataset.link;
                                 if (!linkData) return;
 
-                                // 情報を分割 (例: "page:settings-page" → ["page", "settings-page"])
                                 const parts = linkData.split(':');
                                 const type = parts[0];
 
                                 if (type === 'page') {
-                                    // ■ タブ移動の場合
+                                    // ■ タブ移動 (例: page:settings-page)
                                     const pageId = parts[1];
                                     const targetTab = document.querySelector(`.tab-btn[data-page="${pageId}"]`);
-                                    if (targetTab) {
-                                        targetTab.click(); // タブをクリックしたことにする
-                                    }
+                                    if (targetTab) targetTab.click();
                                 } 
                                 else if (type === 'item') {
-                                    // ■ アイテム詳細を開く場合 (例: item:game:just100)
+                                    // ■ ストア経由でアイテム詳細を開く (例: item:game:just100)
                                     const category = parts[1]; // game, theme, background, music
-                                    const itemId = parts[2];   // just100, default など
+                                    const itemId = parts[2];
                                     
-                                    // 詳細画面を開く関数を呼び出す
-                                    if (typeof openItemDetailScreen === 'function') {
-                                        openItemDetailScreen(itemId, category);
+                                    // 1. ストア画面を開く
+                                    if (typeof statusPage !== 'undefined') {
+                                        statusPage.open();
+                                        
+                                        // 2. 該当のタブ(ゲーム等)を選択状態にする
+                                        // (DOMが描画された直後にクリックイベントを発火させる)
+                                        const targetTab = document.querySelector(`.status-tab-btn[data-target="${category}"]`);
+                                        if (targetTab) {
+                                            targetTab.click();
+                                        }
+
+                                        // 3. 詳細画面を開く
+                                        if (typeof openItemDetailScreen === 'function') {
+                                            openItemDetailScreen(itemId, category);
+                                        }
+                                    }
+                                }
+                                else if (type === 'action') {
+                                    // ■ 特定のアクションを実行 (例: action:feedback)
+                                    const actionType = parts[1];
+                                    
+                                    if (actionType === 'feedback') {
+                                        // 設定タブに移動
+                                        const settingsTab = document.querySelector(`.tab-btn[data-page="settings-page"]`);
+                                        if (settingsTab) settingsTab.click();
+
+                                        // 意見フォームを開く処理
+                                        isFeedbackExternalOpen = true; // 復帰時のフラグを立てる
+                                        window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                                     }
                                 }
                             });
-                            // ▲▲▲ 追加ここまで ▲▲▲
+                            // ▲▲▲ 修正ここまで ▲▲▲
                         }
                         // ▲▲▲ 修正ここまで ▲▲▲
                         
