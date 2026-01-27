@@ -3300,7 +3300,7 @@
     // --- 2. フィルタと全クイズリスト ---
     const allContainer = $('#all-quizzes');
     // リストコンテナのスタイル適用
-    allContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700 min-h-[100px]';
+    allContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
 
     const subjects = [...new Set(initialData.quizzes.map(q => q.subject))];
     let activeFilter = $('#filter-container .active')?.dataset.filter;
@@ -4524,17 +4524,16 @@ const renderDailyDetails = (targetDate) => {
                 }
                 // ★新規追加★ 休憩設定ボタン（クエスト中）
                 const breakSettingsBtn = e.target.closest('#break-settings-btn');
-                if (breakSettingsBtn) {
-                    openBreakSettingsModal();
-                }
-    
-                // ★新規追加★ 休憩設定モーダルを閉じる
-                const breakSettingsCloseBtn = e.target.closest('#break-settings-close-btn');
-                if (breakSettingsCloseBtn) {
-                    $('#break-settings-modal').style.display = 'none';
-                    // 変更を即座に反映
-                    renderBreakIcons();
-                }
+                    if (breakSettingsBtn) {
+                        // 正しいクラスメソッドを呼び出す
+                        breakSettingsPage.open(); 
+                    }
+                    
+                    // 閉じるボタンの処理（これはSubPageクラスで自動管理されるため、このif文ブロックごと削除しても構いませんが、念のため記述する場合も close() を使います）
+                    const breakSettingsCloseBtn = e.target.closest('#break-settings-close-btn');
+                    if (breakSettingsCloseBtn) {
+                        breakSettingsPage.close();
+                    }
             });
             
             // --- Focus Page Logic ---
@@ -6934,6 +6933,7 @@ const renderDailyDetails = (targetDate) => {
             const renderPinnedListPageContent = () => {
                 const container = $('#pinned-list-full-content');
                 if(!container) return;
+                container.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
                 
                 // 全てのピン留めクイズを取得
                 const allPinned = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
