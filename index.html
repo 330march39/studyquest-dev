@@ -3490,119 +3490,114 @@
                         };
                     },
                     
+                    // renderEngineオブジェクト内の 'settings-page' プロパティを以下に置き換えてください
                     'settings-page': () => {
                         const settingsPage = $('#settings-page');
                         settingsPage.innerHTML = ''; // 一旦クリア
                     
-                        // --- 1. プロフィールカード (一番上に表示) ---
+                        // --- 1. プロフィールカード ---
                         const profileCard = document.createElement('div');
-                        profileCard.className = 'bg-white dark:bg-gray-700 p-4 rounded-lg shadow mb-6 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition';
+                        // rounded-super, shadow-modern を適用
+                        profileCard.className = 'bg-white dark:bg-gray-800 p-5 rounded-super shadow-modern mb-6 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition active:scale-[0.98]';
                         profileCard.innerHTML = `
-                            <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl mr-4 border-2" style="border-color: var(--primary-color);">
+                            <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-3xl mr-4 border-2 shadow-sm" style="border-color: var(--primary-color);">
                                 ${state.user.icon}
                             </div>
                             <div class="flex-grow">
-                                <h3 class="font-bold text-lg">${state.user.name}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">${state.user.grade || '学年未設定'}</p>
+                                <h3 class="font-bold text-lg text-gray-800 dark:text-white">${state.user.name}</h3>
+                                <p class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">${state.user.grade || '学年未設定'}</p>
                             </div>
-                            <i data-lucide="chevron-right" class="text-gray-400"></i>
+                            <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full text-gray-400">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </div>
                         `;
                         profileCard.addEventListener('click', () => { profilePage.open(); });
                         settingsPage.appendChild(profileCard);
                     
-                        // --- ヘルパー関数 ---
+                        // --- ヘルパー関数: セクションタイトル ---
                         const createSectionTitle = (text) => {
                             const h3 = document.createElement('h3');
-                            h3.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 ml-1 mt-6';
+                            h3.className = 'text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 ml-4 mt-8';
                             h3.textContent = text;
                             return h3;
                         };
-
+                    
+                        // --- ヘルパー関数: リストコンテナ (Inset Style) ---
                         const createListContainer = () => {
                             const div = document.createElement('div');
-                            div.className = 'bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden';
+                            // rounded-super, shadow-modern, divide-y で統一
+                            div.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
                             return div;
                         };
-
+                    
+                        // --- ヘルパー関数: リストアイテム ---
                         const createListItem = (icon, title, colorClass, onClick) => {
                             const item = document.createElement('div');
-                            item.className = 'flex items-center p-4 border-b border-gray-100 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition last:border-0';
+                            item.className = 'flex items-center p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition active:bg-gray-100 dark:active:bg-gray-700';
                             item.innerHTML = `
-                                <div class="p-2 rounded-lg ${colorClass} mr-4">
-                                    <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full ${colorClass} flex items-center justify-center mr-4 shadow-sm">
+                                    <i data-lucide="${icon}" class="w-4 h-4 text-white"></i>
                                 </div>
-                                <span class="flex-grow font-medium">${title}</span>
-                                <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+                                <span class="flex-grow font-bold text-sm text-gray-700 dark:text-gray-200">${title}</span>
+                                <i data-lucide="chevron-right" class="text-gray-300 dark:text-gray-600 w-5 h-5"></i>
                             `;
                             item.addEventListener('click', onClick);
                             return item;
                         };
                     
-                        // --- 2. 「全般」グループ ---
-                        settingsPage.appendChild(createSectionTitle('全般'));
+                        // --- 2. 「アプリ設定」グループ ---
+                        settingsPage.appendChild(createSectionTitle('アプリ設定'));
                         const generalList = createListContainer();
                     
-                        // 通知設定 (未許可の場合のみ表示)
+                        // 通知設定
                         if (!('Notification' in window) || Notification.permission !== 'granted') {
                             generalList.appendChild(createListItem('bell', '通知を許可する', 'bg-yellow-500', async () => {
-                                 if (!('Notification' in window)) { showToast('非対応です'); return; }
-                                 const permission = await Notification.requestPermission();
-                                 if (permission === 'granted') { 
-                                     showToast('通知が許可されました！'); 
-                                     renderEngine.pages['settings-page'](); 
-                                 }
+                                if (!('Notification' in window)) { showToast('非対応です'); return; }
+                                const permission = await Notification.requestPermission();
+                                if (permission === 'granted') { 
+                                    showToast('通知が許可されました！'); 
+                                    renderEngine.pages['settings-page'](); 
+                                }
                             }));
                         }
-
+                    
                         // テーマカラー設定
-                        generalList.appendChild(createListItem('palette', 'テーマ設定', 'bg-blue-500', () => {
-                            themeSettingsPage.open();
-                        }));
-                    
-                        // 壁紙設定
-                        generalList.appendChild(createListItem('image', '壁紙設定', 'bg-purple-500', () => {
-                            backgroundSettingsPage.open();
-                        }));
-
-                        settingsPage.appendChild(generalList);
-
-                        // --- 3. 「クエスト」グループ ---
-                        settingsPage.appendChild(createSectionTitle('クエスト'));
-                        const questList = createListContainer();
-                        questList.appendChild(createListItem('repeat', 'ルーティン設定', 'bg-teal-500', () => {
-                            routineSettingsPage.open();
-                        }));
-                    
-                        // BGM設定
-                        questList.appendChild(createListItem('music', 'BGM設定', 'bg-pink-500', () => {
-                            bgmSettingsPage.open();
-                        }));
-
-                        // ★追加: ブレイクタイム設定
-                        questList.appendChild(createListItem('coffee', 'ブレイクタイム設定', 'bg-orange-500', () => {
-                            breakSettingsPage.open();
-                        }));
+                        generalList.appendChild(createListItem('palette', 'テーマカラー', 'bg-blue-500', () => themeSettingsPage.open()));
                         
+                        // 壁紙設定
+                        generalList.appendChild(createListItem('image', '壁紙設定', 'bg-purple-500', () => backgroundSettingsPage.open()));
+                    
+                        settingsPage.appendChild(generalList);
+                    
+                        // --- 3. 「クエスト設定」グループ ---
+                        settingsPage.appendChild(createSectionTitle('クエスト設定'));
+                        const questList = createListContainer();
+                        
+                        questList.appendChild(createListItem('repeat', 'ルーティン設定', 'bg-teal-500', () => routineSettingsPage.open()));
+                        questList.appendChild(createListItem('coffee', 'ブレイクタイム設定', 'bg-orange-500', () => breakSettingsPage.open()));
+                        questList.appendChild(createListItem('music', 'BGM設定', 'bg-pink-500', () => bgmSettingsPage.open()));
+                    
                         settingsPage.appendChild(questList);
-
-                        settingsPage.appendChild(createSectionTitle('その他'));
+                    
+                        // --- 4. 「サポート」グループ ---
+                        settingsPage.appendChild(createSectionTitle('サポート'));
                         const otherList = createListContainer();
                         
-                        // 意見を送るボタン (外部ブラウザで開く)
-                        otherList.appendChild(createListItem('mail', '意見を送る（バグ・アイデア）', 'bg-gray-500', () => {
-                            // フラグを立てる
+                        otherList.appendChild(createListItem('mail', '意見・バグ報告', 'bg-gray-500', () => {
                             isFeedbackExternalOpen = true; 
-                            
-                            // 外部ブラウザで開く
                             window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                         }));
                         
                         settingsPage.appendChild(otherList);
-
+                    
                         // --- アイコン生成 ---
                         lucide.createIcons();
+                        
+                        // 余白
+                        const spacer = document.createElement('div');
+                        spacer.className = 'h-20';
+                        settingsPage.appendChild(spacer);
                     },
-                },
                 renderAll: () => {
                     for(const pageId in renderEngine.pages){
                         if($(`#${pageId}`).classList.contains('active')){
@@ -5594,101 +5589,90 @@
         }
 
         // --- 6. ブレイクタイム設定サブページ (新規追加) ---
+            // breakSettingsPageの定義を以下に置き換えてください
             const breakSettingsPage = new SubPage('break-settings-screen', {
                 onOpen: () => {
                     const activeContainer = $('#break-active-list');
                     const inactiveContainer = $('#break-inactive-list');
-                    
                     if (!activeContainer || !inactiveContainer) return;
-        
-                    activeContainer.innerHTML = '';
-                    inactiveContainer.innerHTML = '';
-        
-                    // 1. アイコンを表示中と非表示に分ける
+            
+                    // Inset Styleの適用
+                    activeContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
+                    inactiveContainer.className = 'w-full flex flex-wrap gap-2';
+            
                     const activeIcons = state.breakIcons.filter(i => i.visible);
                     const inactiveIcons = state.breakIcons.filter(i => !i.visible);
-        
-                    // 2. 表示中リストの描画 (削除ボタン付き)
+            
+                    // 表示中リスト
                     if (activeIcons.length === 0) {
-                        activeContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4 bg-white dark:bg-gray-700 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">表示するコンテンツがありません</p>';
+                        activeContainer.innerHTML = `<div class="p-6 text-center text-xs text-gray-400">表示中のコンテンツはありません</div>`;
                     } else {
                         activeContainer.innerHTML = activeIcons.map(icon => `
-                            <div class="break-settings-item flex items-center bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 mb-2 touch-none" data-id="${icon.id}">
-                                <div class="break-settings-handle p-2 mr-1 cursor-grab active:cursor-grabbing text-gray-400">
-                                     <i data-lucide="grip-vertical" class="w-6 h-6"></i>
+                            <div class="break-settings-item flex items-center p-3 h-16 bg-white dark:bg-gray-800" data-id="${icon.id}">
+                                <div class="break-settings-handle p-2 mr-2 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 touch-none">
+                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                                 </div>
-                                <div class="flex items-center justify-center w-8 h-8 mr-3 text-gray-600 dark:text-gray-300">
-                                    <i data-lucide="${icon.icon}" class="w-6 h-6"></i>
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="${icon.icon}" class="w-4 h-4"></i>
                                 </div>
-                                <span class="text-gray-800 dark:text-gray-200 flex-grow text-sm font-bold truncate">${icon.name}</span>
-                                <button class="remove-break-btn p-2 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition flex-shrink-0">
+                                <span class="text-gray-800 dark:text-gray-200 text-sm font-bold flex-grow truncate">${icon.name}</span>
+                                <button class="remove-break-btn p-2 rounded-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                                     <i data-lucide="minus-circle" class="w-5 h-5"></i>
                                 </button>
                             </div>
                         `).join('');
                     }
-        
-                    // 3. 追加可能リストの描画 (追加ボタン付き)
-                    if (inactiveIcons.length === 0) {
-                        inactiveContainer.innerHTML = '<p class="text-xs text-gray-500 w-full text-center py-2">すべて追加済みです</p>';
-                    } else {
-                        inactiveContainer.innerHTML = inactiveIcons.map(icon => `
-                            <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded-full transition shadow-sm" data-id="${icon.id}">
+            
+                    // 追加可能リスト
+                    inactiveContainer.innerHTML = inactiveIcons.length === 0 
+                        ? '<p class="text-xs text-gray-400 w-full text-center py-2">すべて追加済みです</p>'
+                        : inactiveIcons.map(icon => `
+                            <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent shadow-sm px-4 py-2 rounded-full transition" data-id="${icon.id}">
                                 <i data-lucide="plus" class="w-4 h-4 text-green-500"></i>
-                                <span class="text-sm text-gray-700 dark:text-gray-300">${icon.name}</span>
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${icon.name}</span>
                             </button>
                         `).join('');
-                    }
-        
-                    // アイコン生成
+            
                     lucide.createIcons({ root: activeContainer });
                     lucide.createIcons({ root: inactiveContainer });
-        
-                    // 4. イベントリスナー設定：削除ボタン
+            
+                    // イベント設定 (追加・削除)
                     activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
                         btn.addEventListener('click', (e) => {
-                            const itemId = e.target.closest('.break-settings-item').dataset.id;
-                            const icon = state.breakIcons.find(i => i.id === itemId);
-                            if (icon) {
-                                icon.visible = false;
-                                saveState();
-                                breakSettingsPage.onOpen(); // 再描画 (自分自身を呼ぶ)
-                            }
+                            const id = e.target.closest('.break-settings-item').dataset.id;
+                            const icon = state.breakIcons.find(i => i.id === id);
+                            if (icon) { icon.visible = false; saveState(); breakSettingsPage.onOpen(); }
                         });
                     });
-        
-                    // 5. イベントリスナー設定：追加ボタン
                     inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
                         btn.addEventListener('click', (e) => {
-                            const itemId = btn.dataset.id;
-                            const icon = state.breakIcons.find(i => i.id === itemId);
-                            if (icon) {
-                                icon.visible = true;
-                                saveState();
-                                breakSettingsPage.onOpen(); // 再描画
-                            }
+                            const id = btn.dataset.id;
+                            const icon = state.breakIcons.find(i => i.id === id);
+                            if (icon) { icon.visible = true; saveState(); breakSettingsPage.onOpen(); }
                         });
                     });
-        
-                    // 6. Sortable.js の適用
+            
+                    // Sortable初期化 (forceFallback: true)
                     if (breakSortable) breakSortable.destroy();
-                    
-                    breakSortable = Sortable.create(activeContainer, {
-                        handle: '.break-settings-handle',
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                        delay: 100, 
-                        delayOnTouchOnly: true,
-                        touchStartThreshold: 5,
-                        onEnd: (evt) => {
-                            const idOrder = Array.from(activeContainer.children).map(child => child.dataset.id);
-                            const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
-                            const inactive = state.breakIcons.filter(i => !i.visible);
-                            
-                            state.breakIcons = [...sortedActive, ...inactive];
-                            saveState();
-                        }
-                    });
+                    if (activeIcons.length > 0) {
+                        breakSortable = Sortable.create(activeContainer, {
+                            handle: '.break-settings-handle',
+                            animation: 200,
+                            ghostClass: 'sortable-ghost',
+                            forceFallback: true, // ★重要
+                            fallbackClass: 'sortable-drag',
+                            delay: 150,
+                            delayOnTouchOnly: true,
+                            touchStartThreshold: 5,
+                            onEnd: (evt) => {
+                                const idOrder = Array.from(activeContainer.children).map(c => c.dataset.id);
+                                const sorted = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
+                                const hidden = state.breakIcons.filter(i => !i.visible);
+                                state.breakIcons = [...sorted, ...hidden];
+                                saveState();
+                            }
+                        });
+                    }
                 }
             });
             // 戻るボタンの紐付け
@@ -6797,53 +6781,48 @@
                 $('#status-lp-display').textContent = state.profile.lp;
 
                 // 共通のクリックハンドラ
+                // renderStatusPageContent関数内の createItemHTML を以下のように修正してください
                 const createItemHTML = (id, item, type, isUnlocked, isActive) => {
                     let iconHTML = '';
                     let statusBadge = '';
-                    // 選択中（適用中）の枠線スタイル
-                    let activeClass = isActive ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : 'border-transparent';
-
-                    // ▼▼▼ 修正: 解放済みバッジのデザインを統一（テーマカラーのチェックマーク） ▼▼▼
-                    // bg-white/90 (背景) + primary-text (テーマ色のアイコン)
-                    const checkMarkBadge = `<div class="absolute top-1 right-1 bg-white/90 dark:bg-gray-800/90 rounded-full p-1 shadow-sm z-10"><i data-lucide="check" class="w-3 h-3 primary-text"></i></div>`;
-
-                    // タイプごとの見た目設定
+                    // 枠線を削除し、リングのみで表現
+                    let activeClass = isActive ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : '';
+                    
+                    // バッジデザイン (白背景にテーマ色チェック)
+                    const checkMarkBadge = `<div class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 rounded-full p-1.5 shadow-md z-10"><i data-lucide="check" class="w-4 h-4 primary-text"></i></div>`;
+                
                     if (type === 'theme') {
-                        iconHTML = `<div class="w-full h-full rounded-full" style="background-color: ${item.color}"></div>`;
-                        if (isUnlocked) statusBadge = `<div class="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-1 shadow"><i data-lucide="check" class="w-4 h-4 text-green-500"></i></div>`;
+                        iconHTML = `<div class="w-full h-full rounded-full shadow-inner" style="background-color: ${item.color}"></div>`;
+                        if (isUnlocked) statusBadge = checkMarkBadge;
                     } else if (type === 'background') {
                         const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
-                        iconHTML = `<div class="w-full h-full bg-cover bg-center rounded-lg" style="${style}"></div>`;
-                        activeClass = isActive ? 'ring-4 ring-blue-500' : ''; 
-                        if (isUnlocked) statusBadge = checkMarkBadge; // 壁紙も統一
-                    } else if (type === 'game') {
-                        iconHTML = `<i data-lucide="${item.icon}" class="w-8 h-8 text-indigo-500"></i>`;
-                        if (isUnlocked) statusBadge = checkMarkBadge; // ゲーム: 修正
-                    } else if (type === 'music') {
-                        iconHTML = `<i data-lucide="music" class="w-8 h-8 text-pink-500"></i>`;
-                        if (isUnlocked) statusBadge = checkMarkBadge; // 音楽: 修正
+                        iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
+                        if (isUnlocked) statusBadge = checkMarkBadge;
+                    } else {
+                        const iconName = item.icon || (type === 'music' ? 'music' : 'gamepad-2');
+                        const colorClass = type === 'game' ? 'text-indigo-500' : 'text-pink-500';
+                        iconHTML = `<i data-lucide="${iconName}" class="w-10 h-10 ${colorClass}"></i>`;
+                        if (isUnlocked) statusBadge = checkMarkBadge;
                     }
-
-                    // コンテナの形状
-                    const containerClass = (type === 'theme') ? 'w-16 h-16 rounded-full' : 'w-full aspect-square rounded-xl';
-                    const wrapperClass = (type === 'background') ? 'w-full aspect-[9/16]' : '';
-
-                    // ロック状態の表示
-                    const overlayShape = (type === 'theme') ? 'rounded-full' : 'rounded-xl';
-                    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${overlayShape} text-white"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold">${item.cost}</span></div>` : '';
+                
+                    // カード形状: rounded-2xl (rounded-superより少し小さいがカードとしては適切)
+                    const containerClass = (type === 'theme') ? 'w-20 h-20 rounded-full' : 'w-full aspect-square rounded-2xl';
+                    // 影: shadow-modern-sm 相当 (shadow-mdで代用可)
+                    const shadowClass = isActive ? 'shadow-none' : 'shadow-md dark:shadow-gray-900/50';
+                
+                    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
                     
                     return `
-                        <div class="text-center cursor-pointer item-btn group relative" data-id="${id}" data-type="${type}">
-                            <div class="${containerClass} ${wrapperClass} mx-auto relative ${activeClass} transition-transform active:scale-95 bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-transparent">
+                        <div class="text-center cursor-pointer item-btn group relative p-1" data-id="${id}" data-type="${type}">
+                            <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
                                 ${iconHTML}
                                 ${lockOverlay}
                                 ${statusBadge}
                             </div>
-                            <p class="text-xs mt-2 font-bold truncate px-1">${item.name}</p>
+                            <p class="text-xs mt-3 font-bold truncate px-1 text-gray-700 dark:text-gray-300">${item.name}</p>
                         </div>
                     `;
                 };
-
                 // 各リストの描画
                 $('#status-theme-list').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
                     return createItemHTML(id, theme, 'theme', state.profile.unlockedThemes.includes(id), state.profile.activeTheme === id);
@@ -7316,58 +7295,84 @@
             const routineListEl = document.getElementById('routine-list');
             
             // リスト描画関数
+            // renderRoutineList 関数を以下に置き換えてください
             const renderRoutineList = () => {
                 routineListEl.innerHTML = '';
                 
+                // 親コンテナ自体のクラス設定（Inset Style）
+                // リストアイテムを囲むdivに対してクラスを適用します（今回はroutineListEl自体にスタイルを適用する形が良いでしょう）
+                routineListEl.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
+            
+                if (state.profile.routineTemplate.length === 0) {
+                    routineListEl.innerHTML = `
+                        <div class="p-8 text-center text-gray-400 dark:text-gray-500">
+                            <i data-lucide="list" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+                            <p class="text-sm font-bold">ルーティンが空です</p>
+                            <p class="text-xs mt-1">下のボタンから追加してください</p>
+                        </div>`;
+                }
+            
                 state.profile.routineTemplate.forEach((item, index) => {
                     const itemEl = document.createElement('div');
-                    itemEl.className = 'routine-item bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex items-center space-x-3';
+                    // リストアイテムはborderを持たず、親のdivide-yで区切る
+                    itemEl.className = 'routine-item relative group w-full bg-white dark:bg-gray-800 transition-colors';
                     itemEl.setAttribute('data-id', item.id);
             
-                    let contentHTML = '';
+                    let iconHTML = '';
+                    let titleHTML = '';
+                    
                     if (item.type === 'section') {
-                        contentHTML = `
-                            <div class="p-2 rounded bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-                                <i data-lucide="book-open" class="w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow min-w-0">
-                                <p class="text-sm font-bold text-gray-800 dark:text-gray-200">セクション</p>
-                            </div>
-                        `;
+                        iconHTML = `<div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
+                        titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">セクション</span>`;
                     } else {
-                        contentHTML = `
-                            <div class="p-2 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                                <i data-lucide="coffee" class="w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow min-w-0">
-                                <p class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</p>
-                            </div>
-                        `;
+                        iconHTML = `<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
+                        titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイク</span>`;
                     }
             
-                    itemEl.innerHTML = `
-                        <div class="routine-handle cursor-grab active:cursor-grabbing text-gray-400">
-                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                    // 時間入力部分（レイアウトシフト防止のための重ね合わせ）
+                    const durationMin = item.duration / 60;
+                    const durationHTML = `
+                        <div class="relative w-12 h-8 mr-1">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none bg-gray-100 dark:bg-gray-700 rounded-lg border border-transparent">
+                                <span class="font-bold text-sm text-gray-700 dark:text-gray-200">${durationMin}</span>
+                            </div>
+                            <input type="number" value="${durationMin}" 
+                                class="routine-duration-input absolute inset-0 w-full h-full opacity-0 cursor-pointer text-center font-bold text-sm z-10 p-0 m-0">
                         </div>
-                        ${contentHTML}
-                        <div class="flex items-center space-x-1">
-                            <input type="number" value="${item.duration / 60}" class="routine-duration-input w-12 p-1 border rounded text-center dark:bg-gray-700 dark:border-gray-600 text-sm">
-                            <span class="text-xs text-gray-500">分</span>
-                        </div>
-                        <button class="remove-routine-btn text-red-400 hover:text-red-600 p-2">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
+                        <span class="text-xs text-gray-400 font-bold mr-3">分</span>
                     `;
             
-                    // 時間変更イベント
-                    itemEl.querySelector('.routine-duration-input').addEventListener('change', (e) => {
+                    itemEl.innerHTML = `
+                        <div class="flex items-center p-3 h-16">
+                            <div class="routine-handle p-2 mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none">
+                                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                            </div>
+                            
+                            <div class="mr-4 flex-shrink-0">${iconHTML}</div>
+                            
+                            <div class="flex-grow min-w-0 flex flex-col justify-center">
+                                ${titleHTML}
+                            </div>
+            
+                            ${durationHTML}
+            
+                            <button class="remove-routine-btn p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex-shrink-0">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    `;
+            
+                    // イベント: 時間変更
+                    const input = itemEl.querySelector('.routine-duration-input');
+                    input.addEventListener('change', (e) => {
                         let val = parseInt(e.target.value);
                         if(val < 1) val = 1;
                         item.duration = val * 60;
                         saveState();
+                        renderRoutineList(); // 再描画して表示を更新
                     });
             
-                    // 削除イベント
+                    // イベント: 削除
                     itemEl.querySelector('.remove-routine-btn').addEventListener('click', () => {
                         state.profile.routineTemplate.splice(index, 1);
                         saveState();
@@ -7379,18 +7384,16 @@
             
                 lucide.createIcons({ root: routineListEl });
             
-                // 1. 既にインスタンスが存在していたら破棄する（これが重要）
-                if (routineSortable) {
-                    routineSortable.destroy();
-                    routineSortable = null;
-                }
-            
-                // 2. 新しく作成して変数に保存する
-                if (routineListEl && Sortable) {
+                // Sortable初期化 (forceFallback: true を追加)
+                if (routineSortable) routineSortable.destroy();
+                if (state.profile.routineTemplate.length > 0) {
                     routineSortable = Sortable.create(routineListEl, {
                         handle: '.routine-handle',
-                        animation: 150,
-                        delay: 200, // スマホでの誤動作防止用
+                        animation: 200,
+                        ghostClass: 'sortable-ghost',
+                        forceFallback: true, // ★重要: これでドラッグ時の固まりを防止
+                        fallbackClass: 'sortable-drag',
+                        delay: 150,
                         delayOnTouchOnly: true,
                         touchStartThreshold: 5,
                         onEnd: (evt) => {
@@ -7428,116 +7431,110 @@
 
             // --- 5. BGM設定サブページ ---
             let bgmSortable = null;
+            // bgmSettingsPage の onOpen 内の renderBgmPageList と Sortable初期化を以下に置き換えてください
             const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 onOpen: () => {
-                    // トグル設定
+                    // トグル制御 (既存通り)
                     const toggle = $('#bgm-toggle-sub');
                     toggle.checked = state.settings.bgmEnabled;
-                    toggle.onclick = (e) => {
-                        state.settings.bgmEnabled = e.target.checked;
-                        saveState();
-                    };
-
-                    // プレイリスト描画関数
+                    toggle.onclick = (e) => { state.settings.bgmEnabled = e.target.checked; saveState(); };
+            
+                    const container = $('#playlist-container-sub');
+                    const unlockedContainer = $('#unlocked-music-list-sub');
+            
+                    // Inset Style適用
+                    container.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700 mb-6';
+            
+                    // プレイリスト描画
                     const renderBgmPageList = () => {
-                        const container = $('#playlist-container-sub');
                         if (state.settings.playlist.length === 0) {
-                            container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">曲がありません。<br>下のリストから追加してください。</p>';
+                            container.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">プレイリストが空です</p>';
                         } else {
-                            container.innerHTML = '';
-                            state.settings.playlist.forEach((id, index) => {
+                            container.innerHTML = state.settings.playlist.map(id => {
                                 const track = initialData.music[id];
-                                if(!track) return;
-                                const itemEl = document.createElement('div');
-                                itemEl.className = 'bg-white dark:bg-gray-600 rounded-lg p-2 flex items-center shadow-sm border border-gray-100 dark:border-gray-500';
-                                itemEl.setAttribute('data-id', id);
-                                itemEl.innerHTML = `
-                                    <div class="playlist-handle text-gray-400 cursor-grab active:cursor-grabbing p-2 mr-1">
-                                        <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                                    </div>
-                                    <div class="flex-grow min-w-0">
-                                        <p class="font-bold text-sm truncate text-gray-800 dark:text-gray-100">${track.name}</p>
-                                    </div>
-                                    <div class="flex items-center space-x-1">
-                                        <button class="preview-bgm-btn p-2 rounded-full text-indigo-500 hover:bg-indigo-50 dark:hover:bg-gray-500 transition">
-                                            <i data-lucide="play-circle" class="w-5 h-5"></i>
-                                        </button>
-                                        <button class="remove-bgm-btn p-2 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-gray-500 transition">
-                                            <i data-lucide="x-circle" class="w-5 h-5"></i>
-                                        </button>
+                                if(!track) return '';
+                                return `
+                                    <div class="bgm-item flex items-center p-3 h-16 bg-white dark:bg-gray-800" data-id="${id}">
+                                        <div class="playlist-handle p-2 mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none">
+                                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                                        </div>
+                                        <div class="flex-grow min-w-0">
+                                            <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${track.name}</p>
+                                        </div>
+                                        <div class="flex items-center space-x-1">
+                                            <button class="preview-bgm-btn p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-full transition">
+                                                <i data-lucide="play-circle" class="w-5 h-5"></i>
+                                            </button>
+                                            <button class="remove-bgm-btn p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition">
+                                                <i data-lucide="x-circle" class="w-5 h-5"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 `;
-                                
-                                // 試聴ボタン
-                                const previewBtn = itemEl.querySelector('.preview-bgm-btn');
-                                previewBtn.addEventListener('click', () => toggleMusicPreview(track.url, previewBtn));
-
-                                // 削除ボタン
-                                itemEl.querySelector('.remove-bgm-btn').addEventListener('click', () => {
+                            }).join('');
+                            
+                            // イベント設定
+                            container.querySelectorAll('.preview-bgm-btn').forEach(btn => {
+                                const id = btn.closest('.bgm-item').dataset.id;
+                                const url = initialData.music[id].url;
+                                btn.addEventListener('click', () => toggleMusicPreview(url, btn));
+                            });
+                            container.querySelectorAll('.remove-bgm-btn').forEach(btn => {
+                                btn.addEventListener('click', () => {
+                                    const index = Array.from(container.children).indexOf(btn.closest('.bgm-item'));
                                     stopMusicPreview();
                                     state.settings.playlist.splice(index, 1);
                                     saveState();
                                     renderBgmPageList(); // 再描画
                                 });
-
-                                container.appendChild(itemEl);
                             });
-
-                            // Sortable適用
-                            // 1. 古いインスタンスを破棄
-                            if (bgmSortable) {
-                                bgmSortable.destroy();
-                                bgmSortable = null;
-                            }
-                
-                            // 2. 新しく作成して保存
-                            if(Sortable && container) {
-                                bgmSortable = Sortable.create(container, {
-                                    handle: '.playlist-handle',
-                                    animation: 150,
-                                    ghostClass: 'sortable-ghost',
-                                    delay: 200, 
-                                    delayOnTouchOnly: true, 
-                                    touchStartThreshold: 5,
-                                    onEnd: (evt) => {
-                                        const item = state.settings.playlist.splice(evt.oldIndex, 1)[0];
-                                        state.settings.playlist.splice(evt.newIndex, 0, item);
-                                        saveState();
-                                    }
-                                });
-                            }
                         }
-
-                        // 追加可能リストの描画
-                        const unlockedContainer = $('#unlocked-music-list-sub');
-                        const availableMusic = state.profile.unlockedMusic.filter(id => !state.settings.playlist.includes(id));
-                        
-                        if (availableMusic.length === 0) {
-                            unlockedContainer.innerHTML = '<span class="text-xs text-gray-400">追加できる曲がありません</span>';
-                        } else {
-                            unlockedContainer.innerHTML = availableMusic.map(id => {
-                                const track = initialData.music[id];
-                                return `<button class="add-to-playlist-btn bg-gray-50 dark:bg-gray-800 border dark:border-gray-600 px-3 py-2 rounded-full text-xs font-bold transition flex items-center hover:bg-gray-100 dark:hover:bg-gray-700" data-id="${id}" style="color: var(--primary-color); border-color: var(--primary-color);">
-                                    <i data-lucide="plus" class="w-3 h-3 mr-1"></i>${track.name}
+            
+                        // 追加可能リスト描画
+                        const available = state.profile.unlockedMusic.filter(id => !state.settings.playlist.includes(id));
+                        unlockedContainer.innerHTML = available.length === 0 
+                            ? '<span class="text-xs text-gray-400 w-full text-center">追加できる曲がありません</span>'
+                            : available.map(id => {
+                                const t = initialData.music[id];
+                                return `<button class="add-to-playlist-btn bg-white dark:bg-gray-800 shadow-sm border border-transparent px-3 py-2 rounded-full text-xs font-bold transition flex items-center hover:bg-gray-50 dark:hover:bg-gray-700" data-id="${id}" style="color: var(--primary-color);">
+                                    <i data-lucide="plus" class="w-3 h-3 mr-1"></i>${t.name}
                                 </button>`;
                             }).join('');
-
-                            unlockedContainer.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
-                                btn.addEventListener('click', () => {
-                                    state.settings.playlist.push(btn.dataset.id);
+                        
+                        unlockedContainer.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                state.settings.playlist.push(btn.dataset.id);
+                                saveState();
+                                renderBgmPageList();
+                            });
+                        });
+            
+                        lucide.createIcons();
+            
+                        // Sortable初期化 (forceFallback: true)
+                        if (bgmSortable) bgmSortable.destroy();
+                        if (state.settings.playlist.length > 0) {
+                            bgmSortable = Sortable.create(container, {
+                                handle: '.playlist-handle',
+                                animation: 200,
+                                ghostClass: 'sortable-ghost',
+                                forceFallback: true, // ★重要
+                                fallbackClass: 'sortable-drag',
+                                delay: 150,
+                                delayOnTouchOnly: true,
+                                touchStartThreshold: 5,
+                                onEnd: (evt) => {
+                                    const item = state.settings.playlist.splice(evt.oldIndex, 1)[0];
+                                    state.settings.playlist.splice(evt.newIndex, 0, item);
                                     saveState();
-                                    renderBgmPageList();
-                                });
+                                }
                             });
                         }
-                        lucide.createIcons();
                     };
-
+            
                     renderBgmPageList();
                 },
-                onClose: () => {
-                    stopMusicPreview(); // ページを閉じたら試聴停止
-                }
+                onClose: () => { stopMusicPreview(); }
             });
             $('#close-bgm-settings-btn').addEventListener('click', () => bgmSettingsPage.close());
 
