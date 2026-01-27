@@ -1069,6 +1069,62 @@
         .rounded-ios-md {
             border-radius: 16px !important;
         }
+        /* --- モダンデザイン用ユーティリティ --- */
+
+/* 1. より柔らかく広い影 (Diffuse Shadow) */
+.shadow-modern {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08); /* 薄く広い影 */
+}
+.shadow-modern-sm {
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05); /* 小さい要素用 */
+}
+/* ダークモード時の影は控えめに、代わりに背景色で浮き出させる */
+.dark .shadow-modern, .dark .shadow-modern-sm {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+    background-color: #1f2937; /* bg-gray-800 */
+    border: 1px solid rgba(255,255,255,0.05); /* 境界を微妙に光らせる */
+}
+
+/* 2. 角丸の強化 (iOSライクな大きな角丸) */
+.rounded-super {
+    border-radius: 24px !important; /* カードなどは24pxに */
+}
+.rounded-pill {
+    border-radius: 9999px !important; /* ボタンは完全な丸み */
+}
+
+/* 3. 入力フォームのモダン化 (線ではなく面で表現) */
+.input-modern {
+    background-color: #f3f4f6; /* bg-gray-100 */
+    border: none !important;
+    border-radius: 16px;
+    padding: 12px 16px;
+    transition: all 0.2s;
+}
+.input-modern:focus {
+    background-color: #fff;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+.dark .input-modern {
+    background-color: #374151; /* bg-gray-700 */
+    color: #fff;
+}
+.dark .input-modern:focus {
+    background-color: #1f2937;
+}
+
+/* 4. グラスモーフィズム（すりガラス）の強化 */
+/* ヘッダーやタブバー、モーダルに適用 */
+.glass-effect {
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.5); /* 上部にハイライト */
+}
+.dark .glass-effect {
+    background-color: rgba(17, 24, 39, 0.85) !important; /* dark:bg-gray-900 */
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1109,7 +1165,7 @@
                             </div>
                         </div>
                         
-                        <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-colors">
+                        <div class="bg-white/20 p-2 rounded-super backdrop-blur-sm hover:bg-white/30 transition-colors">
                             <i data-lucide="chevron-right" class="w-6 h-6 text-white"></i>
                         </div>
                     </div>
@@ -1119,13 +1175,16 @@
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3">
                         <i data-lucide="check-square" class="w-5 h-5 mr-2 primary-text"></i> 今日の予定
                     </h2>
-                    <div class="bg-white dark:bg-gray-700 p-4 rounded-[24px] shadow-sm">
-                        <div id="home-task-list" class="space-y-2">
-                            <p class="text-center text-sm text-gray-500">今日の予定はありません。</p>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern mb-6">
+                        <div id="home-task-list" class="space-y-3">
+                            <p class="text-center text-sm text-gray-400 py-2">今日の予定はありません。</p>
                         </div>
-                        <div class="flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-                            <span id="new-task-number" class="font-bold w-6 text-center text-gray-500 dark:text-gray-400">1</span>
-                            <input type="text" id="new-task-input" placeholder="新しいタスクを追加 (Enterで確定)" class="flex-grow bg-transparent p-1 border-b-2 border-gray-300 dark:border-gray-600 focus-theme-border focus:outline-none transition-colors">
+                    
+                        <div class="flex items-center space-x-3 mt-6">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400">
+                                <span id="new-task-number">1</span>
+                            </div>
+                            <input type="text" id="new-task-input" placeholder="新しいタスクを追加" class="flex-grow input-modern text-sm outline-none">
                         </div>
                     </div>
                 </div>
@@ -4051,26 +4110,27 @@
                         const taskEl = document.createElement('div');
                         // 並び替え時のID識別用に data-id を追加
                         taskEl.setAttribute('data-id', task.id); 
-                        taskEl.className = `task-item swipe-container relative overflow-hidden rounded-2xl mb-2`; 
+                        taskEl.className = `task-item swipe-container relative overflow-hidden rounded-card mb-3 shadow-modern-sm transition-transform active:scale-[0.99]`;
                         
                         taskEl.innerHTML = `
                             <div class="swipe-actions">
-                                <button class="btn-complete swipe-btn bg-gray-400 w-[70px]">
+                                <button class="btn-complete swipe-btn bg-gray-300 dark:bg-gray-600 w-[70px]">
                                     <i data-lucide="check" class="w-6 h-6"></i>
-                                    <span>完了</span>
                                 </button>
-                                <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                                <button class="btn-delete swipe-btn bg-red-400 w-[70px]">
                                     <i data-lucide="trash-2" class="w-6 h-6"></i>
-                                    <span>削除</span>
                                 </button>
                             </div>
-
-                            <div class="swipe-content flex items-center p-2 bg-white dark:bg-gray-800 shadow-sm relative z-10 ${isCompleted ? 'bg-gray-100 dark:bg-gray-900' : ''}">
-                                <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400 shrink-0">${index + 1}</span>
+                        
+                            <div class="swipe-content flex items-center p-3.5 bg-white dark:bg-gray-700 relative z-10 ${isCompleted ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' : ''}">
                                 
-                                <input type="text" value="${task.text}" class="task-text-input flex-grow min-w-0 bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full ${isCompleted ? 'bg-gray-200 dark:bg-gray-700' : 'bg-indigo-50 dark:bg-indigo-900/30'} flex items-center justify-center mr-3">
+                                    <span class="font-bold text-sm ${isCompleted ? 'text-gray-400' : 'text-indigo-600 dark:text-indigo-400'}">${index + 1}</span>
+                                </div>
                                 
-                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity p-2 shrink-0 ${isCompleted ? 'invisible' : ''}">
+                                <input type="text" value="${task.text}" class="task-text-input flex-grow min-w-0 bg-transparent p-1 focus:outline-none rounded font-medium text-gray-700 dark:text-gray-200 ${textStyle}" ${isCompleted ? 'disabled' : ''}>
+                                
+                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300 transition-opacity p-2 shrink-0 ${isCompleted ? 'invisible' : ''}">
                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                                 </button>
                             </div>
