@@ -1105,6 +1105,21 @@
     /* JS側で bg-white / bg-gray-50 を切り替えているのでここは基本設定のみ */
     will-change: transform;
 }
+        /* ▼▼▼ 追加: 並び替え(Sortable)時のスタイル ▼▼▼ */
+/* ドラッグ中の要素を少し小さくして浮かせる */
+.sortable-drag {
+    transform: scale(0.95) !important; /* 95%のサイズに縮小 */
+    opacity: 0.9;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    z-index: 9999 !important;
+    cursor: grabbing !important;
+    background-color: var(--bg-color, #fff); /* 背景色を維持 */
+}
+/* ダークモード対応 */
+.dark .sortable-drag {
+    background-color: #1f2937; /* dark:bg-gray-800 */
+}
+/* ▲▲▲ 追加ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1162,7 +1177,7 @@
                             <p class="text-center text-sm text-gray-400 py-6">今日の予定はありません。</p>
                         </div>
                 
-                        <div class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
+                        <div class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
                             <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400 mr-3 text-xs">
                                 <span id="new-task-number">+</span>
                             </div>
@@ -1701,7 +1716,7 @@
                 <div id="quest-plan-list" class="divide-y divide-gray-100 dark:divide-gray-700">
                     </div>
             
-                <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2">
+                <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2 border-t border-gray-100 dark:border-gray-700">
                     <button id="add-section-btn" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center">
                         <i data-lucide="plus" class="w-4 h-4 mr-1"></i> セクション
                     </button>
@@ -4984,6 +4999,8 @@
             // ▼▼▼ renderQuestPlan 関数全体を書き換え ▼▼▼
             function renderQuestPlan() {
                 if (!questPlanListEl) return;
+                const scrollContainer = document.querySelector('#quest-view .flex-grow');
+                const savedScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
                 questPlanListEl.innerHTML = '';
                 
                 // 1. 空の状態
@@ -5134,6 +5151,12 @@
                 });
             
                 lucide.createIcons({ root: questPlanListEl });
+                if (scrollContainer) {
+                    // requestAnimationFrameを使って描画完了を待つとより確実です
+                    requestAnimationFrame(() => {
+                        scrollContainer.scrollTop = savedScrollTop;
+                    });
+                }
             }
             // ▲▲▲ 変更ここまで ▲▲▲
             
