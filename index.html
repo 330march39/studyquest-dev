@@ -2176,6 +2176,24 @@
             </div>
         </div>
     </div>
+
+    <div id="pinned-list-screen" class="screen-layer">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-pinned-list-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">ピン留めしたクイズ</h2>
+            <div class="flex-1"></div>
+        </header>
+        <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
+            <div id="pinned-list-full-content" class="grid grid-cols-1 gap-3"></div>
+        </div>
+    </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -3200,24 +3218,78 @@
                         renderHomeTasks();
                     },
                     'study-page': () => {
+                        // --- 1. ピン留めエリアの制御 ---
                         const pinnedContainer = $('#pinned-quizzes');
                         const pinnedSectionContainer = pinnedContainer.parentElement;
-                    
+                        
                         if (state.pinnedQuizzes.length > 0) {
                             pinnedSectionContainer.style.display = 'block';
-                            const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
-                            pinnedContainer.innerHTML = pinnedQuizzes.map(q => createQuizCard(q, true)).join('');
+                            
+                            // 実際のクイズデータを取得
+                            const allPinned = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
+                            
+                            // 表示するアイテム（最大3つまで表示）
+                            // ※「3つ以上」という条件なので、3つの場合はそのまま3つ表示し、ボタンも出すか、
+                            // あるいはリストが長くなりすぎないように制御します。
+                            // ここでは「3つまではそのまま表示、3つ以上ならボタンを出す」形にします。
+                            const displayItems = allPinned.slice(0, 3);
+                            
+                            pinnedContainer.innerHTML = displayItems.map(q => createQuizCard(q, true)).join('');
+
+                            // 「すべて見る」ボタンの制御
+                            // 既存のボタンがあれば削除（重複防止）
+                            const existingBtn = document.getElementById('see-all-pinned-btn');
+                            if (existingBtn) existingBtn.remove();
+
+                            if (state.pinnedQuizzes.length >= 3) {
+                                const seeAllBtn = document.createElement('button');
+                                seeAllBtn.id = 'see-all-pinned-btn';
+                                seeAllBtn.className = "w-full text-center text-sm font-bold text-indigo-500 dark:text-indigo-400 mt-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors";
+                                seeAllBtn.innerHTML = `すべて見る (${state.pinnedQuizzes.length})`;
+                                
+                                seeAllBtn.onclick = () => {
+                                    // サブページを開く処理
+                                    if (typeof pinnedListPage !== 'undefined') {
+                                        pinnedListPage.open();
+                                    }
+                                };
+                                pinnedContainer.appendChild(seeAllBtn);
+                            }
+
                         } else {
                             pinnedSectionContainer.style.display = 'none';
                         }
                     
+                        // --- 2. 「すべて」をなくしたフィルタ制御 ---
                         const allContainer = $('#all-quizzes');
-                        const subjects = ['all', ...new Set(initialData.quizzes.map(q => q.subject))];
-                        const activeFilter = $('#filter-container .active')?.dataset.filter || 'all';
-                        $('#filter-container').innerHTML = subjects.map(s => `<button class="filter-btn ${s === activeFilter ? 'active primary-bg text-white' : 'bg-gray-200 dark:bg-gray-600'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="${s}">${s === 'all' ? 'すべて' : s}</button>`).join('');
+                        
+                        // 科目のリストを作成 ('all' を除去)
+                        const subjects = [...new Set(initialData.quizzes.map(q => q.subject))];
+                        
+                        // 現在のアクティブなフィルタを取得
+                        // もし 'all' が保存されていたり、未設定なら、最初の科目をデフォルトにする
+                        let activeFilter = $('#filter-container .active')?.dataset.filter;
+                        if (!activeFilter || activeFilter === 'all' || !subjects.includes(activeFilter)) {
+                            activeFilter = subjects[0]; // 最初の科目を強制選択
+                        }
+
+                        // フィルタボタンの描画
+                        $('#filter-container').innerHTML = subjects.map(s => 
+                            `<button class="filter-btn ${s === activeFilter ? 'active primary-bg text-white' : 'bg-gray-200 dark:bg-gray-600'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-filter="${s}">
+                                ${s}
+                            </button>`
+                        ).join('');
                     
-                        const quizzes = initialData.quizzes.filter(q => activeFilter === 'all' || q.subject === activeFilter);
-                        allContainer.innerHTML = quizzes.map(q => createQuizCard(q, state.pinnedQuizzes.includes(q.id))).join('');
+                        // クイズリストの描画 (フィルタリング実行)
+                        const quizzes = initialData.quizzes.filter(q => q.subject === activeFilter);
+                        
+                        if (quizzes.length === 0) {
+                            allContainer.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">クイズがありません</p>`;
+                        } else {
+                            allContainer.innerHTML = quizzes.map(q => createQuizCard(q, state.pinnedQuizzes.includes(q.id))).join('');
+                        }
+                        
+                        lucide.createIcons();
                     },
                     // 変更後
                   'focus-page': () => {
@@ -5823,14 +5895,14 @@
             });
 
             const openMigrationBtn = $('#open-migration-menu-btn');
+            // ▼▼▼ 修正: プロフィール画面を開いたままモーダルを重ねる ▼▼▼
             if (openMigrationBtn) {
                 openMigrationBtn.addEventListener('click', () => {
-                    // プロフィール画面を閉じてからモーダルを開く
-                    profilePage.close(); 
-                    setTimeout(() => openMigrationModal(), 300);
+                    // profilePage.close(); // 削除またはコメントアウト
+                    openMigrationModal();   // 即座に開く
                 });
             }
-
+            // ▲▲▲ 修正ここまで ▲▲▲
             $$('.status-tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const target = e.currentTarget.dataset.target; // theme, background, game, music のいずれか
@@ -6676,6 +6748,25 @@
                     });
                 });
             };
+
+            // ▼▼▼ 追加: ピン留め一覧サブページ ▼▼▼
+            const pinnedListPage = new SubPage('pinned-list-screen', {
+                onOpen: () => {
+                    const container = $('#pinned-list-full-content');
+                    // 全てのピン留めクイズを取得
+                    const allPinned = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
+                    
+                    if (allPinned.length === 0) {
+                        container.innerHTML = '<p class="text-center text-gray-500 mt-4">ピン留めはありません</p>';
+                    } else {
+                        container.innerHTML = allPinned.map(q => createQuizCard(q, true)).join('');
+                    }
+                    lucide.createIcons();
+                }
+            });
+            // 戻るボタン
+            $('#close-pinned-list-btn').addEventListener('click', () => pinnedListPage.close());
+            // ▲▲▲ 追加ここまで ▲▲▲
 
             // ==========================================
             // ▼▼▼ アイテム詳細画面の制御 (SubPageクラス適用版) ▼▼▼
