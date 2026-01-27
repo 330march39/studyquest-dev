@@ -1163,7 +1163,7 @@
                         </div>
                 
                         <div class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400 mr-3 text-xs">
+                            <div id="add-task-btn" class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400 mr-3 text-lg cursor-pointer hover:opacity-80 transition-opacity">
                                 <span id="new-task-number">+</span>
                             </div>
                             <input type="text" id="new-task-input" placeholder="新しいタスクを追加" class="flex-grow bg-transparent border-none outline-none text-sm font-bold text-gray-700 dark:text-gray-200 placeholder-gray-400 h-10">
@@ -3816,23 +3816,23 @@ const renderDailyDetails = (targetDate) => {
             
                 return `
                     <div class="quiz-card flex items-center p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition active:bg-gray-100 dark:active:bg-gray-700" data-id="${quiz.id}">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full ${iconClass} flex items-center justify-center mr-4 shadow-sm">
-                            <i data-lucide="${iconName}" class="w-5 h-5"></i>
-                        </div>
-                        
-                        <div class="flex-grow min-w-0 mr-2">
-                            <h3 class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate leading-tight mb-0.5">${quiz.title}</h3>
-                            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 truncate flex items-center">
-                                <span class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] mr-1">${quiz.subject}</span>
-                                ${quiz.genre}
-                            </p>
-                        </div>
+            <div class="flex-shrink-0 w-10 h-10 rounded-full ${iconClass} flex items-center justify-center mr-4 shadow-sm">
+                <i data-lucide="${iconName}" class="w-5 h-5"></i>
+            </div>
             
-                        <button class="pin-btn p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition flex-shrink-0 text-gray-400 ${isPinned ? 'primary-text fill-current' : ''}" data-id="${quiz.id}">
-                            <i data-lucide="pin" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                `;
+            <div class="flex-grow min-w-0 mr-2">
+                <h3 class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate leading-tight mb-0.5">${quiz.title}</h3>
+                <p class="text-xs font-medium text-gray-400 dark:text-gray-500 truncate flex items-center">
+                    <span class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] mr-1">${quiz.subject}</span>
+                    ${quiz.genre}
+                </p>
+            </div>
+
+            <button class="pin-btn p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition flex-shrink-0 ${isPinned ? 'primary-text fill-current' : 'text-gray-400'}" data-id="${quiz.id}">
+                <i data-lucide="pin" class="w-5 h-5"></i>
+            </button>
+        </div>
+    `;
             };
             
             const renderChart = (canvasId, type, data, options) => {
@@ -6696,6 +6696,21 @@ const renderDailyDetails = (targetDate) => {
                             renderHomeTasks();
                         }
                     });
+                }
+                // ▼▼▼ 追加箇所: アイコンタップ時の処理 ▼▼▼
+                const addTaskBtn = document.getElementById('add-task-btn');
+                if (addTaskBtn && newTaskInput) {
+                    // 重複登録を防ぐため、一度cloneNodeでリセットするか、onclickを使用
+                    addTaskBtn.onclick = () => {
+                        if (newTaskInput.value.trim() !== '') {
+                            state.tasks.push({ id: Date.now(), text: newTaskInput.value.trim() });
+                            newTaskInput.value = ''; // 入力欄をクリア
+                            saveState();
+                            renderHomeTasks();
+                        } else {
+                            newTaskInput.focus(); // 空ならフォーカスを当てる
+                        }
+                    };
                 }
 
                  // Sortable.js の初期化 (クエストプラン)
