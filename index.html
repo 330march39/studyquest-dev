@@ -1105,29 +1105,6 @@
     /* JS側で bg-white / bg-gray-50 を切り替えているのでここは基本設定のみ */
     will-change: transform;
 }
-/* ▼▼▼ 修正版: 並び替え時のスタイル ▼▼▼ */
-
-/* 移動する外箱 (ここには transform を書かない！ ) */
-.sortable-drag {
-    opacity: 1 !important; /* 透明度は中身で調整 */
-    z-index: 9999 !important;
-    cursor: grabbing !important;
-    background: transparent !important; /* 背景は透明に */
-}
-
-/* 中身だけを小さくする */
-.sortable-drag .swipe-content {
-    transform: scale(0.95); /* ここで縮小 */
-    opacity: 0.9;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
-    border-radius: 20px; /* 角丸を維持 */
-    /* ダークモード対応 */
-    background-color: #fff; 
-}
-.dark .sortable-drag .swipe-content {
-    background-color: #1f2937; /* dark:bg-gray-800 */
-}
-/* ▲▲▲ 修正ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -5703,8 +5680,6 @@
                         delay: 100, 
                         delayOnTouchOnly: true,
                         touchStartThreshold: 5,
-                        forceFallback: true, // ★★★ 追加 ★★★
-                        fallbackClass: 'sortable-drag', // ★追加
                         onEnd: (evt) => {
                             const idOrder = Array.from(activeContainer.children).map(child => child.dataset.id);
                             const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
@@ -6624,12 +6599,9 @@
                         handle: '.task-handle', 
                         animation: 150,
                         ghostClass: 'sortable-ghost',
-                        dragClass: 'sortable-drag', // ★念のため明示
                         delay: 200, // ★重要: 200ms長押ししないとドラッグ開始しない
                         delayOnTouchOnly: true, // タッチ操作の時だけ遅延させる（マウスは即時）
                         touchStartThreshold: 5, // 5px以上動いたらタップではなくドラッグ判定（誤動作防止）
-                        forceFallback: true,
-                        fallbackClass: 'sortable-drag',
                         filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加: これらが付いている要素は並び替え不可
                         onEnd: (evt) => { /* 中身は変更なし */
                             const item = state.tasks.splice(evt.oldIndex, 1)[0];
@@ -6673,8 +6645,6 @@
                             delay: 200, // ★追加
                             delayOnTouchOnly: true, // ★追加
                             touchStartThreshold: 5, // ★追加
-                            forceFallback: true, // ★★★ 追加 ★★★
-                            fallbackClass: 'sortable-drag', // ★追加
                             filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加
                             onEnd: (evt) => {
                                 // quest.plan 配列を並び替え
@@ -7423,8 +7393,6 @@
                         delay: 200, // スマホでの誤動作防止用
                         delayOnTouchOnly: true,
                         touchStartThreshold: 5,
-                        forceFallback: true, // ★★★ 追加 ★★★
-                        fallbackClass: 'sortable-drag', // ★追加
                         onEnd: (evt) => {
                             const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
                             state.profile.routineTemplate.splice(evt.newIndex, 0, item);
