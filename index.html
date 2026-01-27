@@ -1696,18 +1696,18 @@
                 </button>
             </div>
             
-            <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm"> 
-                <div id="quest-plan-list" class="space-y-2">
+            <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden mb-24">
+    
+                <div id="quest-plan-list" class="divide-y divide-gray-100 dark:divide-gray-700">
                     </div>
-                
-                <div class="flex justify-between mt-4 gap-3">
-                    <button id="add-section-btn" class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-3 px-4 rounded-xl shadow-sm flex items-center justify-center transition-transform active:scale-95">
-                        <i data-lucide="plus" class="w-5 h-5 mr-2 text-indigo-500"></i>
-                        <span>セクション</span>
+            
+                <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2">
+                    <button id="add-section-btn" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center">
+                        <i data-lucide="plus" class="w-4 h-4 mr-1"></i> セクション
                     </button>
-                    <button id="add-break-btn" class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-3 px-4 rounded-xl shadow-sm flex items-center justify-center transition-transform active:scale-95">
-                        <i data-lucide="coffee" class="w-5 h-5 mr-2 text-green-500"></i>
-                        <span>ブレイク</span>
+                    <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+                    <button id="add-break-btn" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center">
+                        <i data-lucide="coffee" class="w-4 h-4 mr-1"></i> ブレイク
                     </button>
                 </div>
             </div>
@@ -4075,53 +4075,52 @@
             logStudyTime('focus', durationSeconds); 
             saveState();
         };
-
+            
             const renderHomeTasks = () => {
                 if (!homeTaskListEl) return;
-
+            
+                // --- 1. 空の状態 (Empty State) の改善 ---
                 if (!state.tasks || state.tasks.length === 0) {
-                    homeTaskListEl.innerHTML = `<p class="text-center text-sm text-gray-500">今日の予定はありません。</p>`;
+                    homeTaskListEl.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
+                            <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-full mb-3">
+                                <i data-lucide="clipboard-list" class="w-8 h-8 opacity-50"></i>
+                            </div>
+                            <p class="text-sm font-bold">今日の予定はありません</p>
+                            <p class="text-xs mt-1 opacity-70">下の入力欄からタスクを追加できます</p>
+                        </div>
+                    `;
                 } else {
-                    homeTaskListEl.innerHTML = ''; // 一旦クリア
+                    homeTaskListEl.innerHTML = ''; // クリア
                     
                     state.tasks.forEach((task, index) => {
                         const isCompleted = task.completed || false;
-                        
-                        // ★重要: opacityを使わず、文字色と取り消し線だけで完了状態を表す
                         const textStyle = isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200';
-                        
-                        // ★重要: 背景色は完了時も「不透明な色」を指定する (transparentは避ける)
-                        // 未完了: bg-white, 完了: bg-gray-50 (薄いグレー)
                         const bgStyle = isCompleted ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
-                
+            
                         const taskEl = document.createElement('div');
                         taskEl.setAttribute('data-id', task.id);
-                        
-                        // ★変更: マージン(mb-2)や角丸(rounded)を削除し、リスト形式にする
-                        // overflow-hidden は必須 (スワイプ時の角のはみ出し防止)
                         taskEl.className = `task-item swipe-container relative overflow-hidden group`;
-                
+            
+                        // --- 2. 番号の色をテーマカラーに反映 (style="color: var(--primary-color)") ---
                         taskEl.innerHTML = `
                             <div class="swipe-actions">
                                 <button class="btn-complete swipe-btn bg-gray-300 dark:bg-gray-600 w-[70px]">
                                     <i data-lucide="${isCompleted ? 'rotate-ccw' : 'check'}" class="w-6 h-6"></i>
-                                    <span>${isCompleted ? '戻す' : '完了'}</span>
                                 </button>
                                 <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
                                     <i data-lucide="trash-2" class="w-6 h-6"></i>
-                                    <span>削除</span>
                                 </button>
                             </div>
-                
-                            <div class="swipe-content flex items-center p-4 relative z-10 transition-transform ${bgStyle}">
-                                
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full ${isCompleted ? 'bg-gray-200 dark:bg-gray-700 text-gray-400' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'} flex items-center justify-center mr-3 transition-colors">
-                                    <span class="font-bold text-sm">${index + 1}</span>
+            
+                            <div class="swipe-content flex items-center p-4 relative z-10 transition-colors ${bgStyle}">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3">
+                                    <span class="font-bold text-sm" style="color: ${isCompleted ? '#9ca3af' : 'var(--primary-color)'}">${index + 1}</span>
                                 </div>
                                 
                                 <input type="text" value="${task.text}" class="task-text-input flex-grow min-w-0 bg-transparent border-none focus:outline-none font-bold text-sm ${textStyle}" ${isCompleted ? 'disabled' : ''}>
                                 
-                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400 p-2 -mr-2 flex-shrink-0 touch-none">
+                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none">
                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                                 </button>
                             </div>
@@ -4129,25 +4128,24 @@
                         
                         homeTaskListEl.appendChild(taskEl);
                         
-                        // ★スワイプ機能の適用
+                        // スワイプ等のイベント設定（既存のロジックと同じ）
                         new SwipeHandler(taskEl, {
                             onComplete: () => {
                                 const taskToUpdate = state.tasks.find(t => t.id === task.id);
                                 if (taskToUpdate) {
-                                    taskToUpdate.completed = !taskToUpdate.completed; // トグル
+                                    taskToUpdate.completed = !taskToUpdate.completed;
                                     saveState();
-                                    renderHomeTasks(); // 再描画
+                                    renderHomeTasks();
                                 }
                             },
                             onDelete: () => {
                                 state.tasks = state.tasks.filter(t => t.id !== task.id);
                                 saveState();
-                                setTimeout(renderHomeTasks, 100); 
+                                setTimeout(renderHomeTasks, 100);
                                 showToast('タスクを削除しました');
                             }
                         });
-                        
-                        // テキスト変更イベント
+            
                         taskEl.querySelector('.task-text-input').addEventListener('change', (e) => {
                             const taskToUpdate = state.tasks.find(t => t.id === task.id);
                             if (taskToUpdate) {
@@ -4158,15 +4156,13 @@
                     });
                 }
                 
-                if(newTaskNumberEl) newTaskNumberEl.textContent = state.tasks.length + 1;
-
-                // ★重要: 生成したリストの中に対してアイコン生成を実行
+                // 入力欄横の番号も更新
+                if(newTaskNumberEl) newTaskNumberEl.textContent = "+";
+                
+                // アイコン生成
                 lucide.createIcons({
                     root: homeTaskListEl,
-                    nameAttr: 'data-lucide',
-                    attrs: {
-                        class: "w-5 h-5" // デフォルトサイズ指定
-                    }
+                    attrs: { class: "w-5 h-5" }
                 });
             };
 
@@ -4936,117 +4932,119 @@
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
             // クエストプランのリストをレンダリングする関数（時間強制・未入力表示対応版）
+            // renderQuestPlan 全体を以下に置き換え
+            
             function renderQuestPlan() {
+                if (!questPlanListEl) return;
                 questPlanListEl.innerHTML = '';
                 
                 if (quest.plan.length === 0) {
                     questPlanListEl.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-10 text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl">
-                            <i data-lucide="clipboard-list" class="w-10 h-10 mb-2 opacity-50"></i>
-                            <p class="text-sm font-bold">リストは空です</p>
-                            <p class="text-xs mt-1">「今日の予定」を読み込むか、<br>下のボタンから追加してください。</p>
+                        <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
+                            <i data-lucide="map" class="w-12 h-12 mb-3 opacity-20"></i>
+                            <p class="text-sm font-bold">クエストが設定されていません</p>
+                            <p class="text-xs mt-1 opacity-70">下のボタンからセクションを追加してください</p>
                         </div>
                     `;
                 }
-                
+            
                 let sectionCounter = 1;
             
                 quest.plan.forEach((item, index) => {
                     const itemEl = document.createElement('div');
-                    itemEl.className = 'swipe-container relative overflow-hidden rounded-xl mb-3 shadow-sm group';
+                    itemEl.className = 'swipe-container relative overflow-hidden group'; // Inset Listスタイル
                     itemEl.setAttribute('data-id', item.id);
             
                     let iconHTML = '';
-                    let contentAreaHTML = '';
+                    let contentHTML = '';
             
                     if (item.type === 'section') {
-                        // === 学習セクション ===
+                        // === セクション（学習） ===
+                        // 番号表示 (テーマカラー適用)
                         iconHTML = `
-                            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/50">
-                                <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400" style="font-family: 'LINE Seed JP', sans-serif;">${sectionCounter}</span>
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border border-transparent">
+                                <span class="text-sm font-bold" style="color: var(--primary-color);">${sectionCounter}</span>
                             </div>
                         `;
+            
+                        // テキスト整形ロジック (スペースがあったらサブタイトル化)
+                        const text = item.text || '新しいセクション';
+                        const match = text.match(/^(.+?)[\s　]+(.+)$/); // 全角・半角スペースで分割
                         
-                        // --- テキスト整形ロジック ---
-                        let viewHTML = '';
-                        // テキストが空なら「新しいセクション」を表示用テキストとする
-                        const displayText = item.text ? item.text : '新しいセクション';
-                        
-                        const match = displayText.match(/^(.+?)[\s　]+(.+)$/);
+                        let displayHTML = '';
                         if (match) {
-                            // スペースがあれば分割表示
-                            viewHTML = `
-                                <span class="text-base font-bold text-gray-800 dark:text-gray-200 leading-tight block">${match[1]}</span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mt-0.5">${match[2]}</span>
+                            // メイン + サブタイトル
+                            displayHTML = `
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200 leading-tight">${match[1]}</span>
+                                    <span class="text-[10px] text-gray-400 font-bold mt-0.5 truncate">${match[2]}</span>
+                                </div>
                             `;
                         } else {
-                            // なければそのまま表示
-                            // item.textが空（displayTextが'新しいセクション'）の場合は、少し色を薄くするか、通常通り表示するか
-                            // ここではご要望通り「新しいセクション」として通常表示に近い形で出します
-                            const textColor = item.text ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400';
-                            viewHTML = `<span class="text-base font-bold ${textColor} leading-tight block">${displayText}</span>`;
+                            // 通常表示
+                            const textColor = item.text ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500';
+                            displayHTML = `<span class="text-sm font-bold ${textColor}">${text}</span>`;
                         }
             
-                        // 表示用div と 編集用input
-                        contentAreaHTML = `
-                            <div class="relative w-full">
-                                <div class="quest-item-view" onclick="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.focus();">
-                                    ${viewHTML}
+                        // 表示モードと編集モードの切り替えエリア
+                        contentHTML = `
+                            <div class="relative w-full min-w-0">
+                                <div class="quest-item-view cursor-text py-2" onclick="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.focus();">
+                                    ${displayHTML}
                                 </div>
                                 <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" 
-                                    class="quest-item-input hidden" 
+                                    class="quest-item-input hidden w-full bg-transparent border-none focus:outline-none font-bold text-sm h-full py-2" 
                                     onblur="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');"
                                     placeholder="新しいセクション">
                             </div>
                         `;
-                        
                         sectionCounter++;
+            
                     } else {
                         // === 休憩 ===
                         iconHTML = `
-                            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center border border-green-100 dark:border-green-800/50">
-                                <i data-lucide="coffee" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+                                <i data-lucide="coffee" class="w-4 h-4 text-green-500"></i>
                             </div>
                         `;
-                        
-                        contentAreaHTML = `
-                            <div class="flex items-center h-full">
-                                <span class="font-bold text-gray-500 dark:text-gray-400 text-base">ブレイクタイム</span>
-                            </div>
-                        `;
+                        contentHTML = `<span class="font-bold text-gray-500 dark:text-gray-400 text-sm">ブレイクタイム</span>`;
                     }
             
-                    // 全体のHTML構造
+                    // リストアイテム全体のHTML
                     itemEl.innerHTML = `
                         <div class="swipe-actions">
-                            <div class="flex-grow"></div>
-                            <button class="btn-delete swipe-btn bg-red-500 w-[80px] flex flex-col items-center justify-center text-white h-full">
-                                <i data-lucide="trash-2" class="w-6 h-6 mb-1"></i>
-                                <span class="text-[10px] font-bold">削除</span>
+                            <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                <span>削除</span>
                             </button>
                         </div>
             
-                        <div class="swipe-content flex items-center bg-white dark:bg-gray-800 p-3 relative z-10 w-full border border-gray-200 dark:border-gray-700 rounded-xl">
+                        <div class="swipe-content flex items-center p-3 bg-white dark:bg-gray-800 relative z-10 w-full">
                             <div class="mr-3 flex-shrink-0">
                                 ${iconHTML}
                             </div>
-                            <div class="flex-grow min-w-0 mr-3">
-                                ${contentAreaHTML}
+                            
+                            <div class="flex-grow min-w-0 mr-2">
+                                ${contentHTML}
                             </div>
-                            <div class="flex items-center space-x-1 pl-3 border-l border-gray-100 dark:border-gray-700 h-10 flex-shrink-0">
+            
+                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-2 py-1 flex-shrink-0 mr-1">
                                 <input type="number" value="${item.duration / 60}" 
-                                    class="quest-item-duration w-10 bg-transparent text-center font-bold text-base text-gray-800 dark:text-gray-200 focus:outline-none focus:border-b-2 focus:border-indigo-500 transition-colors p-0"
-                                >
-                                <span class="text-[10px] text-gray-400 font-bold mt-1">分</span>
+                                    class="quest-item-duration w-8 bg-transparent text-center font-bold text-sm text-gray-700 dark:text-gray-200 focus:outline-none p-0 appearance-none">
+                                <span class="text-[10px] text-gray-400 font-bold ml-0.5">分</span>
                             </div>
-                            <button class="quest-handle p-2 text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 cursor-grab active:cursor-grabbing touch-none transition-colors -mr-2 flex-shrink-0">
+            
+                            <button class="quest-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none">
                                 <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                             </button>
                         </div>
                     `;
-                    
+            
                     questPlanListEl.appendChild(itemEl);
             
+                    // --- イベントリスナー設定 ---
+                    
+                    // 削除スワイプ
                     new SwipeHandler(itemEl, {
                         onDelete: () => {
                             quest.plan = quest.plan.filter(p => p.id !== item.id);
@@ -5054,35 +5052,33 @@
                         }
                     });
             
-                    // テキスト変更イベント
+                    // テキスト変更
                     const input = itemEl.querySelector('.quest-item-input');
                     if (input) {
                         input.addEventListener('change', (e) => {
-                            item.text = e.target.value; // 空文字なら空文字のまま保存
+                            item.text = e.target.value;
                             item.originalTaskId = e.target.dataset.originalId || null;
-                            renderQuestPlan(); // 再描画して「新しいセクション」表示にする
+                            renderQuestPlan(); // 再描画して表示を更新
+                        });
+                        // Enterキーでフォーカスを外す
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') e.target.blur();
                         });
                     }
             
-                    // 時間変更イベント（ここを修正）
+                    // 時間変更
                     const durationInput = itemEl.querySelector('.quest-item-duration');
                     durationInput.addEventListener('change', (e) => {
                         let val = parseInt(e.target.value);
-                        
-                        // デフォルト値の設定 (セクションなら25、休憩なら5)
                         const defaultVal = (item.type === 'section') ? 25 : 5;
-            
-                        // NaN(空欄) または 0以下 の場合はデフォルト値を適用
-                        if (isNaN(val) || val <= 0) {
-                            val = defaultVal;
-                        }
-                        
+                        if (isNaN(val) || val <= 0) val = defaultVal;
                         item.duration = val * 60;
-                        renderQuestPlan(); // 入力欄に数値を反映させるため再描画
+                        // 数値を整形するためにinputの値を更新しない（フォーカスが外れた時に反映されるだけで良いなら）
+                        // 即座に反映させたい場合は renderQuestPlan() を呼ぶが、入力中にフォーカスが外れるので注意
                     });
                 });
             
-                lucide.createIcons();
+                lucide.createIcons({ root: questPlanListEl });
             }
             
         // クエスト用のタイマーを開始する関数 (バックグラウンド耐性強化版)
