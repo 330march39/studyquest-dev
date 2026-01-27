@@ -880,14 +880,16 @@
             border-bottom: 2px solid var(--primary-color);
         }
         
-        /* ▼▼▼ 修正: バナー用CSS (影切れ対策・パディング追加版) ▼▼▼ */
+        /* ▼▼▼ 修正: PCでの見切れ防止・バナーサイズ拡大版 ▼▼▼ */
         .banner-wrapper {
-            width: 100vw; 
-            margin-left: calc(50% - 50vw);
-            margin-right: calc(50% - 50vw);
+            /* 変更前: width: 100vw; margin-left: calc(50% - 50vw); ... */
+            /* 変更後: 親要素(スマホ枠)の幅を基準に、少しだけはみ出させる設定に変更 */
+            width: calc(100% + 2rem); /* 親のpadding(1rem)×2 を打ち消して横いっぱいに */
+            margin-left: -1rem;       /* 左側のpaddingを相殺 */
+            margin-right: -1rem;      /* 右側のpaddingを相殺 */
+            
             overflow: hidden;
-            /* パディング分を含めた高さを確保する（必要に応じて微調整してください） */
-            padding-bottom: 10px; 
+            padding-bottom: 20px; /* 影が見切れないように下の余白確保 */
         }
 
         .banner-carousel {
@@ -897,10 +899,10 @@
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
             
-            /* ▼ 変更点: 上下(24px)に余白を与えて影が見切れないようにする ▼ */
-            padding: 24px 7.5%; 
+            /* ▼ 変更: 画像を大きく見せるため、左右の余白(padding)を小さく調整 */
+            padding: 0 4.5%; /* 左右に少しだけ次が見えるようにする */
             
-            gap: 16px;
+            gap: 12px; /* 画像同士の間隔 */
             width: 100%;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -908,21 +910,27 @@
         .banner-carousel::-webkit-scrollbar { display: none; }
 
         .banner-item {
-            flex: 0 0 85%;
+            /* ▼ 変更: 画像サイズを大きくする (85% → 92%) */
+            flex: 0 0 92%; 
+            
+            /* 比率は 3/2 のままだとかなり縦長で大きく見えます。
+               少しスッキリさせたい場合は 16 / 9 に変更してください */
             aspect-ratio: 3 / 2;
+            
             scroll-snap-align: center;
             border-radius: 20px;
-            overflow: visible; /* 念のためvisibleに */
+            overflow: visible;
             position: relative;
             
-            /* 影を少し強めにし、y方向のオフセットを増やす */
+            /* 影を調整 */
             box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.25);
             
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fff; /* 画像読み込み前の背景 */
+            background-color: #fff;
         }
+        /* ▲▲▲ 修正ここまで ▲▲▲ */
         
         /* 画像自体の角丸はここで制御 */
         .banner-item img {
