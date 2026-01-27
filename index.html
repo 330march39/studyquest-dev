@@ -3598,6 +3598,7 @@
                         spacer.className = 'h-20';
                         settingsPage.appendChild(spacer);
                     },
+                    },
                 renderAll: () => {
                     for(const pageId in renderEngine.pages){
                         if($(`#${pageId}`).classList.contains('active')){
@@ -3609,7 +3610,6 @@
                     document.documentElement.style.setProperty('--primary-color', activeTheme.color);
                     document.documentElement.style.setProperty('--primary-color-hover', activeTheme.hover);
                 }
-            }
             };
 
             // カレンダー描画関数
