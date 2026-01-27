@@ -1142,7 +1142,7 @@
             </div>
 
             <div id="study-page" class="page p-4">
-                <div class="mb-6">
+                <div class="mb-2">
                     <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center"><i data-lucide="pin" class="w-5 h-5 mr-2 primary-text"></i> ピン留め</h2>
                     <div id="pinned-quizzes" class="grid grid-cols-1 gap-3"></div>
                 </div>
@@ -3244,18 +3244,18 @@
                             if (state.pinnedQuizzes.length >= 3) {
                                 const seeAllBtn = document.createElement('button');
                                 seeAllBtn.id = 'see-all-pinned-btn';
-                                seeAllBtn.className = "w-full text-center text-sm font-bold text-indigo-500 dark:text-indigo-400 mt-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors";
+                                
+                                // 色を primary-text に変更し、text-indigo-500 を削除
+                                seeAllBtn.className = "w-full text-center text-sm font-bold primary-text mt-1 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors";
                                 seeAllBtn.innerHTML = `すべて見る (${state.pinnedQuizzes.length})`;
                                 
                                 seeAllBtn.onclick = () => {
-                                    // サブページを開く処理
                                     if (typeof pinnedListPage !== 'undefined') {
                                         pinnedListPage.open();
                                     }
                                 };
                                 pinnedContainer.appendChild(seeAllBtn);
                             }
-
                         } else {
                             pinnedSectionContainer.style.display = 'none';
                         }
@@ -4134,12 +4134,24 @@
                         window.open(quiz.url, '_blank');
                     }
                 }
+                // ▼▼▼ 修正: ピン留め解除時に一覧ページも即座に更新する ▼▼▼
                 const pinBtn = e.target.closest('.pin-btn');
                 if(pinBtn) {
                     const quizId = pinBtn.dataset.id;
                     state.pinnedQuizzes.includes(quizId) ? state.pinnedQuizzes = state.pinnedQuizzes.filter(id => id !== quizId) : state.pinnedQuizzes.push(quizId);
-                    saveState(); renderEngine.pages['study-page'](); lucide.createIcons();
+                    saveState(); 
+                    
+                    // 教材ページ（親元）を更新
+                    renderEngine.pages['study-page'](); 
+                    
+                    // ★追加: ピン留め一覧ページが開いているなら、そこも即座に再描画
+                    if (document.getElementById('pinned-list-screen').classList.contains('active')) {
+                        renderPinnedListPageContent();
+                    }
+                    
+                    lucide.createIcons();
                 }
+                // ▲▲▲ 修正ここまで ▲▲▲
                 
                 const filterBtn = e.target.closest('.filter-btn');
                 if(filterBtn) {
@@ -6749,24 +6761,33 @@
                 });
             };
 
-            // ▼▼▼ 追加: ピン留め一覧サブページ ▼▼▼
+            // ▼▼▼ 修正: ピン留め一覧を描画する関数を独立定義 ▼▼▼
+            const renderPinnedListPageContent = () => {
+                const container = $('#pinned-list-full-content');
+                if(!container) return;
+                
+                // 全てのピン留めクイズを取得
+                const allPinned = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
+                
+                if (allPinned.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 mt-4">ピン留めはありません</p>';
+                } else {
+                    container.innerHTML = allPinned.map(q => createQuizCard(q, true)).join('');
+                }
+                
+                // コンテナ内だけアイコン生成（パフォーマンス対策）
+                lucide.createIcons({ root: container });
+            };
+
+            // サブページの定義
             const pinnedListPage = new SubPage('pinned-list-screen', {
                 onOpen: () => {
-                    const container = $('#pinned-list-full-content');
-                    // 全てのピン留めクイズを取得
-                    const allPinned = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
-                    
-                    if (allPinned.length === 0) {
-                        container.innerHTML = '<p class="text-center text-gray-500 mt-4">ピン留めはありません</p>';
-                    } else {
-                        container.innerHTML = allPinned.map(q => createQuizCard(q, true)).join('');
-                    }
-                    lucide.createIcons();
+                    renderPinnedListPageContent();
                 }
             });
             // 戻るボタン
             $('#close-pinned-list-btn').addEventListener('click', () => pinnedListPage.close());
-            // ▲▲▲ 追加ここまで ▲▲▲
+            // ▲▲▲ 修正ここまで ▲▲▲
 
             // ==========================================
             // ▼▼▼ アイテム詳細画面の制御 (SubPageクラス適用版) ▼▼▼
