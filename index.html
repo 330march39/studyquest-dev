@@ -66,6 +66,17 @@ html.dark .text-gray-500 {
         html.dark #splash-screen { background-color: #000000; } /* 👈 コンテンツ色 */
         html.dark #splash-logo-light { display: none; }
         html.dark #splash-logo-dark { display: block; }
+        /* ▼▼▼ 追加：セクションタイトル（今日の予定、設定の見出しなど）の一括変更 ▼▼▼ */
+
+/* 1. 共通の特徴を持つ要素を狙い撃ちして、サイズを大きくする */
+.text-xs.font-bold.uppercase.tracking-wider {
+    font-size: 15px !important; /* 元の12pxから15pxに拡大（お好みで調整してください） */
+}
+
+/* 2. ダークモードの時だけ、文字色を真っ白にする */
+html.dark .text-xs.font-bold.uppercase.tracking-wider {
+    color: #ffffff !important;
+}
     </style>
 
     <script>
