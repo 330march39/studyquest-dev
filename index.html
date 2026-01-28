@@ -1127,7 +1127,7 @@
                         </div>
                 </div>
                 
-                <button id="home-lp-banner" class="w-full relative overflow-hidden rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-[1.02] active:scale-95 group">
+                <button id="home-lp-banner" class="w-full relative overflow-hidden rounded-super shadow-modern transform transition-all duration-300 hover:scale-[1.02] active:scale-95 group">
                     <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 animate-gradient-xy"></div>
                     <div class="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
                     
@@ -1753,29 +1753,31 @@
             </div>
         </header>
 
-        <div class="flex-grow overflow-y-auto p-4 pb-safe space-y-6">
-            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-sm space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-1 text-gray-500 dark:text-gray-400">イベント名</label>
-                    <input id="countdown-name" type="text" placeholder="例: 期末テスト" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="flex-grow overflow-y-auto p-4 pb-safe space-y-6 bg-gray-100 dark:bg-gray-900">
+    
+            <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
+                <div class="p-4">
+                    <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 mb-1">イベント名</label>
+                    <input id="countdown-name" type="text" placeholder="例: 期末テスト" class="w-full bg-transparent border-none outline-none font-bold text-lg text-gray-800 dark:text-gray-200 placeholder-gray-300">
                 </div>
-                <div>
-                    <label class="block text-sm font-bold mb-1 text-gray-500 dark:text-gray-400">日付</label>
-                    <input id="countdown-date" type="date" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="p-4">
+                    <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 mb-1">日付</label>
+                    <input id="countdown-date" type="date" class="w-full bg-transparent border-none outline-none font-bold text-lg text-gray-800 dark:text-gray-200">
                 </div>
             </div>
-
-            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-sm">
-                <label class="block text-sm font-bold mb-1 text-gray-500 dark:text-gray-400">メモ</label>
-                <textarea id="countdown-memo" rows="5" placeholder="例：テスト範囲は、教科書10ページから50ページ。" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+        
+            <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden p-4">
+                <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 mb-2">メモ</label>
+                <textarea id="countdown-memo" rows="5" placeholder="範囲や目標などを入力..." class="w-full bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 border-none outline-none text-sm text-gray-700 dark:text-gray-300 resize-none"></textarea>
             </div>
-
-            <button id="countdown-delete-btn" class="w-full text-red-500 bg-white dark:bg-gray-700 border border-red-200 dark:border-red-900/30 p-3 rounded-xl font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center hidden">
-                <i data-lucide="trash-2" class="w-5 h-5 mr-2"></i>このイベントを削除
+        
+            <button id="countdown-delete-btn" class="w-full bg-white dark:bg-gray-800 text-red-500 font-bold py-4 rounded-super shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center hidden">
+                <i data-lucide="trash-2" class="w-5 h-5 mr-2"></i>
+                このイベントを削除
             </button>
             
-            <div class="h-20"></div> </div>
-    </div>
+            <div class="h-20"></div></div>
+        </div>
 
     <div id="break-settings-screen" class="screen-layer">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
@@ -3219,33 +3221,60 @@
                         const countdownContainer = $('#countdown-list');
                         
                         if (state.countdowns.length === 0) {
-                            countdownContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
+                            // 空の状態のデザイン修正
+                            countdownContainer.innerHTML = `
+                                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern p-6 text-center">
+                                    <p class="text-sm text-gray-400">予定はありません</p>
+                                    <p class="text-xs text-gray-300 mt-1">右上の「+」で追加</p>
+                                </div>
+                            `;
                         } else {
-                            countdownContainer.innerHTML = state.countdowns.map(cd => {
-                              const now = new Date();
-                              const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                              const targetStart = new Date(cd.date);
-                              targetStart.setHours(0, 0, 0, 0);
-                              const diffTime = targetStart - todayStart;
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
+                            // ▼▼▼ 修正箇所: リスト全体を囲むdivを作成し、その中にアイテムを入れる ▼▼▼
+                            const listHTML = state.countdowns.map(cd => {
+                                const now = new Date();
+                                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                const targetStart = new Date(cd.date);
+                                targetStart.setHours(0, 0, 0, 0);
+                                const diffTime = targetStart - todayStart;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                 
-                                // ★変更点: 全体を button タグにするか、onclick を設定する
-                                // ここでは div に countdown-card クラスを付け、親要素でイベント委任します
+                                // 残り日数の表示デザイン
+                                let dayText = '';
+                                if (diffDays > 0) {
+                                    dayText = `<span class="text-xl font-black primary-text">${diffDays}</span><span class="text-[10px] text-gray-400 font-bold ml-0.5">日</span>`;
+                                } else if (diffDays === 0) {
+                                    dayText = `<span class="text-sm font-bold text-red-500">今日</span>`;
+                                } else {
+                                    dayText = `<span class="text-xs font-bold text-gray-400">終了</span>`;
+                                }
+                        
+                                // リストアイテムのデザイン（枠線なし、ホバーエフェクトあり）
                                 return `
-                                    <div class="countdown-card bg-white dark:bg-gray-700 rounded-2xl shadow-sm p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" data-id="${cd.id}">
-                                        <div>
-                                            <h3 class="font-bold text-gray-800 dark:text-gray-200 text-lg">${cd.name}</h3>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 tabular-nums mt-1">${cd.date.replace(/-/g, '/')}</p>
+                                    <div class="countdown-card flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition active:bg-gray-100 dark:active:bg-gray-700" data-id="${cd.id}">
+                                        <div class="flex items-center min-w-0 mr-4">
+                                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mr-3 text-indigo-500">
+                                                <i data-lucide="calendar" class="w-5 h-5"></i>
+                                            </div>
+                                            <div class="truncate">
+                                                <h3 class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${cd.name}</h3>
+                                                <p class="text-[10px] text-gray-400 dark:text-gray-500 font-mono">${cd.date.replace(/-/g, '/')}</p>
+                                            </div>
                                         </div>
-                                        <div class="text-right">
+                                        <div class="flex-shrink-0 text-right bg-gray-50 dark:bg-gray-700/50 px-3 py-1 rounded-lg">
                                             ${dayText}
                                         </div>
-                                        </div>
+                                    </div>
                                 `;
                             }).join('');
-
-                            // ★重要: カードクリック時のイベントリスナーを追加（毎回再設定）
+                        
+                            // 外枠のコンテナに入れる
+                            countdownContainer.innerHTML = `
+                                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
+                                    ${listHTML}
+                                </div>
+                            `;
+                        
+                            // クリックイベント再設定（変更なし）
                             countdownContainer.querySelectorAll('.countdown-card').forEach(card => {
                                 card.addEventListener('click', () => {
                                     openCountdownScreen(card.dataset.id);
