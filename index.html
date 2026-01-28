@@ -1131,6 +1131,17 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     /* JS側で bg-white / bg-gray-50 を切り替えているのでここは基本設定のみ */
     will-change: transform;
 }
+        /* --- ▼▼▼ 追加: セーフティエリア用ユーティリティ ▼▼▼ */
+.pb-safe {
+    /* ナビゲーションバーがある端末ではその高さ分、ない端末では0pxになります */
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+
+/* メインコンテンツの下余白も、タブバーが縦に伸びる分だけ増やす */
+.pb-with-nav {
+    /* 元の80px(pb-20) + セーフティエリア */
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+}
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1146,7 +1157,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
         </header>
 
-        <main class="flex-grow overflow-y-auto pb-20">
+        <main class="flex-grow overflow-y-auto pb-with-nav">
             <div id="home-page" class="page active p-4 space-y-6">
                 <div class="banner-wrapper mb-2">
                     <div id="home-banner-carousel" class="banner-carousel">
@@ -1323,7 +1334,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             <div id="settings-page" class="page p-4 space-y-4">
                 </div>
 
-        <nav id="bottom-nav" class="fixed bottom-0 w-full max-w-lg pb-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
+        <nav id="bottom-nav" class="fixed bottom-0 w-full max-w-lg pb-safe bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
         <div class="relative flex justify-between items-end h-16 px-2">
             
             <div class="flex-1 flex justify-around items-center h-full">
