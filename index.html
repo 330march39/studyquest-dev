@@ -7,7 +7,7 @@
 
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     
-    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#1A1A1D" media="(prefers-color-scheme: dark)">
 
     <style>
         /* 1. htmlとbodyに最初から背景色をつける */
@@ -3058,7 +3058,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                 // --- 4. ノッチ（ステータスバー）の色同期 ---
                 const metaThemeColor = document.getElementById('meta-theme-color');
                 if (metaThemeColor) {
-                    const headerColor = (effectiveTone === 'dark') ? '#111827' : '#ffffff';
+                    const headerColor = (effectiveTone === 'dark') ? '#1A1A1D' : '#ffffff';
                     metaThemeColor.setAttribute('content', headerColor);
                 }
                 applyThemeColor();
