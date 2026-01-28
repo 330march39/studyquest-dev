@@ -48,7 +48,7 @@
         /* 3. ダークモード時の背景色をOS設定から即座に反映 */
         @media (prefers-color-scheme: dark) {
             html, body {
-                background-color: #000000; /* 👈 bg-gray-800 (ヘッダーと同じ色) に変更 */
+                background-color: #1A1A1D; /* 👈 bg-gray-800 (ヘッダーと同じ色) に変更 */
             }
             #splash-screen {
                 background-color: #000000; /* スプラッシュは元のままでOK */
@@ -1133,7 +1133,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
 }
     </style>
 </head>
-<body class="bg-white dark:bg-black text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
+<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
     <div id="splash-screen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
         <img id="splash-logo-light" src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
         
@@ -1834,7 +1834,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     </div>
 
     <div id="profile-screen" class="screen-layer flex flex-col">
-        <header class="header-safe px-4 border-b border-gray-200 dark:border-gray-800 shadow-sm flex-shrink-0 sticky top-0 z-10 bg-white dark:bg-black">
+        <header class="header-safe px-4 border-b border-gray-200 dark:border-gray-800 shadow-sm flex-shrink-0 sticky top-0 z-10 bg-white dark:bg-gray-800">
             <div class="flex items-center flex-1">
                 <button id="close-profile-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition-colors">
                     <div class="flex items-center font-medium primary-text">
