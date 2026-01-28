@@ -1134,7 +1134,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         /* --- ▼▼▼ 追加: セーフティエリア用ユーティリティ ▼▼▼ */
 .pb-safe {
     /* ナビゲーションバーがある端末ではその高さ分、ない端末では0pxになります */
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) - 10px) !important;
 }
 
 /* メインコンテンツの下余白も、タブバーが縦に伸びる分だけ増やす */
