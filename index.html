@@ -56,6 +56,10 @@
             #splash-logo-light { display: none; }
             #splash-logo-dark { display: block; }
         }
+        /* ▼▼▼ 追加：ダークモード時のタイトル文字色を白に強制する ▼▼▼ */
+html.dark .text-gray-500 {
+    color: #ffffff !important;
+}
 
         /* クラスによる制御 (JSロード後) */
         html.dark, html.dark body { background-color: #111827; } /* 👈 ヘッダー色 */
@@ -130,10 +134,21 @@
     </script>
     
     <script>
-      tailwind.config = {
-        darkMode: 'class' // ここでダークモードの制御方法を'class'に指定します
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          gray: {
+            // ここで色を上書きします
+            800: '#1A1A1D', // リスト・ヘッダー・タブバーの色
+            900: '#000000', // 全体の背景色
+          }
+        }
       }
-    </script>
+    }
+  }
+</script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
