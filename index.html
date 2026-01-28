@@ -1748,9 +1748,7 @@
                 </button>
             </div>
             <h2 id="countdown-screen-title" class="text-lg font-bold text-gray-900 dark:text-white">イベント設定</h2>
-            <div class="flex-1 text-right">
-                <button id="countdown-save-btn" class="primary-text font-bold text-sm px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">保存</button>
-            </div>
+             <div class="flex-1"></div>
         </header>
 
         <div class="flex-grow overflow-y-auto p-4 pb-safe space-y-6 bg-gray-100 dark:bg-gray-900">
@@ -1771,7 +1769,12 @@
                 <textarea id="countdown-memo" rows="5" placeholder="範囲や目標などを入力..." class="w-full bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 border-none outline-none text-sm text-gray-700 dark:text-gray-300 resize-none"></textarea>
             </div>
         
-            <button id="countdown-delete-btn" class="w-full bg-white dark:bg-gray-800 text-red-500 font-bold py-4 rounded-super shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center hidden">
+                        <button id="countdown-save-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center">
+                <i data-lucide="save" class="w-5 h-5 mr-2"></i>
+                保存する
+            </button>
+        
+            <button id="countdown-delete-btn" class="w-full bg-white dark:bg-gray-800 text-red-500 font-bold py-4 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center hidden">
                 <i data-lucide="trash-2" class="w-5 h-5 mr-2"></i>
                 このイベントを削除
             </button>
@@ -3252,7 +3255,7 @@
                                 return `
                                     <div class="countdown-card flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition active:bg-gray-100 dark:active:bg-gray-700" data-id="${cd.id}">
                                         <div class="flex items-center min-w-0 mr-4">
-                                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mr-3 text-indigo-500">
+                                            <div class="flex-shrink-0 w-10 h-10 rounded-full primary-bg flex items-center justify-center mr-3 text-white shadow-md">
                                                 <i data-lucide="calendar" class="w-5 h-5"></i>
                                             </div>
                                             <div class="truncate">
@@ -3273,6 +3276,7 @@
                                     ${listHTML}
                                 </div>
                             `;
+                            lucide.createIcons({ root: countdownContainer });
                         
                             // クリックイベント再設定（変更なし）
                             countdownContainer.querySelectorAll('.countdown-card').forEach(card => {
