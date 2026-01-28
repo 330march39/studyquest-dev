@@ -58,37 +58,8 @@
         }
 
         /* クラスによる制御 (JSロード後) */
-        /* --- ダークモードの背景色を完全な黒(#000000)に変更 --- */
-html.dark, html.dark body {
-    background-color: #000000;
-    color: #ffffff; /* 文字は真っ白 */
-}
-
-/* 画面レイヤーも真っ黒に */
-html.dark .screen-layer {
-    background-color: #000000;
-}
-
-/* リストコンテナ（Inset List）の背景色 */
-/* 真っ黒な背景の上に乗せるため、わずかに明るいダークグレーにする */
-html.dark .bg-white.dark\:bg-gray-800 {
-    background-color: #1c1c1e !important;
-}
-
-/* 区切り線の色を微調整 */
-html.dark .divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
-    border-color: #38383a !important; /* 少し明るくして見やすく */
-}
-
-/* 入力フォームの文字色を真っ白に強制 */
-html.dark input, html.dark select, html.dark textarea {
-    color: #ffffff !important;
-}
-
-/* サブテキストの色を少し明るく */
-html.dark .text-gray-400, html.dark .text-gray-500 {
-    color: #9ca3af !important; /* text-gray-400相当に統一 */
-}
+        html.dark, html.dark body { background-color: #1f2937; } /* 👈 ヘッダー色 */
+        html.dark #splash-screen { background-color: #111827; } /* 👈 コンテンツ色 */
         html.dark #splash-logo-light { display: none; }
         html.dark #splash-logo-dark { display: block; }
     </style>
