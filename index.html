@@ -7,7 +7,7 @@
 
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     
-    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
 
     <style>
         /* 1. htmlとbodyに最初から背景色をつける */
@@ -48,10 +48,10 @@
         /* 3. ダークモード時の背景色をOS設定から即座に反映 */
         @media (prefers-color-scheme: dark) {
             html, body {
-                background-color: #1f2937; /* 👈 bg-gray-800 (ヘッダーと同じ色) に変更 */
+                background-color: #111827; /* 👈 bg-gray-800 (ヘッダーと同じ色) に変更 */
             }
             #splash-screen {
-                background-color: #111827; /* スプラッシュは元のままでOK */
+                background-color: #000000; /* スプラッシュは元のままでOK */
             }
             #splash-logo-light { display: none; }
             #splash-logo-dark { display: block; }
@@ -628,7 +628,7 @@
 
         /* ダークモード時の枠線色（背景色に合わせる） */
         html.dark .center-fab {
-            border-color: #1f2937; 
+            border-color: #111827; 
         }
 
         /* 押した時のアニメーション */
@@ -678,7 +678,7 @@
         
         /* ダークモード対応 */
         html.dark .screen-layer {
-            background-color: #111827; /* dark bg */
+            background-color: #000000; /* dark bg */
         }
         
         /* 画面が表示される時のクラス */
@@ -3032,7 +3032,7 @@
                 // --- 4. ノッチ（ステータスバー）の色同期 ---
                 const metaThemeColor = document.getElementById('meta-theme-color');
                 if (metaThemeColor) {
-                    const headerColor = (effectiveTone === 'dark') ? '#1f2937' : '#ffffff';
+                    const headerColor = (effectiveTone === 'dark') ? '#111827' : '#ffffff';
                     metaThemeColor.setAttribute('content', headerColor);
                 }
                 applyThemeColor();
