@@ -1161,8 +1161,8 @@
                         </div>
                 
                         <div class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
-                            <div id="add-task-btn" class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400 mr-3 text-2xl cursor-pointer hover:opacity-80 transition-opacity">
-                                <span id="new-task-number">+</span>
+                            <div id="add-task-btn" class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3 cursor-pointer hover:opacity-80 transition-opacity">
+                                <i data-lucide="plus" class="w-6 h-6 stroke-[3]"></i>
                             </div>
                             <input type="text" id="new-task-input" placeholder="新しいタスクを追加" class="flex-grow bg-transparent border-none outline-none text-sm font-bold text-gray-700 dark:text-gray-200 placeholder-gray-400 h-10">
                         </div>
@@ -4276,9 +4276,6 @@ const renderDailyDetails = (targetDate) => {
                         });
                     });
                 }
-                
-                // 入力欄横の番号も更新 (+)
-                if(newTaskNumberEl) newTaskNumberEl.textContent = "+";
                 
                 // アイコン生成
                 lucide.createIcons({
