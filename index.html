@@ -1242,12 +1242,12 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                         <div class="toggle-container bg-gray-200 dark:bg-gray-800 rounded-full p-1.5 shadow-inner" id="focus-mode-toggle">
                             <div class="toggle-glider rounded-full shadow-sm" id="focus-mode-glider"></div>
                             <button class="focus-mode-btn active rounded-full py-2 z-10" data-mode="timer">タイマー</button>
-                            <button class="focus-mode-btn rounded-full py-2 z-10" data-mode="stopwatch">ウォッチ</button>
+                            <button class="focus-mode-btn rounded-full py-2 z-10" data-mode="stopwatch">ストップウォッチ</button>
                         </div>
                     </div>
             
                     <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-super shadow-modern overflow-hidden border border-gray-200/20 dark:border-gray-700/50">
-                        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"></div>
+                        <div class="absolute inset-0 bg-black/50 dark:bg-black/70"></div>
                         <div class="relative z-10 p-6 w-full max-w-sm mx-auto">
                             
                             <div id="timer-settings-container" class="mb-8">
@@ -1279,7 +1279,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                     
                     <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-super shadow-modern overflow-hidden border border-gray-200/20 dark:border-gray-700/50">
-                        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"></div>
+                        <div class="absolute inset-0 bg-black/50 dark:bg-black/70"></div>
                         <div class="relative z-10 p-6 w-full max-w-sm mx-auto">
                             <div id="stopwatch-display" class="text-7xl font-black tracking-tighter tabular-nums mb-10 drop-shadow-lg">00:00</div>
                             
@@ -7338,55 +7338,52 @@ const renderDailyDetails = (targetDate) => {
                 itemDetailPage.open();
             };
 
-            // テーマ設定サブページ（修正版）
+            // テーマ設定サブページ（ボックス分割修正版）
 const themeSettingsPage = new SubPage('theme-settings-screen', {
     onOpen: () => {
-        // コンテナを取得
+        // コンテナ要素を取得
         const container = document.getElementById('theme-selector-container');
         if (!container) return;
 
-        // 親要素（白いボックス）を取得し、一度中身をリセットして作り直すことで順序を保証する
+        // 親要素（元々1つの白い箱だったdiv）を取得
         const parentBox = container.parentElement;
         
-        // レイアウト崩れを防ぐため、親ボックスの中身を一度空にする
-        // ただし、theme-selector-container自体は再利用するため退避させる、
-        // またはここでHTML文字列として再構築する方が安全です。
-        
-        // 親ボックス自体のスタイルもここで確定させる
-        parentBox.className = "bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern"; 
+        // 親要素のスタイルをリセット（白い箱ではなく、ただのレイアウト枠にする）
+        // space-y-8 で2つのボックスの間隔を空ける
+        parentBox.className = "flex flex-col space-y-8 pb-10";
+        parentBox.innerHTML = ""; // 中身をリセット
 
-        // --- 1. モード設定部分のHTML ---
-        const modeListHTML = `
-            <div id="theme-mode-section" class="mb-8">
-                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">外観モード</h3>
-                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                    <div class="relative w-full h-16 flex items-center px-4">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-500 dark:text-gray-400 shadow-sm">
-                            <i data-lucide="moon" class="w-4 h-4"></i>
-                        </div>
-                        <div class="flex-grow min-w-0 mr-4">
-                            <p class="text-sm font-bold text-gray-800 dark:text-white">モード設定</p>
-                        </div>
-                        <div class="relative">
-                            <span id="theme-mode-label" class="text-sm font-bold primary-text pr-6">自動</span>
-                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                            <select id="theme-mode-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                                <option value="light">ライトモード</option>
-                                <option value="dark">ダークモード</option>
-                                <option value="system">自動 (デバイス)</option>
-                            </select>
-                        </div>
+        // --- 1. 外観モード設定ボックスの作成 ---
+        const modeSection = document.createElement('div');
+        modeSection.innerHTML = `
+            <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">外観モード</h3>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-super shadow-modern overflow-hidden">
+                <div class="relative w-full h-12 flex items-center">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-500 dark:text-gray-400">
+                        <i data-lucide="moon" class="w-4 h-4"></i>
                     </div>
-                    <div id="theme-locked-msg" class="hidden px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-bold flex items-center border-t border-orange-100 dark:border-orange-900/30">
-                        <i data-lucide="lock" class="w-3 h-3 mr-1.5"></i> 壁紙設定により固定されています
+                    <div class="flex-grow min-w-0 mr-4">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white">モード設定</p>
                     </div>
+                    <div class="relative">
+                        <span id="theme-mode-label" class="text-sm font-bold primary-text pr-6">自動</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <select id="theme-mode-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <option value="light">ライトモード</option>
+                            <option value="dark">ダークモード</option>
+                            <option value="system">自動 (デバイス)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="theme-locked-msg" class="hidden mt-3 px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-bold flex items-center rounded-lg">
+                    <i data-lucide="lock" class="w-3 h-3 mr-1.5"></i> 壁紙設定により固定中
                 </div>
             </div>
         `;
+        parentBox.appendChild(modeSection);
 
-        // --- 2. カラーパレット部分のHTML構築 ---
-        // 見出し
-        const paletteTitleHTML = `<h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 ml-2">アクセントカラー</h3>`;
+        // --- 2. アクセントカラー設定ボックスの作成 ---
+        const colorSection = document.createElement('div');
         
         // ボタン一覧の生成
         const buttonsHTML = state.profile.unlockedThemes.map(id => {
@@ -7403,13 +7400,15 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
                 </div>`;
         }).join('');
 
-        // コンテナHTML
-        const paletteContainerHTML = `<div id="theme-selector-container" class="grid grid-cols-4 gap-4">${buttonsHTML}</div>`;
+        colorSection.innerHTML = `
+            <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">アクセントカラー</h3>
+            <div id="recreated-theme-selector" class="bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern grid grid-cols-4 gap-4">
+                ${buttonsHTML}
+            </div>
+        `;
+        parentBox.appendChild(colorSection);
 
-        // 親ボックスの中身を完全に書き換える（これで順序と重複の問題が解決します）
-        parentBox.innerHTML = modeListHTML + paletteTitleHTML + paletteContainerHTML;
-
-        // --- 3. ロジックの再設定 ---
+        // --- 3. ロジックの設定 (モード選択) ---
         const select = document.getElementById('theme-mode-select');
         const label = document.getElementById('theme-mode-label');
         const lockedMsg = document.getElementById('theme-locked-msg');
@@ -7431,7 +7430,6 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
             if (isGlobal && activeBg && activeBg.url) {
                 select.disabled = true;
                 lockedMsg.classList.remove('hidden');
-                // 壁紙にtone設定がある場合はその表示に合わせる
                 if (activeBg.tone && activeBg.tone !== 'system') {
                     select.value = activeBg.tone;
                     updateLabel(activeBg.tone);
@@ -7449,7 +7447,7 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
             };
         }
 
-        // テーマボタンのイベント設定
+        // --- 4. ロジックの設定 (カラー選択) ---
         parentBox.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 state.profile.activeTheme = btn.dataset.theme;
