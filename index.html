@@ -1644,24 +1644,20 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     </div>
 
     <div id="theme-settings-screen" class="screen-layer">
-        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
-            <div class="flex items-center flex-1">
-                <button id="close-theme-settings-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                    <div class="flex items-center font-medium primary-text">
-                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
-                        <span>戻る</span>
-                    </div>
-                </button>
-            </div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">テーマ設定</h2>
-            <div class="flex-1"></div>
-        </header>
-        <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
-            <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                <div id="theme-selector-container" class="grid grid-cols-4 gap-4"></div>
-            </div>
+    <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+        <div class="flex items-center flex-1">
+            <button id="close-theme-settings-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                <div class="flex items-center font-medium primary-text">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                    <span>戻る</span>
+                </div>
+            </button>
         </div>
-    </div>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">テーマ設定</h2>
+        <div class="flex-1"></div>
+    </header>
+    <div id="theme-settings-content" class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900"></div>
+</div>
 
     <div id="background-settings-screen" class="screen-layer">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
@@ -7338,29 +7334,25 @@ const renderDailyDetails = (targetDate) => {
                 itemDetailPage.open();
             };
 
-            // テーマ設定サブページ（ボックス分割修正版）
+            // テーマ設定サブページ（修正版: 再描画バグ修正 & 色同期）
 const themeSettingsPage = new SubPage('theme-settings-screen', {
     onOpen: () => {
-        // コンテナ要素を取得
-        const container = document.getElementById('theme-selector-container');
-        if (!container) return;
+        // コンテナをIDで確実に取得
+        const contentArea = document.getElementById('theme-settings-content');
+        if (!contentArea) return;
 
-        // 親要素（元々1つの白い箱だったdiv）を取得
-        const parentBox = container.parentElement;
-        
-        // 親要素のスタイルをリセット（白い箱ではなく、ただのレイアウト枠にする）
-        // space-y-8 で2つのボックスの間隔を空ける
-        parentBox.className = "flex flex-col space-y-8 pb-10";
-        parentBox.innerHTML = ""; // 中身をリセット
+        // 一度中身を完全にクリア（これで再描画時の重複やバグを防ぐ）
+        contentArea.innerHTML = "";
 
-        // --- 1. 外観モード設定ボックスの作成 ---
+        // --- 1. 外観モード設定ボックス ---
         const modeSection = document.createElement('div');
+        modeSection.className = "mb-8";
         modeSection.innerHTML = `
             <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">外観モード</h3>
             <div class="bg-white dark:bg-gray-800 p-4 rounded-super shadow-modern overflow-hidden">
                 <div class="relative w-full h-12 flex items-center">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-500 dark:text-gray-400">
-                        <i data-lucide="moon" class="w-4 h-4"></i>
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4 shadow-sm" style="background-color: var(--primary-color);">
+                        <i data-lucide="moon" class="w-4 h-4 text-white"></i>
                     </div>
                     <div class="flex-grow min-w-0 mr-4">
                         <p class="text-sm font-bold text-gray-800 dark:text-white">モード設定</p>
@@ -7380,35 +7372,41 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
                 </div>
             </div>
         `;
-        parentBox.appendChild(modeSection);
+        contentArea.appendChild(modeSection);
 
-        // --- 2. アクセントカラー設定ボックスの作成 ---
+        // --- 2. アクセントカラー設定ボックス ---
         const colorSection = document.createElement('div');
         
-        // ボタン一覧の生成
         const buttonsHTML = state.profile.unlockedThemes.map(id => {
             const theme = initialData.themes[id];
             const isActive = state.profile.activeTheme === id;
+            // ▼ 選択枠の色をテーマカラーに同期 (style属性でbox-shadowを制御)
+            const activeStyle = isActive 
+                ? `box-shadow: 0 0 0 3px var(--primary-color), 0 0 0 5px white; transform: scale(1.1);` 
+                : `border: 4px solid transparent;`;
+            
+            // ダークモード時のリングの隙間色調整用（簡易的に白固定にしていますが、必要ならダーク対応も可）
+            
             return `
-                <div class="flex flex-col items-center">
-                    <button class="theme-btn w-14 h-14 rounded-full border-4 ${isActive ? 'border-indigo-500/30 ring-2 ring-indigo-500 dark:ring-indigo-400 scale-110' : 'border-transparent'} relative transition-all active:scale-95 shadow-sm" 
-                            style="background-color: ${theme.color}" 
+                <div class="flex flex-col items-center pt-2">
+                    <button class="theme-btn w-12 h-12 rounded-full relative transition-all active:scale-95 shadow-sm" 
+                            style="background-color: ${theme.color}; ${activeStyle}" 
                             data-theme="${id}">
                         ${isActive ? '<div class="absolute inset-0 flex items-center justify-center"><i data-lucide="check" class="text-white w-6 h-6 drop-shadow-md"></i></div>' : ''}
                     </button>
-                    <span class="text-[10px] font-bold mt-2 text-gray-500 dark:text-gray-400 ${isActive ? 'primary-text' : ''}">${theme.name}</span>
+                    <span class="text-[10px] font-bold mt-3 text-gray-500 dark:text-gray-400 ${isActive ? 'primary-text' : ''}">${theme.name}</span>
                 </div>`;
         }).join('');
 
         colorSection.innerHTML = `
             <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">アクセントカラー</h3>
-            <div id="recreated-theme-selector" class="bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern grid grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern grid grid-cols-4 gap-y-6 gap-x-4">
                 ${buttonsHTML}
             </div>
         `;
-        parentBox.appendChild(colorSection);
+        contentArea.appendChild(colorSection);
 
-        // --- 3. ロジックの設定 (モード選択) ---
+        // --- 3. ロジック設定 ---
         const select = document.getElementById('theme-mode-select');
         const label = document.getElementById('theme-mode-label');
         const lockedMsg = document.getElementById('theme-locked-msg');
@@ -7423,7 +7421,6 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
             select.value = currentMode;
             updateLabel(currentMode);
 
-            // 壁紙によるロック判定
             const activeBg = initialData.backgrounds[state.profile.activeBackground];
             const isGlobal = state.settings.backgroundScopeGlobal;
             
@@ -7447,13 +7444,13 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
             };
         }
 
-        // --- 4. ロジックの設定 (カラー選択) ---
-        parentBox.querySelectorAll('.theme-btn').forEach(btn => {
+        // カラー変更イベント
+        contentArea.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 state.profile.activeTheme = btn.dataset.theme;
                 saveState();
                 applyThemeColor();
-                themeSettingsPage.onOpen(); // 再描画してチェックマーク移動
+                themeSettingsPage.onOpen(); // 再帰的に呼んで再描画
             });
         });
 
@@ -7462,12 +7459,13 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
 });
             $('#close-theme-settings-btn').addEventListener('click', () => themeSettingsPage.close());
 
-            // 壁紙設定サブページ
+            // 壁紙設定サブページ（修正版: アイコン・トグル色同期）
 const backgroundSettingsPage = new SubPage('background-settings-screen', {
     onOpen: () => {
-        // --- HTML構造の再構築 (初回のみ) ---
+        // HTML構造をJSで生成
         const pageRoot = document.querySelector('#background-settings-screen .overflow-y-auto');
-        // 既存の中身をクリアして、新しい構造をセット
+        if(!pageRoot) return;
+
         pageRoot.innerHTML = `
             <div class="space-y-8 pb-10">
                 <div>
@@ -7481,8 +7479,8 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
                         
                         <div class="relative flex items-center justify-between p-4 h-16">
                             <div class="flex items-center">
-                                <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mr-4 text-purple-600 dark:text-purple-400">
-                                    <i data-lucide="smartphone" class="w-4 h-4"></i>
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center mr-4 shadow-sm" style="background-color: var(--primary-color);">
+                                    <i data-lucide="smartphone" class="w-4 h-4 text-white"></i>
                                 </div>
                                 <div class="flex flex-col justify-center">
                                     <span class="text-sm font-bold text-gray-800 dark:text-white">全体に適用</span>
@@ -7492,7 +7490,7 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
                             
                             <div class="relative">
                                 <input type="checkbox" id="background-scope-toggle-sub" class="peer sr-only">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)]"></div>
                                 <label for="background-scope-toggle-sub" class="absolute inset-0 cursor-pointer w-full h-full"></label>
                             </div>
                         </div>
@@ -7510,15 +7508,18 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
             container.innerHTML = state.profile.unlockedBackgrounds.map(id => {
                 const bg = initialData.backgrounds[id];
                 const isActive = state.profile.activeBackground === id;
-                const activeStyle = isActive ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 ring-offset-2 dark:ring-offset-gray-800' : '';
+                // 選択中の枠線をテーマカラーに
+                const activeStyle = isActive 
+                    ? `box-shadow: 0 0 0 3px var(--primary-color);` 
+                    : '';
                 
                 return `
                     <div class="flex flex-col items-center">
-                        <button class="background-btn w-full aspect-[9/16] rounded-2xl border border-gray-200 dark:border-gray-700 relative bg-gray-200 dark:bg-gray-700 bg-cover bg-center transition-all active:scale-95 shadow-sm ${activeStyle}" 
-                                style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" 
+                        <button class="background-btn w-full aspect-[9/16] rounded-2xl border border-gray-200 dark:border-gray-700 relative bg-gray-200 dark:bg-gray-700 bg-cover bg-center transition-all active:scale-95 shadow-sm" 
+                                style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}; ${activeStyle}" 
                                 data-bg="${id}">
                             ${!bg.url ? '<i data-lucide="image-off" class="w-8 h-8 text-gray-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>' : ''}
-                            ${isActive ? '<div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl"><div class="bg-white rounded-full p-1 shadow-sm"><i data-lucide="check" class="text-indigo-600 w-4 h-4"></i></div></div>' : ''}
+                            ${isActive ? `<div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl"><div class="rounded-full p-1 shadow-sm" style="background-color: var(--primary-color);"><i data-lucide="check" class="text-white w-4 h-4"></i></div></div>` : ''}
                         </button>
                         <p class="text-xs mt-2 font-bold text-gray-600 dark:text-gray-300 truncate w-full text-center">${bg.name}</p>
                     </div>`;
@@ -7543,13 +7544,12 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
         const toggle = document.getElementById('background-scope-toggle-sub');
         if (toggle) {
             toggle.checked = state.settings.backgroundScopeGlobal;
-            
-            // changeイベントに変更（ラベルクリックでも反応するように）
             toggle.addEventListener('change', (e) => {
                 state.settings.backgroundScopeGlobal = e.target.checked;
                 saveState();
                 updateAppearance();
                 updateBackgrounds();
+                // トグルの色がCSS変数で即時反映されない場合のため、親を再描画しても良いが、CSS変数なら自動で変わるはず
             });
         }
         
