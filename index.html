@@ -1230,50 +1230,70 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             </div>             
             <div id="focus-page" class="page relative flex flex-col h-full">
                 
-                <div id="focus-main-view" class="flex flex-col h-full p-4">
-                    <div class="flex-shrink-0 mb-4 space-y-4">
-                        <button id="show-quest-btn" class="w-full p-3 rounded-lg font-bold text-lg shadow-md flex items-center justify-center space-x-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-mode="quest">
-                            <span>クエスト</span>
+                <div id="focus-main-view" class="flex flex-col h-full p-4 space-y-4">
+                    <div class="flex-shrink-0">
+                        <button id="show-quest-btn" class="w-full py-4 px-6 rounded-super font-bold text-lg shadow-modern flex items-center justify-center space-x-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98] border border-transparent dark:border-gray-700" data-mode="quest">
+                            <i data-lucide="map" class="w-6 h-6 text-indigo-500"></i>
+                            <span>クエストを開く</span>
                         </button>
-                        
-                        <div class="toggle-container" id="focus-mode-toggle">
-                            <div class="toggle-glider" id="focus-mode-glider"></div>
-                            <button class="focus-mode-btn active" data-mode="timer">タイマー</button>
-                            <button class="focus-mode-btn" data-mode="stopwatch">ストップウォッチ</button>
+                    </div>
+            
+                    <div class="flex-shrink-0">
+                        <div class="toggle-container bg-gray-200 dark:bg-gray-800 rounded-full p-1.5 shadow-inner" id="focus-mode-toggle">
+                            <div class="toggle-glider rounded-full shadow-sm" id="focus-mode-glider"></div>
+                            <button class="focus-mode-btn active rounded-full py-2 z-10" data-mode="timer">タイマー</button>
+                            <button class="focus-mode-btn rounded-full py-2 z-10" data-mode="stopwatch">ウォッチ</button>
                         </div>
                     </div>
             
-                    <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
-                        <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
-                        <div class="relative z-10 p-4">
-                            <div id="timer-settings-container">
-                                <div class="flex items-center justify-center space-x-2 mb-6">
-                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="60">1分</button>
-                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="300">5分</button>
-                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="1800">30分</button>
-                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="3600">60分</button>
-                                    <button id="timer-reset-btn" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center">
-                                        <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                    <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-super shadow-modern overflow-hidden border border-gray-200/20 dark:border-gray-700/50">
+                        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"></div>
+                        <div class="relative z-10 p-6 w-full max-w-sm mx-auto">
+                            
+                            <div id="timer-settings-container" class="mb-8">
+                                <div class="flex flex-wrap justify-center gap-3">
+                                    <button class="time-add-btn bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-md transition active:scale-95" data-time="60">+1分</button>
+                                    <button class="time-add-btn bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-md transition active:scale-95" data-time="300">+5分</button>
+                                    <button class="time-add-btn bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2 rounded-xl text-sm font-bold backdrop-blur-md transition active:scale-95" data-time="1800">+30分</button>
+                                    <button id="timer-reset-btn" class="bg-white/10 hover:bg-white/20 border border-white/10 w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-md transition active:scale-95 text-gray-300 hover:text-white">
+                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                                     </button>
                                 </div>
                             </div>
-                            <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">30:00</div>
-                            <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
-                            <div id="focus-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
-                                <button id="focus-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
-                                <button id="focus-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
+            
+                            <div id="focus-timer-display" class="text-7xl font-black tracking-tighter tabular-nums mb-10 drop-shadow-lg">30:00</div>
+                            
+                            <button id="focus-start-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 px-8 rounded-2xl text-xl shadow-lg flex items-center justify-center transition-transform active:scale-95">
+                                <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> スタート
+                            </button>
+                            
+                            <div id="focus-controls" class="hidden flex flex-col gap-3 w-full">
+                                <button id="focus-pause-btn" class="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md border border-white/10 transition-colors flex items-center justify-center">
+                                    <i data-lucide="pause" class="w-6 h-6 mr-2 fill-current"></i> 一時停止
+                                </button>
+                                <button id="focus-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md transition-colors flex items-center justify-center">
+                                    <i data-lucide="square" class="w-6 h-6 mr-2 fill-current"></i> 終了
+                                </button>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-lg">
-                        <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
-                        <div class="relative z-10 p-4">
-                            <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00</div>
-                            <button id="stopwatch-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
-                            <div id="stopwatch-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
-                                <button id="stopwatch-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
-                                <button id="stopwatch-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="flag" class="w-6 h-6 mr-2"></i>記録して終了</button>
+                    <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-super shadow-modern overflow-hidden border border-gray-200/20 dark:border-gray-700/50">
+                        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"></div>
+                        <div class="relative z-10 p-6 w-full max-w-sm mx-auto">
+                            <div id="stopwatch-display" class="text-7xl font-black tracking-tighter tabular-nums mb-10 drop-shadow-lg">00:00</div>
+                            
+                            <button id="stopwatch-start-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 px-8 rounded-2xl text-xl shadow-lg flex items-center justify-center transition-transform active:scale-95">
+                                <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> スタート
+                            </button>
+                            
+                            <div id="stopwatch-controls" class="hidden flex flex-col gap-3 w-full">
+                                <button id="stopwatch-pause-btn" class="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md border border-white/10 transition-colors flex items-center justify-center">
+                                    <i data-lucide="pause" class="w-6 h-6 mr-2 fill-current"></i> 一時停止
+                                </button>
+                                <button id="stopwatch-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md transition-colors flex items-center justify-center">
+                                    <i data-lucide="flag" class="w-6 h-6 mr-2 fill-current"></i> 記録して終了
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -7319,168 +7339,229 @@ const renderDailyDetails = (targetDate) => {
                 itemDetailPage.open();
             };
 
-            // --- 3. テーマ設定サブページ ---
-            const themeSettingsPage = new SubPage('theme-settings-screen', {
-                onOpen: () => {
-                    const container = $('#theme-selector-container');
-                    // コンテナの親要素を取得（ここにプルダウンを挿入するため）
-                    const parent = container.parentElement;
-            
-                    // --- 1. モード選択プルダウンの描画 ---
-                    // 既にプルダウンがあるか確認（重複追加防止）
-                    let modeControl = document.getElementById('theme-mode-control');
-                    
-                    if (!modeControl) {
-                        modeControl = document.createElement('div');
-                        modeControl.id = 'theme-mode-control';
-                        modeControl.className = 'mb-6';
-                        modeControl.innerHTML = `
-                            <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">外観モード</h3>
-                            <div class="relative">
-                                <select id="theme-mode-select" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
-                                    <option value="light">ライトモード</option>
-                                    <option value="dark">ダークモード</option>
-                                    <option value="system">デバイスに合わせる</option>
-                                </select>
-                                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-                            </div>
-                            <p id="theme-locked-msg" class="text-xs text-orange-500 mt-2 hidden">
-                                <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i>
-                                壁紙設定によりモードが固定されています
-                            </p>
-                        `;
-                        // カラーパレットの前に挿入
-                        parent.insertBefore(modeControl, container.previousElementSibling);
-                    }
-            
-                    // --- 2. プルダウンの状態設定 ---
-                    const select = document.getElementById('theme-mode-select');
-                    const lockedMsg = document.getElementById('theme-locked-msg');
-                    
-                    // 現在の設定値をセット
-                    select.value = state.settings.themeMode || 'system';
-            
-                    // 壁紙によるロック判定
-                    const activeBgId = state.profile.activeBackground;
-                    const activeBg = initialData.backgrounds[activeBgId];
-                    const isGlobal = state.settings.backgroundScopeGlobal;
-                    const hasImage = activeBg && activeBg.url;
-            
-                    if (isGlobal && hasImage) {
-                        // ロックする場合
-                        select.disabled = true;
-                        select.classList.add('opacity-50', 'cursor-not-allowed');
-                        lockedMsg.classList.remove('hidden');
+            // テーマ設定サブページ
+const themeSettingsPage = new SubPage('theme-settings-screen', {
+    onOpen: () => {
+        const container = document.getElementById('theme-selector-container');
+        // 親要素を取得して、もし古いコントロールがあれば削除（重複防止）
+        const parent = container.parentElement;
+        const oldControl = document.getElementById('theme-mode-list-container');
+        if (oldControl) oldControl.remove();
+
+        // --- 1. モード選択リストの描画 (Inset Listスタイル) ---
+        const modeListHTML = `
+            <div id="theme-mode-list-container" class="mb-8">
+                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">外観モード</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                    <div class="relative w-full h-16 flex items-center px-4 bg-white dark:bg-gray-800">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-500 dark:text-gray-400">
+                            <i data-lucide="moon" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-grow min-w-0 mr-4">
+                            <p class="text-sm font-bold text-gray-800 dark:text-white">モード設定</p>
+                        </div>
                         
-                        // 強制的に壁紙のトーンに合わせて表示上の選択を変えておく（保存はしない）
-                        // ※「system」設定の壁紙の場合はユーザーがいじれるように見えますが、
-                        //   壁紙側でsystem指定ならデバイス依存になるので実質制御下です。
-                        if (activeBg.tone !== 'system') {
-                            select.value = activeBg.tone;
-                        }
-                    } else {
-                        // ロック解除
-                        select.disabled = false;
-                        select.classList.remove('opacity-50', 'cursor-not-allowed');
-                        lockedMsg.classList.add('hidden');
-                    }
+                        <div class="relative">
+                            <span id="theme-mode-label" class="text-sm font-bold primary-text pr-6">自動</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            <select id="theme-mode-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <option value="light">ライトモード</option>
+                                <option value="dark">ダークモード</option>
+                                <option value="system">自動 (デバイス)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="theme-locked-msg" class="hidden px-4 py-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-bold flex items-center">
+                        <i data-lucide="lock" class="w-3 h-3 mr-1.5"></i> 壁紙設定により固定されています
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // パレットの前に挿入
+        container.insertAdjacentHTML('beforebegin', modeListHTML);
+
+        // --- 2. カラーパレットのコンテナスタイル修正 ---
+        // 既存のHTMLにあるクラスをJSで上書きしてスタイル適用
+        container.parentElement.className = "p-4 pb-safe bg-gray-100 dark:bg-gray-900"; // 親のパディングなど
+        container.className = "grid grid-cols-4 gap-4 bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern"; // コンテナ自体
+
+        // --- 3. ロジック設定 ---
+        const select = document.getElementById('theme-mode-select');
+        const label = document.getElementById('theme-mode-label');
+        const lockedMsg = document.getElementById('theme-locked-msg');
+        const currentMode = state.settings.themeMode || 'system';
+
+        // ラベル更新ヘルパー
+        const updateLabel = (val) => {
+            const textMap = { 'light': 'ライト', 'dark': 'ダーク', 'system': '自動' };
+            label.textContent = textMap[val] || '自動';
+        };
+
+        select.value = currentMode;
+        updateLabel(currentMode);
+
+        // 壁紙によるロック判定
+        const activeBg = initialData.backgrounds[state.profile.activeBackground];
+        const isGlobal = state.settings.backgroundScopeGlobal;
+        if (isGlobal && activeBg && activeBg.url) {
+            select.disabled = true;
+            lockedMsg.classList.remove('hidden');
+            if (activeBg.tone !== 'system') {
+                select.value = activeBg.tone;
+                updateLabel(activeBg.tone);
+            }
+        } else {
+            select.disabled = false;
+            lockedMsg.classList.add('hidden');
+        }
+
+        // 変更イベント
+        select.onchange = (e) => {
+            state.settings.themeMode = e.target.value;
+            saveState();
+            updateLabel(e.target.value);
+            updateAppearance();
+        };
+
+        // --- 4. テーマカラー一覧の描画 ---
+        const renderThemes = () => {
+            // 見出しを追加
+            if(!document.getElementById('theme-palette-title')) {
+                const title = document.createElement('h3');
+                title.id = 'theme-palette-title';
+                title.className = 'text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2';
+                title.textContent = 'アクセントカラー';
+                container.parentNode.insertBefore(title, container);
+            }
+
+            container.innerHTML = state.profile.unlockedThemes.map(id => {
+                const theme = initialData.themes[id];
+                const isActive = state.profile.activeTheme === id;
+                // ボタンのデザインも少し調整
+                return `
+                    <div class="flex flex-col items-center">
+                        <button class="theme-btn w-14 h-14 rounded-full border-4 ${isActive ? 'border-indigo-500/30 ring-2 ring-indigo-500 dark:ring-indigo-400 scale-110' : 'border-transparent'} relative transition-all active:scale-95 shadow-sm" 
+                                style="background-color: ${theme.color}" 
+                                data-theme="${id}">
+                            ${isActive ? '<div class="absolute inset-0 flex items-center justify-center"><i data-lucide="check" class="text-white w-6 h-6 drop-shadow-md"></i></div>' : ''}
+                        </button>
+                        <span class="text-[10px] font-bold mt-2 text-gray-500 dark:text-gray-400 ${isActive ? 'primary-text' : ''}">${theme.name}</span>
+                    </div>`;
+            }).join('');
             
-                    // イベントリスナー：変更時
-                    // 重複登録を防ぐため、onchangeを上書き設定
-                    select.onchange = (e) => {
-                        state.settings.themeMode = e.target.value;
-                        saveState();
-                        updateAppearance(); // 即座に反映
-                    };
-            
-                    // --- 3. カラーパレットの描画 (修正版) ---
-                    const renderThemes = () => {
-                        container.innerHTML = state.profile.unlockedThemes.map(id => {
-                            const theme = initialData.themes[id];
-                            const isActive = state.profile.activeTheme === id;
-                            return `<div class="text-center">
-                                <button class="theme-btn w-16 h-16 rounded-full border-4 ${isActive ? 'border-blue-500 ring-2 ring-blue-300 dark:ring-blue-800' : 'border-transparent'} relative mx-auto block transition-transform active:scale-90 shadow-md" style="background-color: ${theme.color}" data-theme="${id}">
-                                    ${isActive ? '<div class="absolute inset-0 flex items-center justify-center"><i data-lucide="check" class="text-white w-8 h-8 drop-shadow-md"></i></div>' : ''}
-                                </button>
-                                <p class="text-xs mt-2 font-bold text-gray-600 dark:text-gray-400">${theme.name}</p>
-                            </div>`;
-                        }).join('');
-                        
-                        lucide.createIcons();
-            
-                        // イベントリスナーの設定（ここをシンプルに修正）
-                        container.querySelectorAll('.theme-btn').forEach(btn => {
-                            btn.addEventListener('click', () => {
-                                const themeId = btn.dataset.theme;
-                                
-                                // 1. 状態を更新して保存
-                                state.profile.activeTheme = themeId;
-                                saveState();
-                                
-                                applyThemeColor();
-                                
-                                // 3. パレットの選択表示を更新するために再描画
-                                renderThemes();
-                            });
-                        });
-                    };
-            
-                    renderThemes(); // 初回描画
-                    lucide.createIcons(); // ロックアイコン等のため
-                }
+            lucide.createIcons();
+
+            container.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.profile.activeTheme = btn.dataset.theme;
+                    saveState();
+                    applyThemeColor(); // 色適用
+                    renderThemes();    // 再描画
+                });
             });
+        };
+
+        renderThemes();
+        lucide.createIcons();
+    }
+});
             $('#close-theme-settings-btn').addEventListener('click', () => themeSettingsPage.close());
 
-            // --- 4. 壁紙設定サブページ ---
-            const backgroundSettingsPage = new SubPage('background-settings-screen', {
-                onOpen: () => {
-                    const container = $('#background-selector-container');
-                    
-                    // 描画関数
-                    const renderBackgrounds = () => {
-                        container.innerHTML = state.profile.unlockedBackgrounds.map(id => {
-                            const bg = initialData.backgrounds[id];
-                            const isActive = state.profile.activeBackground === id;
-                            // ★アニメーション(active:scale-95)を追加
-                            return `<div class="text-center">
-                                <button class="background-btn w-full h-24 rounded-lg border-4 ${isActive ? 'border-blue-500 ring-2 ring-blue-300 dark:ring-blue-800' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center transition-transform active:scale-95 shadow-md" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
-                                    ${isActive ? '<div class="absolute inset-0 flex items-center justify-center bg-black/20"><i data-lucide="check" class="text-white w-8 h-8 drop-shadow-md"></i></div>' : ''}
-                                </button>
-                                <p class="text-xs mt-2 font-bold truncate">${bg.name}</p>
-                            </div>`;
-                        }).join('');
-                        lucide.createIcons();
+            // 壁紙設定サブページ
+const backgroundSettingsPage = new SubPage('background-settings-screen', {
+    onOpen: () => {
+        // --- HTML構造の再構築 (初回のみ) ---
+        const pageRoot = document.querySelector('#background-settings-screen .overflow-y-auto');
+        // 既存の中身をクリアして、新しい構造をセット
+        pageRoot.innerHTML = `
+            <div class="space-y-8 pb-10">
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">壁紙を選択</h3>
+                    <div id="background-selector-container" class="bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern grid grid-cols-2 gap-4"></div>
+                </div>
 
-                        // ★イベントリスナーを設定
-                        container.querySelectorAll('.background-btn').forEach(btn => {
-                            btn.addEventListener('click', () => {
-                                const bgId = btn.dataset.bg;
-                                state.profile.activeBackground = bgId; // 状態を更新
-                                saveState();        // 保存
-                                updateAppearance(); // 全体テーマ（ダークモード等）更新
-                                updateBackgrounds();// 背景画像更新
-                                renderBackgrounds();// 選択枠更新のため再描画
-                            });
-                        });
-                    };
-
-                    renderBackgrounds(); // 初回描画
-
-                    // スイッチの状態反映
-                    const toggle = $('#background-scope-toggle-sub');
-                    if (toggle) {
-                        toggle.checked = state.settings.backgroundScopeGlobal;
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">オプション</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
                         
-                        // イベントリスナー (重複登録防止のためonclick使用)
-                        toggle.onclick = (e) => {
-                            state.settings.backgroundScopeGlobal = e.target.checked;
-                            saveState();
-                            updateAppearance();
-                            updateBackgrounds();
-                        };
-                    }
-                }
+                        <div class="relative flex items-center justify-between p-4 h-16">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mr-4 text-purple-600 dark:text-purple-400">
+                                    <i data-lucide="smartphone" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex flex-col justify-center">
+                                    <span class="text-sm font-bold text-gray-800 dark:text-white">全体に適用</span>
+                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">ホーム画面等にも反映</span>
+                                </div>
+                            </div>
+                            
+                            <div class="relative">
+                                <input type="checkbox" id="background-scope-toggle-sub" class="peer sr-only">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                                <label for="background-scope-toggle-sub" class="absolute inset-0 cursor-pointer w-full h-full"></label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2 ml-2">※オンにすると視認性が下がる場合があります。</p>
+                </div>
+            </div>
+        `;
+
+        const container = document.getElementById('background-selector-container');
+        
+        // --- 1. 壁紙一覧の描画 ---
+        const renderBackgrounds = () => {
+            container.innerHTML = state.profile.unlockedBackgrounds.map(id => {
+                const bg = initialData.backgrounds[id];
+                const isActive = state.profile.activeBackground === id;
+                const activeStyle = isActive ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 ring-offset-2 dark:ring-offset-gray-800' : '';
+                
+                return `
+                    <div class="flex flex-col items-center">
+                        <button class="background-btn w-full aspect-[9/16] rounded-2xl border border-gray-200 dark:border-gray-700 relative bg-gray-200 dark:bg-gray-700 bg-cover bg-center transition-all active:scale-95 shadow-sm ${activeStyle}" 
+                                style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" 
+                                data-bg="${id}">
+                            ${!bg.url ? '<i data-lucide="image-off" class="w-8 h-8 text-gray-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>' : ''}
+                            ${isActive ? '<div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl"><div class="bg-white rounded-full p-1 shadow-sm"><i data-lucide="check" class="text-indigo-600 w-4 h-4"></i></div></div>' : ''}
+                        </button>
+                        <p class="text-xs mt-2 font-bold text-gray-600 dark:text-gray-300 truncate w-full text-center">${bg.name}</p>
+                    </div>`;
+            }).join('');
+            lucide.createIcons();
+
+            container.querySelectorAll('.background-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bgId = btn.dataset.bg;
+                    state.profile.activeBackground = bgId;
+                    saveState();
+                    updateAppearance();   // 全体テーマ更新
+                    updateBackgrounds();  // 背景画像更新
+                    renderBackgrounds();  // リスト再描画
+                });
             });
+        };
+
+        renderBackgrounds();
+
+        // --- 2. スイッチのイベント設定 ---
+        const toggle = document.getElementById('background-scope-toggle-sub');
+        if (toggle) {
+            toggle.checked = state.settings.backgroundScopeGlobal;
+            
+            // changeイベントに変更（ラベルクリックでも反応するように）
+            toggle.addEventListener('change', (e) => {
+                state.settings.backgroundScopeGlobal = e.target.checked;
+                saveState();
+                updateAppearance();
+                updateBackgrounds();
+            });
+        }
+        
+        lucide.createIcons();
+    }
+});
             $('#close-bg-settings-btn').addEventListener('click', () => backgroundSettingsPage.close());
 
             // ▼▼▼ ルーティン設定画面の制御 ▼▼▼
