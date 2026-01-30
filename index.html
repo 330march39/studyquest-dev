@@ -6980,48 +6980,50 @@ const renderDailyDetails = (targetDate) => {
                 $('#status-lp-display').textContent = state.profile.lp;
 
                 // 共通のクリックハンドラ
-                // renderStatusPageContent関数内の createItemHTML を以下のように修正してください
-                const createItemHTML = (id, item, type, isUnlocked, isActive) => {
-                    let iconHTML = '';
-                    let statusBadge = '';
-                    // 枠線を削除し、リングのみで表現
-                    let activeClass = isActive ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : '';
-                    
-                    // バッジデザイン (白背景にテーマ色チェック)
-                    const checkMarkBadge = `<div class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 rounded-full p-1.5 shadow-md z-10"><i data-lucide="check" class="w-4 h-4 primary-text"></i></div>`;
-                
-                    if (type === 'theme') {
-                        iconHTML = `<div class="w-full h-full rounded-full shadow-inner" style="background-color: ${item.color}"></div>`;
-                        if (isUnlocked) statusBadge = checkMarkBadge;
-                    } else if (type === 'background') {
-                        const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
-                        iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
-                        if (isUnlocked) statusBadge = checkMarkBadge;
-                    } else {
-                        const iconName = item.icon || (type === 'music' ? 'music' : 'gamepad-2');
-                        const colorClass = type === 'game' ? 'text-indigo-500' : 'text-pink-500';
-                        iconHTML = `<i data-lucide="${iconName}" class="w-10 h-10 ${colorClass}"></i>`;
-                        if (isUnlocked) statusBadge = checkMarkBadge;
-                    }
-                
-                    // カード形状: rounded-2xl (rounded-superより少し小さいがカードとしては適切)
-                    const containerClass = (type === 'theme') ? 'w-20 h-20 rounded-full' : 'w-full aspect-square rounded-2xl';
-                    // 影: shadow-modern-sm 相当 (shadow-mdで代用可)
-                    const shadowClass = isActive ? 'shadow-none' : 'shadow-md dark:shadow-gray-900/50';
-                
-                    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
-                    
-                    return `
-                        <div class="text-center cursor-pointer item-btn group relative p-1" data-id="${id}" data-type="${type}">
-                            <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
-                                ${iconHTML}
-                                ${lockOverlay}
-                                ${statusBadge}
-                            </div>
-                            <p class="text-xs mt-3 font-bold truncate px-1 text-gray-700 dark:text-gray-300">${item.name}</p>
-                        </div>
-                    `;
-                };
+                // ↓↓↓ 既存の createItemHTML をこのコードに置き換えてください ↓↓↓
+const createItemHTML = (id, item, type, isUnlocked, isActive) => {
+    let iconHTML = '';
+    let statusBadge = '';
+    // 枠線を削除し、リングのみで表現
+    let activeClass = isActive ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : '';
+    
+    // バッジデザイン
+    const checkMarkBadge = `<div class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 rounded-full p-1.5 shadow-md z-10"><i data-lucide="check" class="w-4 h-4 primary-text"></i></div>`;
+
+    // ★修正: 壁紙（background）の場合は縦長（9/16）にする。それ以外は正方形。
+    let containerClass = 'w-full aspect-square rounded-2xl'; // デフォルト（ゲーム・音楽）
+    
+    if (type === 'theme') {
+        containerClass = 'w-20 h-20 rounded-full'; // テーマは丸
+        iconHTML = `<div class="w-full h-full rounded-full shadow-inner" style="background-color: ${item.color}"></div>`;
+        if (isUnlocked) statusBadge = checkMarkBadge;
+    } else if (type === 'background') {
+        containerClass = 'w-full aspect-[9/16] rounded-2xl'; // ★ここを変更: スマホ比率
+        const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
+        iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
+        if (isUnlocked) statusBadge = checkMarkBadge;
+    } else {
+        const iconName = item.icon || (type === 'music' ? 'music' : 'gamepad-2');
+        const colorClass = type === 'game' ? 'text-indigo-500' : 'text-pink-500';
+        iconHTML = `<i data-lucide="${iconName}" class="w-10 h-10 ${colorClass}"></i>`;
+        if (isUnlocked) statusBadge = checkMarkBadge;
+    }
+
+    const shadowClass = isActive ? 'shadow-none' : 'shadow-md dark:shadow-gray-900/50';
+    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
+
+    return `
+        <div class="text-center cursor-pointer item-btn group relative p-1" data-id="${id}" data-type="${type}">
+            <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
+                ${iconHTML}
+                ${lockOverlay}
+                ${statusBadge}
+            </div>
+            <p class="text-xs mt-3 font-bold truncate px-1 text-gray-700 dark:text-gray-300">${item.name}</p>
+        </div>
+    `;
+};
+// ↑↑↑ 修正ここまで ↑↑↑
                 // 各リストの描画
                 $('#status-theme-list').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
                     return createItemHTML(id, theme, 'theme', state.profile.unlockedThemes.includes(id), state.profile.activeTheme === id);
@@ -7244,77 +7246,81 @@ const renderDailyDetails = (targetDate) => {
                 // --- ▼▼▼ ここからアクションボタンのロジック変更 ▼▼▼ ---
                 
                 // ボタン描画ロジックを関数化
-                const renderActionButton = () => {
-                    const actionBtn = $('#detail-action-btn');
-                    const statusText = $('#detail-status-text');
-                    
-                    // 最新の状態をstateから再取得する (ここが重要)
-                    let isUnlocked = false;
-                    let isActive = false;
+                // ↓↓↓ 既存の renderActionButton をこのコードに置き換えてください ↓↓↓
+const renderActionButton = () => {
+    const actionBtn = $('#detail-action-btn');
+    const statusText = $('#detail-status-text');
+    
+    // 最新の状態をstateから再取得
+    let isUnlocked = false;
+    let isActive = false;
 
-                    if (type === 'theme') {
-                        isUnlocked = state.profile.unlockedThemes.includes(id);
-                        isActive = state.profile.activeTheme === id;
-                    } else if (type === 'background') {
-                        isUnlocked = state.profile.unlockedBackgrounds.includes(id);
-                        isActive = state.profile.activeBackground === id;
-                    } else if (type === 'game') {
-                        isUnlocked = state.profile.unlockedGames.includes(id);
-                    } else if (type === 'music') {
-                        isUnlocked = state.profile.unlockedMusic.includes(id);
-                    }
+    if (type === 'theme') {
+        isUnlocked = state.profile.unlockedThemes.includes(id);
+        isActive = state.profile.activeTheme === id;
+    } else if (type === 'background') {
+        isUnlocked = state.profile.unlockedBackgrounds.includes(id);
+        isActive = state.profile.activeBackground === id;
+    } else if (type === 'game') {
+        isUnlocked = state.profile.unlockedGames.includes(id);
+    } else if (type === 'music') {
+        isUnlocked = state.profile.unlockedMusic.includes(id);
+    }
 
-                    // ボタンを複製してイベントリスナーをリセット
-                    const newBtn = actionBtn.cloneNode(true);
-                    actionBtn.parentNode.replaceChild(newBtn, actionBtn);
+    const newBtn = actionBtn.cloneNode(true);
+    actionBtn.parentNode.replaceChild(newBtn, actionBtn);
 
-                    statusText.classList.add('hidden');
-                    newBtn.className = "font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 flex items-center min-w-[140px] justify-center text-lg";
+    newBtn.className = "font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 flex items-center min-w-[140px] justify-center text-lg";
 
-                    if (!isUnlocked) {
-                        // 未購入状態
-                        newBtn.innerHTML = `<span class="mr-1">${itemData.cost}</span> <span class="text-sm">LP で交換</span>`;
-                        
-                        if (state.profile.lp >= itemData.cost) {
-                            newBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                            newBtn.classList.add('primary-bg', 'text-white');
-                            newBtn.onclick = () => {
-                                if(confirm(`「${itemData.name}」を ${itemData.cost} LPで交換しますか？`)){
-                                    // 第4引数に成功時のコールバック(自分自身を再描画)を渡す
-                                    purchaseItem(id, type, itemData.cost, () => {
-                                        renderActionButton(); // ★ここで購入後にボタン表示を更新！
-                                    });
-                                }
-                            };
-                        } else {
-                            newBtn.classList.remove('primary-bg', 'text-white');
-                            newBtn.classList.add('bg-gray-400', 'text-gray-100', 'cursor-not-allowed');
-                            newBtn.onclick = () => showToast('LPが足りません');
-                        }
-                    } else {
-                        // 購入済み状態
-                        if (type === 'theme' || type === 'background') {
-                            if (isActive) {
-                                newBtn.innerHTML = `<span>適用中</span>`;
-                                newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
-                                newBtn.onclick = null;
-                            } else {
-                                newBtn.innerHTML = `<span>適用する</span>`;
-                                newBtn.className = "primary-bg text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 cursor-pointer min-w-[140px]";
-                                newBtn.onclick = () => {
-                                    applyItem(id, type);
-                                    renderActionButton(); // 適用後もボタン表示を更新
-                                };
-                            }
-                        } else {
-                            newBtn.innerHTML = `<span>解放済み</span>`;
-                            newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
-                            newBtn.onclick = null;
-                        }
-                        statusText.classList.remove('hidden');
-                    }
+    if (!isUnlocked) {
+        // 未購入状態
+        statusText.classList.add('hidden'); // 未購入時は隠す
+        
+        newBtn.innerHTML = `<span class="mr-1">${itemData.cost}</span> <span class="text-sm">LP で交換</span>`;
+        
+        if (state.profile.lp >= itemData.cost) {
+            newBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            newBtn.classList.add('primary-bg', 'text-white');
+            newBtn.onclick = () => {
+                if(confirm(`「${itemData.name}」を ${itemData.cost} LPで交換しますか？`)){
+                    purchaseItem(id, type, itemData.cost, () => {
+                        renderActionButton(); 
+                    });
+                }
+            };
+        } else {
+            newBtn.classList.remove('primary-bg', 'text-white');
+            newBtn.classList.add('bg-gray-400', 'text-gray-100', 'cursor-not-allowed');
+            newBtn.onclick = () => showToast('LPが足りません');
+        }
+    } else {
+        // 購入済み状態
+        
+        // ★修正: 交換済みの文字のところに必要LPを表示する
+        statusText.textContent = `${itemData.cost} LP (交換済)`;
+        statusText.classList.remove('hidden');
+
+        if (type === 'theme' || type === 'background') {
+            if (isActive) {
+                newBtn.innerHTML = `<span>適用中</span>`;
+                newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
+                newBtn.onclick = null;
+            } else {
+                newBtn.innerHTML = `<span>適用する</span>`;
+                newBtn.className = "primary-bg text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 cursor-pointer min-w-[140px]";
+                newBtn.onclick = () => {
+                    applyItem(id, type);
+                    renderActionButton();
                 };
-
+            }
+        } else {
+            newBtn.innerHTML = `<span>解放済み</span>`;
+            newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
+            newBtn.onclick = null;
+        }
+    }
+};
+// ↑↑↑ 修正ここまで ↑↑↑
                 // 初回描画実行
                 renderActionButton();
 
@@ -7859,45 +7865,42 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
             
         /* ▼▼▼ 追加機能用関数 ▼▼▼ */
         
-        // ゲームプレビュー（画像・動画）を生成する関数
-        const renderGamePreviews = (game) => {
-            const container = $('#detail-carousel'); // ★ID変更: game-preview-container -> detail-carousel
-            if(!container) return; // エラーガード
-            container.innerHTML = ''; // クリア
+        // ↓↓↓ 既存の renderGamePreviews をこのコードに置き換えてください ↓↓↓
+const renderGamePreviews = (game) => {
+    const container = $('#detail-carousel'); 
+    if(!container) return;
+    container.innerHTML = '';
+
+    if (!game.previews || game.previews.length === 0) {
+        container.innerHTML = `
+            <div class="preview-item w-full aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-400 border border-gray-200 dark:border-gray-700">
+                <i data-lucide="image-off" class="w-12 h-12 mb-2"></i>
+                <span>No Preview</span>
+            </div>`;
+        return;
+    }
+
+    game.previews.forEach((url, index) => { // ★indexを受け取る
+        const item = document.createElement('div');
         
-            if (!game.previews || game.previews.length === 0) {
-                // プレビューがない場合のダミー
-                container.innerHTML = `
-                    <div class="preview-item w-full aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-400 border border-gray-200 dark:border-gray-700">
-                        <i data-lucide="image-off" class="w-12 h-12 mb-2"></i>
-                        <span>No Preview</span>
-                    </div>`;
-                return;
-            }
+        // ★修正: 1枚目(index === 0)なら aspect-square、それ以外は aspect-[9/16] を適用
+        const aspectClass = (index === 0) ? 'aspect-square' : 'aspect-[9/16]';
         
-            game.previews.forEach(url => {
-                const item = document.createElement('div');
-                // ★スタイル変更: 大きく表示し、スナップスクロールに対応させる
-                // w-[85vw]: 画面幅の85% (横に見切れさせてスクロールを促す)
-                // aspect-[9/16]: スマホ縦画面比率
-                // flex-shrink-0: 縮小させない
-                item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
-                
-                // 拡張子で画像か動画か簡易判定
-                const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
-                
-                if (isVideo) {
-                    item.innerHTML = `<video src="${url}" controls playsinline muted class="w-full h-full object-cover pointer-events-auto"></video>`;
-                } else {
-                    item.innerHTML = `<img src="${url}" alt="preview" class="w-full h-full object-cover">`;
-                }
-                container.appendChild(item);
-            });
-            
-            // ★コンテナのスタイル設定 (横スクロール強制)
-            container.className = "flex overflow-x-auto gap-4 pb-4 px-6 snap-x snap-mandatory scroll-smooth no-scrollbar";
-            // ※ no-scrollbar はTailwind標準にはないので、CSSで隠すか、あるいはスクロールバーが出ても許容するか
-        };
+        item.className = `preview-item w-[70vw] md:w-[300px] ${aspectClass} flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm`;
+        
+        const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
+        
+        if (isVideo) {
+            item.innerHTML = `<video src="${url}" controls playsinline muted class="w-full h-full object-cover pointer-events-auto"></video>`;
+        } else {
+            item.innerHTML = `<img src="${url}" alt="preview" class="w-full h-full object-cover">`;
+        }
+        container.appendChild(item);
+    });
+    
+    container.className = "flex overflow-x-auto gap-4 pb-4 px-6 snap-x snap-mandatory scroll-smooth no-scrollbar";
+};
+// ↑↑↑ 修正ここまで ↑↑↑
         
         // BGM試聴の再生・停止制御
         const toggleMusicPreview = (url, btnElement) => {
