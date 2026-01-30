@@ -288,20 +288,21 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     opacity: 0.8;
 }
 
-/* アイコン画像のデザイン */
+/* ↓↓↓ この部分を探して、widthとheightの数値を書き換えてください ↓↓↓ */
 .break-app-icon {
-    width: 60px; /* スマホのアプリアイコンサイズ */
-    height: 60px;
-    border-radius: 14px; /* iOS風の角丸 */
+    width: 72px;  /* 👈 60px から 72px に変更 */
+    height: 72px; /* 👈 60px から 72px に変更 */
+    border-radius: 16px; /* 角丸も少し大きく */
     object-fit: cover;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    margin-bottom: 6px;
-    background-color: #fff; /* 画像がない場合の背景 */
+    margin-bottom: 8px; /* 文字との間隔も少し広げる */
+    background-color: #374151; /* 画像がない時の背景色 (ダークグレー) */
     
     /* 柔軟な配置のため */
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden; /* はみ出し防止 */
 }
 
 .break-content-btn span {
@@ -5814,31 +5815,60 @@ function renderBreakIcons() {
 // ↑↑↑ 修正ここまで ↑↑↑
 
         // ★新規追加★ 解禁済みゲームをbreakIconsに同期させる関数
-        function syncGamesToBreakIcons() {
-            state.profile.unlockedGames.forEach(gameId => {
-                // すでにbreakIconsにあるかチェック
-                const exists = state.breakIcons.find(icon => icon.id === gameId);
-                
-                if (!exists) {
-                    const game = initialData.games[gameId];
-                    if (game) {
-                        // 新しくbreakIconsに追加 (デフォルトで表示ON)
-                        state.breakIcons.push({
-                            id: gameId,
-                            name: game.name,
-                            icon: game.icon,
-                            url: game.url,
-                            openMode: 'iframe', // ゲームはiframeで開く
-                            type: 'game',
-                            visible: true,
-                            thumbnail: game.thumbnail || (game.previews && game.previews.length > 0 ? game.previews[0] : null)
-                        });
-                    }
-                }
+        // ↓↓↓ 既存の syncGamesToBreakIcons をこのコードに丸ごと置き換えてください ↓↓↓
+function syncGamesToBreakIcons() {
+    // 1. ゲームの同期
+    state.profile.unlockedGames.forEach(gameId => {
+        const game = initialData.games[gameId];
+        if (!game) return;
+
+        // 最新のサムネイル情報を取得
+        const newThumbnail = game.thumbnail || (game.previews && game.previews.length > 0 ? game.previews[0] : null);
+        
+        // 既にリストにあるか確認
+        const existingIcon = state.breakIcons.find(icon => icon.id === gameId);
+        
+        if (existingIcon) {
+            // ★重要: 既にリストにある場合でも、最新の画像情報を上書きする
+            existingIcon.thumbnail = newThumbnail;
+            // ついでに名前なども最新に同期しておくと安全です
+            existingIcon.name = game.name;
+            existingIcon.icon = game.icon;
+            existingIcon.url = game.url;
+        } else {
+            // リストにない場合は新規追加
+            state.breakIcons.push({
+                id: gameId,
+                name: game.name,
+                icon: game.icon,
+                url: game.url,
+                openMode: 'iframe',
+                type: 'game',
+                visible: true,
+                thumbnail: newThumbnail
             });
-            // 保存
-            saveState();
         }
+    });
+
+    // 2. SNSアイコン（X, Instagram, YouTube）の画像情報も強制更新
+    // これにより、localStorageに古いデータが残っていても画像が反映されます
+    const staticIcons = [
+        { id: 'x', thumbnail: 'icon_x.png' },
+        { id: 'instagram', thumbnail: 'icon_insta.png' },
+        { id: 'youtube', thumbnail: 'icon_youtube.png' }
+    ];
+
+    staticIcons.forEach(staticItem => {
+        const target = state.breakIcons.find(i => i.id === staticItem.id);
+        if (target) {
+            // 強制的に画像パスを設定
+            target.thumbnail = staticItem.thumbnail;
+        }
+    });
+
+    saveState(); // 変更を保存
+}
+// ↑↑↑ 修正ここまで ↑↑↑
 
         // --- 6. ブレイクタイム設定サブページ (新規追加) ---
             // breakSettingsPageの定義を以下に置き換えてください
