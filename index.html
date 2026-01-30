@@ -255,40 +255,71 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             transform: translateX(-30%); /* 左に少しずれる */
         }
         
-        .break-icon-grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 0.5rem; 
-            width: 100%;
-        }
+        /* ↓↓↓ 既存の .break-content-btn 関連をこれに置き換えてください ↓↓↓ */
 
-        .break-content-btn {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #edfcff;
-            padding: 0.75rem; /* 👈 16px から 12px に変更 */
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* 👈 flex-start から center に変更 (最重要) */
-            justify-content: flex-start; /* 👈 center から flex-start に変更 (上から配置) */
-            /* font-weight: bold; */ /* 👈 この行は削除（span側で指定） */
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 100%;
-            /* 高さを均一にするため (任意) */
-            min-height: 100px;
-        }
-        .break-content-btn span {
-            font-size: 0.75rem; /* 12px */
-            font-weight: bold;
-            line-height: 1.1;
-            text-align: center;
-            word-break: break-word; /* 英語などがはみ出た場合に備える */
-        }
-        .break-content-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
+.break-icon-grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4列表示 */
+    gap: 1.5rem 0.5rem; /* 縦の間隔を広げる */
+    width: 100%;
+    padding: 10px;
+}
+
+.break-content-btn {
+    /* 背景や枠線を削除して透明に */
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    
+    padding: 0;
+    width: 100%;
+    /* min-height指定を削除し、コンテンツなりにする */
+    transition: transform 0.2s;
+}
+
+.break-content-btn:hover {
+    background-color: transparent; /* ホバー時も背景なし */
+    transform: scale(1.05); /* 少し拡大 */
+    opacity: 0.8;
+}
+
+/* アイコン画像のデザイン */
+.break-app-icon {
+    width: 60px; /* スマホのアプリアイコンサイズ */
+    height: 60px;
+    border-radius: 14px; /* iOS風の角丸 */
+    object-fit: cover;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    margin-bottom: 6px;
+    background-color: #fff; /* 画像がない場合の背景 */
+    
+    /* 柔軟な配置のため */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.break-content-btn span {
+    font-size: 0.7rem; /* 文字サイズ調整 */
+    font-weight: 500;
+    line-height: 1.1;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* 視認性向上の影 */
+    
+    /* 2行まで表示して溢れたら...にする設定 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    width: 100%;
+}
+/* ↑↑↑ 修正ここまで ↑↑↑ */
         .sortable-ghost {
             opacity: 0.4;
             background-color: #e2e8f0; /* light gray */
@@ -2368,7 +2399,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                 banners: [
                     { id: 1, url: 'banner_1_1.png', link: '' }, // 画像パスを修正してください
                     { id: 2, url: 'banner_2.png', link: 'action:feedback' },
-                    { id: 3, url: 'banner_3.png', link: 'item:game:just100' }
+                    { id: 3, url: 'banner_3.png', link: 'item:game:NumberPlace' }
                 ],
                 
                 themes: {
@@ -2955,10 +2986,9 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                               },
                     lastLogin: null,
                     breakIcons: [
-                        { id: 'x', name: 'X (Twitter)', icon: 'message-circle', url: 'https://x.com', openMode: 'external', visible: true },
-                        { id: 'instagram', name: 'Instagram', icon: 'instagram', url: 'https://www.instagram.com/', openMode: 'external', visible: true },
-                        { id: 'youtube', name: 'YouTube', icon: 'youtube', url: 'https://www.youtube.com/', openMode: 'external', visible: true },
-                        
+                        { id: 'x', name: 'X', icon: 'twitter', url: 'https://x.com', openMode: 'external', visible: true, thumbnail: 'icon_x.png' },
+                        { id: 'instagram', name: 'Instagram', icon: 'instagram', url: 'https://www.instagram.com/', openMode: 'external', visible: true, thumbnail: 'icon_insta.png' },
+                        { id: 'youtube', name: 'YouTube', icon: 'youtube', url: 'https://www.youtube.com/', openMode: 'external', visible: true, thumbnail: 'icon_youtube.png' },
                     ],
                     
                 };
@@ -5746,22 +5776,42 @@ const renderDailyDetails = (targetDate) => {
             };
             
         // ★修正後★ 休憩アイコンをレンダリングする関数
-        function renderBreakIcons() {
-            if (!breakIconGrid) return;
+        // ↓↓↓ 既存の renderBreakIcons をこのコードに置き換えてください ↓↓↓
+function renderBreakIcons() {
+    if (!breakIconGrid) return;
 
-            // 1. 表示がオンのアイコンだけを抽出
-            const items = state.breakIcons.filter(icon => icon.visible);
+    // 1. 表示がオンのアイコンだけを抽出
+    const items = state.breakIcons.filter(icon => icon.visible);
 
-            // 2. HTMLを生成
-            breakIconGrid.innerHTML = items.map(icon => `
-                <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode || 'external'}" data-id="${icon.id}">
-                    <i data-lucide="${icon.icon}" class="w-8 h-8 mb-1"></i>
-                    <span>${icon.name}</span>
-                </button>
-            `).join('');
-            
-            lucide.createIcons();
+    // 2. HTMLを生成
+    breakIconGrid.innerHTML = items.map(icon => {
+        let visualHTML = '';
+
+        if (icon.thumbnail) {
+            // ★画像がある場合: 画像を表示
+            visualHTML = `<img src="${icon.thumbnail}" alt="${icon.name}" class="break-app-icon bg-gray-900">`;
+        } else {
+            // ★画像がない場合: 背景色付きのボックスの中にアイコンを表示
+            // 色はランダムっぽく見せるため、IDハッシュなどで固定色を決めるか、固定色にする
+            // ここではシンプルにダークグレーの背景にします
+            visualHTML = `
+                <div class="break-app-icon bg-gray-700">
+                    <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
+                </div>
+            `;
         }
+
+        return `
+            <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode || 'external'}" data-id="${icon.id}">
+                ${visualHTML}
+                <span>${icon.name}</span>
+            </button>
+        `;
+    }).join('');
+    
+    lucide.createIcons();
+}
+// ↑↑↑ 修正ここまで ↑↑↑
 
         // ★新規追加★ 解禁済みゲームをbreakIconsに同期させる関数
         function syncGamesToBreakIcons() {
@@ -5780,7 +5830,8 @@ const renderDailyDetails = (targetDate) => {
                             url: game.url,
                             openMode: 'iframe', // ゲームはiframeで開く
                             type: 'game',
-                            visible: true
+                            visible: true,
+                            thumbnail: game.thumbnail || (game.previews && game.previews.length > 0 ? game.previews[0] : null)
                         });
                     }
                 }
