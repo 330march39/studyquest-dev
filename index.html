@@ -6980,31 +6980,44 @@ const renderDailyDetails = (targetDate) => {
                 $('#status-lp-display').textContent = state.profile.lp;
 
                 // 共通のクリックハンドラ
-                // ↓↓↓ 既存の createItemHTML をこのコードに置き換えてください ↓↓↓
+               // ↓↓↓ 既存の createItemHTML をこのコードに置き換えてください ↓↓↓
 const createItemHTML = (id, item, type, isUnlocked, isActive) => {
     let iconHTML = '';
     let statusBadge = '';
-    // 枠線を削除し、リングのみで表現
     let activeClass = isActive ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : '';
     
-    // バッジデザイン
     const checkMarkBadge = `<div class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 rounded-full p-1.5 shadow-md z-10"><i data-lucide="check" class="w-4 h-4 primary-text"></i></div>`;
 
-    // ★修正: 壁紙（background）の場合は縦長（9/16）にする。それ以外は正方形。
-    let containerClass = 'w-full aspect-square rounded-2xl'; // デフォルト（ゲーム・音楽）
+    // 基本は正方形
+    let containerClass = 'w-full aspect-square rounded-2xl'; 
     
     if (type === 'theme') {
-        containerClass = 'w-20 h-20 rounded-full'; // テーマは丸
+        containerClass = 'w-20 h-20 rounded-full';
         iconHTML = `<div class="w-full h-full rounded-full shadow-inner" style="background-color: ${item.color}"></div>`;
         if (isUnlocked) statusBadge = checkMarkBadge;
+
     } else if (type === 'background') {
-        containerClass = 'w-full aspect-[9/16] rounded-2xl'; // ★ここを変更: スマホ比率
+        containerClass = 'w-full aspect-[9/16] rounded-2xl'; // 壁紙は縦長
         const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
         iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
         if (isUnlocked) statusBadge = checkMarkBadge;
+
+    } else if (type === 'game') {
+        // ★修正: ゲームの場合、プレビュー画像の1枚目があればそれを正方形に切り取って表示
+        if (item.previews && item.previews.length > 0) {
+            const previewUrl = item.previews[0];
+            // bg-cover で「切り取る」表示にする
+            iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${previewUrl}')"></div>`;
+        } else {
+            // 画像がない場合は従来のアイコン表示
+            iconHTML = `<i data-lucide="${item.icon || 'gamepad-2'}" class="w-10 h-10 text-indigo-500"></i>`;
+        }
+        if (isUnlocked) statusBadge = checkMarkBadge;
+
     } else {
-        const iconName = item.icon || (type === 'music' ? 'music' : 'gamepad-2');
-        const colorClass = type === 'game' ? 'text-indigo-500' : 'text-pink-500';
+        // 音楽など
+        const iconName = item.icon || 'music';
+        const colorClass = 'text-pink-500';
         iconHTML = `<i data-lucide="${iconName}" class="w-10 h-10 ${colorClass}"></i>`;
         if (isUnlocked) statusBadge = checkMarkBadge;
     }
@@ -7880,19 +7893,20 @@ const renderGamePreviews = (game) => {
         return;
     }
 
-    game.previews.forEach((url, index) => { // ★indexを受け取る
+    game.previews.forEach((url) => { 
         const item = document.createElement('div');
         
-        // ★修正: 1枚目(index === 0)なら aspect-square、それ以外は aspect-[9/16] を適用
-        const aspectClass = (index === 0) ? 'aspect-square' : 'aspect-[9/16]';
-        
-        item.className = `preview-item w-[70vw] md:w-[300px] ${aspectClass} flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm`;
+        // ★修正: indexによる分岐を削除し、全て aspect-[9/16] で統一
+        item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
         
         const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
         
         if (isVideo) {
             item.innerHTML = `<video src="${url}" controls playsinline muted class="w-full h-full object-cover pointer-events-auto"></video>`;
         } else {
+            // object-coverではなく object-contain にすると全体が見えますが、
+            // 「同様のサイズ」とのご要望なのでデザインの一貫性を保つため object-cover にしています。
+            // 全体を表示したい場合はここを object-contain に変更してください。
             item.innerHTML = `<img src="${url}" alt="preview" class="w-full h-full object-cover">`;
         }
         container.appendChild(item);
