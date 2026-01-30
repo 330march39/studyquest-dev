@@ -1852,7 +1852,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">休憩中に表示するゲームなどを設定します。</p>
 
             <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 px-1">表示中 (ドラッグで並び替え)</h4>
-            <div id="break-active-list"></div>
+            <div id="break-active-list" class="w-full space-y-2"></div>
 
             <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-6 mb-2 px-1">追加可能</h4>
             <div id="break-inactive-list" class="w-full flex flex-wrap gap-2"></div>
@@ -1961,7 +1961,8 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             このリストの順序に従ってタスクが割り当てられ、最後まで行くと最初に戻って繰り返されます。
         </p>
 
-        <div id="routine-list" class="mb-4"></div>
+        <div id="routine-list" class="space-y-2 mb-4">
+            </div>
 
         <div class="flex justify-between mt-4">
             <button id="routine-add-section-btn" class="flex-1 mr-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
@@ -5772,101 +5773,92 @@ const renderDailyDetails = (targetDate) => {
         }
 
         // --- 6. ブレイクタイム設定サブページ (新規追加) ---
-            // ▼▼▼ 修正: ブレイクタイム設定もInsetスタイルに統一 ▼▼▼
-const breakSettingsPage = new SubPage('break-settings-screen', {
-    onOpen: () => {
-        const activeContainer = document.getElementById('break-active-list');
-        const inactiveContainer = document.getElementById('break-inactive-list');
-        if (!activeContainer || !inactiveContainer) return;
-
-        // 親コンテナのスタイル：大きな角丸、モダンな影、区切り線
-        activeContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
-        inactiveContainer.className = 'w-full flex flex-wrap gap-2';
-
-        const activeIcons = state.breakIcons.filter(i => i.visible);
-        const inactiveIcons = state.breakIcons.filter(i => !i.visible);
-
-        // --- 1. 表示中リストの描画 ---
-        if (activeIcons.length === 0) {
-            activeContainer.innerHTML = `
-                <div class="p-8 text-center text-gray-400 dark:text-gray-500">
-                    <p class="text-sm font-bold">表示中のコンテンツはありません</p>
-                    <p class="text-xs mt-1">下から追加してください</p>
-                </div>`;
-        } else {
-            activeContainer.innerHTML = activeIcons.map(icon => `
-                <div class="break-settings-item flex items-center p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" data-id="${icon.id}">
-                    <div class="break-settings-handle p-2 mr-2 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 touch-none flex-shrink-0">
-                         <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                    </div>
-                    
-                    <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-600 dark:text-gray-300 shadow-sm flex-shrink-0">
-                        <i data-lucide="${icon.icon}" class="w-5 h-5"></i>
-                    </div>
-                    
-                    <span class="text-gray-800 dark:text-gray-200 text-sm font-bold flex-grow truncate">${icon.name}</span>
-                    
-                    <button class="remove-break-btn p-2 rounded-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex-shrink-0">
-                        <i data-lucide="minus-circle" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // --- 2. 追加可能リストの描画 ---
-        inactiveContainer.innerHTML = inactiveIcons.length === 0 
-            ? '<p class="text-xs text-gray-400 w-full text-center py-4">すべて追加済みです</p>'
-            : inactiveIcons.map(icon => `
-                <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent shadow-sm px-4 py-2.5 rounded-full transition active:scale-95" data-id="${icon.id}">
-                    <i data-lucide="plus" class="w-4 h-4 text-green-500"></i>
-                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${icon.name}</span>
-                </button>
-            `).join('');
-
-        lucide.createIcons({ root: activeContainer });
-        lucide.createIcons({ root: inactiveContainer });
-
-        // イベント設定 (削除)
-        activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.target.closest('.break-settings-item').dataset.id;
-                const icon = state.breakIcons.find(i => i.id === id);
-                if (icon) { icon.visible = false; saveState(); breakSettingsPage.onOpen(); }
-            });
-        });
-
-        // イベント設定 (追加)
-        inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = btn.dataset.id;
-                const icon = state.breakIcons.find(i => i.id === id);
-                if (icon) { icon.visible = true; saveState(); breakSettingsPage.onOpen(); }
-            });
-        });
-
-        // Sortable初期化
-        if (breakSortable) breakSortable.destroy();
-        if (activeIcons.length > 0) {
-            breakSortable = Sortable.create(activeContainer, {
-                handle: '.break-settings-handle',
-                animation: 200,
-                ghostClass: 'sortable-ghost',
-                forceFallback: true,
-                fallbackClass: 'sortable-drag',
-                delay: 150,
-                delayOnTouchOnly: true,
-                touchStartThreshold: 5,
-                onEnd: (evt) => {
-                    const idOrder = Array.from(activeContainer.children).map(c => c.dataset.id);
-                    const sorted = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
-                    const hidden = state.breakIcons.filter(i => !i.visible);
-                    state.breakIcons = [...sorted, ...hidden];
-                    saveState();
+            // breakSettingsPageの定義を以下に置き換えてください
+            const breakSettingsPage = new SubPage('break-settings-screen', {
+                onOpen: () => {
+                    const activeContainer = $('#break-active-list');
+                    const inactiveContainer = $('#break-inactive-list');
+                    if (!activeContainer || !inactiveContainer) return;
+            
+                    // Inset Styleの適用
+                    activeContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
+                    inactiveContainer.className = 'w-full flex flex-wrap gap-2';
+            
+                    const activeIcons = state.breakIcons.filter(i => i.visible);
+                    const inactiveIcons = state.breakIcons.filter(i => !i.visible);
+            
+                    // 表示中リスト
+                    if (activeIcons.length === 0) {
+                        activeContainer.innerHTML = `<div class="p-6 text-center text-xs text-gray-400">表示中のコンテンツはありません</div>`;
+                    } else {
+                        activeContainer.innerHTML = activeIcons.map(icon => `
+                            <div class="break-settings-item flex items-center p-3 h-16 bg-white dark:bg-gray-800" data-id="${icon.id}">
+                                <div class="break-settings-handle p-2 mr-2 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 touch-none">
+                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                                </div>
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="${icon.icon}" class="w-4 h-4"></i>
+                                </div>
+                                <span class="text-gray-800 dark:text-gray-200 text-sm font-bold flex-grow truncate">${icon.name}</span>
+                                <button class="remove-break-btn p-2 rounded-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                                    <i data-lucide="minus-circle" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+            
+                    // 追加可能リスト
+                    inactiveContainer.innerHTML = inactiveIcons.length === 0 
+                        ? '<p class="text-xs text-gray-400 w-full text-center py-2">すべて追加済みです</p>'
+                        : inactiveIcons.map(icon => `
+                            <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent shadow-sm px-4 py-2 rounded-full transition" data-id="${icon.id}">
+                                <i data-lucide="plus" class="w-4 h-4 text-green-500"></i>
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${icon.name}</span>
+                            </button>
+                        `).join('');
+            
+                    lucide.createIcons({ root: activeContainer });
+                    lucide.createIcons({ root: inactiveContainer });
+            
+                    // イベント設定 (追加・削除)
+                    activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const id = e.target.closest('.break-settings-item').dataset.id;
+                            const icon = state.breakIcons.find(i => i.id === id);
+                            if (icon) { icon.visible = false; saveState(); breakSettingsPage.onOpen(); }
+                        });
+                    });
+                    inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const id = btn.dataset.id;
+                            const icon = state.breakIcons.find(i => i.id === id);
+                            if (icon) { icon.visible = true; saveState(); breakSettingsPage.onOpen(); }
+                        });
+                    });
+            
+                    // Sortable初期化 (forceFallback: true)
+                    if (breakSortable) breakSortable.destroy();
+                    if (activeIcons.length > 0) {
+                        breakSortable = Sortable.create(activeContainer, {
+                            handle: '.break-settings-handle',
+                            animation: 200,
+                            ghostClass: 'sortable-ghost',
+                            forceFallback: true, // ★重要
+                            fallbackClass: 'sortable-drag',
+                            delay: 150,
+                            delayOnTouchOnly: true,
+                            touchStartThreshold: 5,
+                            onEnd: (evt) => {
+                                const idOrder = Array.from(activeContainer.children).map(c => c.dataset.id);
+                                const sorted = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
+                                const hidden = state.breakIcons.filter(i => !i.visible);
+                                state.breakIcons = [...sorted, ...hidden];
+                                saveState();
+                            }
+                        });
+                    }
                 }
             });
-        }
-    }
-});
             // 戻るボタンの紐付け
             $('#close-break-settings-btn').addEventListener('click', () => breakSettingsPage.close());
 
@@ -7568,129 +7560,115 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
             const routineListEl = document.getElementById('routine-list');
             
             // リスト描画関数
-            // ▼▼▼ 修正: ルーティンリストをモダンなInsetスタイルで描画 ▼▼▼
-const renderRoutineList = () => {
-    routineListEl.innerHTML = '';
-    
-    // 親コンテナのスタイル：大きな角丸、モダンな影、要素間の区切り線
-    routineListEl.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
-
-    if (state.profile.routineTemplate.length === 0) {
-        routineListEl.innerHTML = `
-            <div class="p-10 text-center text-gray-400 dark:text-gray-500">
-                <i data-lucide="list-plus" class="w-12 h-12 mx-auto mb-3 opacity-20"></i>
-                <p class="text-sm font-bold">ルーティンが設定されていません</p>
-                <p class="text-xs mt-1 opacity-70">下のボタンからセクションを追加してください</p>
-            </div>`;
-        return; // アイコン生成して終了
-    }
-
-    state.profile.routineTemplate.forEach((item, index) => {
-        const itemEl = document.createElement('div');
-        // 背景色は親に任せるか、ホバー時のみ変化させる
-        itemEl.className = 'routine-item relative group w-full hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors';
-        itemEl.setAttribute('data-id', item.id);
-
-        let iconHTML = '';
-        let titleHTML = '';
-        
-        // アイコンとタイトルの定義
-        if (item.type === 'section') {
-            iconHTML = `<div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm"><i data-lucide="book-open" class="w-5 h-5"></i></div>`;
-            titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
-        } else {
-            iconHTML = `<div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-5 h-5"></i></div>`;
-            titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
-        }
-
-        // 時間入力部分：デザインを調整
-        const durationMin = Math.floor(item.duration / 60);
-        const durationHTML = `
-            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1.5 mr-3 group-hover:bg-white dark:group-hover:bg-gray-600 transition-colors border border-transparent group-hover:border-gray-200 dark:group-hover:border-gray-500">
-                <input type="number" value="${durationMin}" 
-                    class="routine-duration-input w-8 bg-transparent text-center font-bold text-gray-700 dark:text-gray-200 focus:outline-none p-0 appearance-none" 
-                    min="1">
-                <span class="text-xs text-gray-400 font-bold ml-1">分</span>
-            </div>
-        `;
-
-        itemEl.innerHTML = `
-            <div class="flex items-center p-4">
-                <div class="routine-handle p-2 mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none flex-shrink-0">
-                    <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                </div>
+            // renderRoutineList 関数を以下に置き換えてください
+            const renderRoutineList = () => {
+                routineListEl.innerHTML = '';
                 
-                <div class="mr-4 flex-shrink-0">
-                    ${iconHTML}
-                </div>
-                
-                <div class="flex-grow min-w-0 flex flex-col justify-center mr-2">
-                    ${titleHTML}
-                    <p class="text-[10px] text-gray-400 dark:text-gray-500 font-medium">ドラッグで並び替え</p>
-                </div>
-
-                ${durationHTML}
-
-                <button class="remove-routine-btn p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex-shrink-0">
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                </button>
-            </div>
-        `;
-
-        // イベント: 時間変更
-        const input = itemEl.querySelector('.routine-duration-input');
-        input.addEventListener('change', (e) => {
-            let val = parseInt(e.target.value);
-            if(isNaN(val) || val < 1) val = 1;
-            item.duration = val * 60;
-            saveState();
-            // 入力中のフォーカスが外れないように再描画はせず値をセットするだけに留める
-            e.target.value = val; 
-        });
-
-        // イベント: 削除
-        itemEl.querySelector('.remove-routine-btn').addEventListener('click', () => {
-            // アニメーションを入れてから削除
-            itemEl.style.height = itemEl.offsetHeight + 'px';
-            itemEl.style.overflow = 'hidden';
-            itemEl.style.transition = 'all 0.3s ease';
-            requestAnimationFrame(() => {
-                itemEl.style.height = '0px';
-                itemEl.style.opacity = '0';
-                itemEl.style.padding = '0';
-            });
-            setTimeout(() => {
-                state.profile.routineTemplate.splice(index, 1);
-                saveState();
-                renderRoutineList();
-            }, 300);
-        });
-
-        routineListEl.appendChild(itemEl);
-    });
-
-    lucide.createIcons({ root: routineListEl });
-
-    // Sortable初期化 (変更なし、既存のロジックでOK)
-    if (routineSortable) routineSortable.destroy();
-    if (state.profile.routineTemplate.length > 0) {
-        routineSortable = Sortable.create(routineListEl, {
-            handle: '.routine-handle',
-            animation: 200,
-            ghostClass: 'sortable-ghost',
-            forceFallback: true,
-            fallbackClass: 'sortable-drag',
-            delay: 150,
-            delayOnTouchOnly: true,
-            touchStartThreshold: 5,
-            onEnd: (evt) => {
-                const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
-                state.profile.routineTemplate.splice(evt.newIndex, 0, item);
-                saveState();
-            }
-        });
-    }
-};
+                // 親コンテナ自体のクラス設定（Inset Style）
+                // リストアイテムを囲むdivに対してクラスを適用します（今回はroutineListEl自体にスタイルを適用する形が良いでしょう）
+                routineListEl.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
+            
+                if (state.profile.routineTemplate.length === 0) {
+                    routineListEl.innerHTML = `
+                        <div class="p-8 text-center text-gray-400 dark:text-gray-500">
+                            <i data-lucide="list" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+                            <p class="text-sm font-bold">ルーティンが空です</p>
+                            <p class="text-xs mt-1">下のボタンから追加してください</p>
+                        </div>`;
+                }
+            
+                state.profile.routineTemplate.forEach((item, index) => {
+                    const itemEl = document.createElement('div');
+                    // リストアイテムはborderを持たず、親のdivide-yで区切る
+                    itemEl.className = 'routine-item relative group w-full bg-white dark:bg-gray-800 transition-colors';
+                    itemEl.setAttribute('data-id', item.id);
+            
+                    let iconHTML = '';
+                    let titleHTML = '';
+                    
+                    if (item.type === 'section') {
+                        iconHTML = `<div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
+                        titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">セクション</span>`;
+                    } else {
+                        iconHTML = `<div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
+                        titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイク</span>`;
+                    }
+            
+                    // 時間入力部分（レイアウトシフト防止のための重ね合わせ）
+                    const durationMin = item.duration / 60;
+                    const durationHTML = `
+                        <div class="relative w-12 h-8 mr-1">
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none bg-gray-100 dark:bg-gray-700 rounded-lg border border-transparent">
+                                <span class="font-bold text-sm text-gray-700 dark:text-gray-200">${durationMin}</span>
+                            </div>
+                            <input type="number" value="${durationMin}" 
+                                class="routine-duration-input absolute inset-0 w-full h-full opacity-0 cursor-pointer text-center font-bold text-sm z-10 p-0 m-0">
+                        </div>
+                        <span class="text-xs text-gray-400 font-bold mr-3">分</span>
+                    `;
+            
+                    itemEl.innerHTML = `
+                        <div class="flex items-center p-3 h-16">
+                            <div class="routine-handle p-2 mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none">
+                                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                            </div>
+                            
+                            <div class="mr-4 flex-shrink-0">${iconHTML}</div>
+                            
+                            <div class="flex-grow min-w-0 flex flex-col justify-center">
+                                ${titleHTML}
+                            </div>
+            
+                            ${durationHTML}
+            
+                            <button class="remove-routine-btn p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex-shrink-0">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    `;
+            
+                    // イベント: 時間変更
+                    const input = itemEl.querySelector('.routine-duration-input');
+                    input.addEventListener('change', (e) => {
+                        let val = parseInt(e.target.value);
+                        if(val < 1) val = 1;
+                        item.duration = val * 60;
+                        saveState();
+                        renderRoutineList(); // 再描画して表示を更新
+                    });
+            
+                    // イベント: 削除
+                    itemEl.querySelector('.remove-routine-btn').addEventListener('click', () => {
+                        state.profile.routineTemplate.splice(index, 1);
+                        saveState();
+                        renderRoutineList();
+                    });
+            
+                    routineListEl.appendChild(itemEl);
+                });
+            
+                lucide.createIcons({ root: routineListEl });
+            
+                // Sortable初期化 (forceFallback: true を追加)
+                if (routineSortable) routineSortable.destroy();
+                if (state.profile.routineTemplate.length > 0) {
+                    routineSortable = Sortable.create(routineListEl, {
+                        handle: '.routine-handle',
+                        animation: 200,
+                        ghostClass: 'sortable-ghost',
+                        forceFallback: true, // ★重要: これでドラッグ時の固まりを防止
+                        fallbackClass: 'sortable-drag',
+                        delay: 150,
+                        delayOnTouchOnly: true,
+                        touchStartThreshold: 5,
+                        onEnd: (evt) => {
+                            const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
+                            state.profile.routineTemplate.splice(evt.newIndex, 0, item);
+                            saveState();
+                        }
+                    });
+                }
+            };
             
             // 追加ボタンイベント
             document.getElementById('routine-add-section-btn').addEventListener('click', () => {
