@@ -1874,81 +1874,71 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         </header>
 
         <div class="flex-grow overflow-y-auto p-4 pb-safe space-y-6">
-            
-            <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
+        
+        <div class="flex flex-col items-center justify-center mt-4">
+            <div class="relative group cursor-pointer" onclick="document.getElementById('edit-icon-random-btn').click()">
+                <input type="text" id="edit-profile-icon" 
+                       class="w-32 h-32 rounded-full text-center text-[5rem] bg-white dark:bg-gray-800 shadow-xl border-4 border-white dark:border-gray-700 outline-none cursor-pointer select-none" 
+                       style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;"
+                       readonly>
                 
-                <div class="flex items-center justify-between p-4 h-20 relative">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center mr-4" style="background-color: var(--primary-color);">
-                            <i data-lucide="smile" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <span class="font-bold text-sm text-gray-800 dark:text-white">アイコン</span>
-                    </div>
-                    
-                    <div class="flex items-center relative z-10">
-                        <div class="relative">
-                            <input type="text" id="edit-profile-icon" class="w-12 h-12 text-center text-3xl bg-transparent border-none outline-none p-0 cursor-default" readonly>
-                            <button id="edit-icon-random-btn" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></button>
-                        </div>
-                        <i data-lucide="refresh-cw" class="w-4 h-4 text-gray-400 ml-2"></i>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between p-4 h-16 relative group">
-                    <div class="flex items-center flex-shrink-0">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center mr-4" style="background-color: var(--primary-color);">
-                            <i data-lucide="user" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <span class="font-bold text-sm text-gray-800 dark:text-white">名前</span>
-                    </div>
-
-                    <div class="flex-grow ml-4 relative h-full flex items-center justify-end">
-                        <input type="text" id="edit-profile-name" 
-                            class="absolute inset-0 w-full h-full bg-transparent border-none outline-none text-right font-bold text-gray-600 dark:text-gray-200 placeholder-gray-400 focus:text-primary transition-colors"
-                            placeholder="名前を入力">
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between p-4 h-16 relative">
-                    <div class="flex items-center flex-shrink-0">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center mr-4" style="background-color: var(--primary-color);">
-                            <i data-lucide="graduation-cap" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <span class="font-bold text-sm text-gray-800 dark:text-white">学年</span>
-                    </div>
-
-                    <div class="flex-grow ml-4 relative h-full flex items-center justify-end">
-                        <select id="edit-profile-grade" 
-                            class="appearance-none bg-transparent border-none outline-none text-right font-bold text-gray-600 dark:text-gray-200 w-full h-full pr-6 cursor-pointer dir-rtl">
-                            </select>
-                        <i data-lucide="chevron-right" class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
-                    </div>
-                </div>
-
+                <button id="edit-icon-random-btn" class="absolute bottom-0 right-0 p-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg transition-transform active:scale-90 border-4 border-gray-100 dark:border-gray-900">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                </button>
             </div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 font-bold">タップしてランダム変更</p>
+        </div>
 
-            <button id="save-profile-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center">
-                <i data-lucide="save" class="w-5 h-5 mr-2"></i>
-                変更を保存する
-            </button>
-
-            <div class="pt-6">
-                <h3 class="text-xs font-bold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">データ管理</h3>
-                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
-                    <button id="open-migration-menu-btn" class="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-500 dark:text-gray-400">
-                                <i data-lucide="smartphone" class="w-4 h-4"></i>
-                            </div>
-                            <span class="font-bold text-sm text-gray-800 dark:text-white">機種変更・データ引き継ぎ</span>
-                        </div>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 dark:text-gray-600"></i>
-                    </button>
+        <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden gap-divider">
+            
+            <div class="flex items-center justify-between p-4 h-16">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mr-3 text-indigo-500">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                    </div>
+                    <span class="font-bold text-sm text-gray-700 dark:text-gray-300">名前</span>
                 </div>
+                <input type="text" id="edit-profile-name" class="text-right font-bold text-gray-900 dark:text-white bg-transparent outline-none flex-grow ml-4 placeholder-gray-300" placeholder="名前を入力">
             </div>
             
-            <div class="h-10"></div>
+            <div class="flex items-center justify-between p-4 h-16 relative">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center mr-3 text-green-500">
+                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                    </div>
+                    <span class="font-bold text-sm text-gray-700 dark:text-gray-300">学年</span>
+                </div>
+                <div class="flex-grow ml-4 relative h-full">
+                    <select id="edit-profile-grade" class="w-full h-full bg-transparent border-none outline-none font-bold text-gray-900 dark:text-white appearance-none pr-6 cursor-pointer" style="direction: rtl;">
+                        </select>
+                    <i data-lucide="chevron-right" class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                </div>
+            </div>
+
         </div>
+
+        <button id="save-profile-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center">
+            <i data-lucide="save" class="w-5 h-5 mr-2"></i>
+            変更を保存する
+        </button>
+
+        <div class="pt-6">
+            <h3 class="text-xs font-bold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">データ管理</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                <button id="open-migration-menu-btn" class="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-left">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-4 text-gray-500 dark:text-gray-400">
+                            <i data-lucide="smartphone" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold text-sm text-gray-800 dark:text-white">機種変更・データ引き継ぎ</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 dark:text-gray-600"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="h-10"></div>
+    </div>
     </div>
 
     <div id="routine-settings-screen" class="screen-layer">
@@ -3667,7 +3657,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                                 ${state.user.icon}
                             </div>
                             <div class="flex-grow">
-                                <h3 class="font-bold text-lg text-gray-800 dark:text-white">${state.user.name}</h3>
+                                <h3 class="font-bold text-lg text-gray-800 dark:text-white mb-1">${state.user.name}</h3>
                                 <p class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">${state.user.grade || '学年未設定'}</p>
                             </div>
                             <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full text-gray-400">
