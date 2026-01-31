@@ -7657,19 +7657,17 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
 
             let routineSortable = null;
             // ▼▼▼ 修正版: ルーティン設定ページ (重複解消・アニメーション修正・ダークモード対応) ▼▼▼
+// ▼▼▼ 修正版: ルーティン設定 (アイコン色変更対応) ▼▼▼
 const routineSettingsPage = new SubPage('routine-settings-screen', {
     onOpen: () => {
-        // コンテナを取得
         const contentArea = document.getElementById('routine-settings-content');
         if (!contentArea) return;
 
-        // 既存のSortableを破棄
         if (routineSortable) {
             routineSortable.destroy();
             routineSortable = null;
         }
 
-        // HTMLをJSで一括生成（これで重複を防ぐ）
         contentArea.innerHTML = `
             <div class="space-y-4 pb-10">
                 <p class="text-xs text-gray-500 dark:text-gray-400 px-2">
@@ -7695,7 +7693,6 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
 
         const listContainer = document.getElementById('routine-list-container');
 
-        // --- リストアイテム描画関数 ---
         const renderItems = () => {
             if (state.profile.routineTemplate.length === 0) {
                 listContainer.innerHTML = `
@@ -7712,16 +7709,17 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                 let titleHTML = '';
                 
                 if (item.type === 'section') {
-                    iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
+                    // ★変更点: 背景をテーマカラー、アイコンを白に変更
+                    iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm" style="background-color: var(--primary-color);"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
                     titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
                 } else {
+                    // ブレイクは緑色のまま維持（区別しやすくするため）
                     iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
                     titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
                 }
 
                 const durationMin = Math.floor(item.duration / 60);
 
-                // ★修正点: active時の背景色から「/50」を削除して不透明にする
                 return `
                     <div class="routine-item swipe-container relative overflow-hidden group h-[72px] w-full bg-white dark:bg-gray-800 transition-colors" data-index="${index}">
                         <div class="swipe-actions">
@@ -7752,12 +7750,10 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                 `;
             }).join('');
 
-            // イベント設定
             listContainer.querySelectorAll('.routine-item').forEach(itemEl => {
                 const index = parseInt(itemEl.dataset.index);
                 const item = state.profile.routineTemplate[index];
 
-                // 時間変更
                 const input = itemEl.querySelector('.routine-duration-input');
                 input.addEventListener('change', (e) => {
                     let val = parseInt(e.target.value);
@@ -7766,12 +7762,10 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                     saveState();
                 });
 
-                // スワイプ削除
                 new SwipeHandler(itemEl, {
                     onDelete: () => {
                         state.profile.routineTemplate.splice(index, 1);
                         saveState();
-                        // ★ アニメーション完了後に再描画
                         setTimeout(renderItems, 300); 
                     }
                 });
@@ -7780,11 +7774,8 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
             lucide.createIcons({ root: listContainer });
         };
 
-        // 初回描画
         renderItems();
 
-        // Sortable初期化 (リストが空でない場合のみ)
-        // ★修正: delay設定などをクエストリストと統一
         if (state.profile.routineTemplate.length > 0) {
             routineSortable = Sortable.create(listContainer, {
                 handle: '.routine-handle',
@@ -7798,16 +7789,14 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                     const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
                     state.profile.routineTemplate.splice(evt.newIndex, 0, item);
                     saveState();
-                    renderItems(); // インデックス振り直しのため再描画
+                    renderItems();
                 }
             });
         }
 
-        // ボタンイベント設定
         document.getElementById('btn-add-section').addEventListener('click', () => {
             state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: 25 * 60 });
             saveState();
-            // ページ全体をリロードしてSortableを再設定
             routineSettingsPage.onOpen();
         });
 
@@ -7828,204 +7817,158 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
             let bgmSortable = null;
             // bgmSettingsPage の onOpen 内の renderBgmPageList と Sortable初期化を以下に置き換えてください
             // ▼▼▼ 修正: BGM設定 (クエストリストと同じ挙動・設定に統一) ▼▼▼
-const bgmSettingsPage = new SubPage('bgm-settings-screen', {
+// ▼▼▼ 修正版: ルーティン設定 (アイコン色変更対応) ▼▼▼
+const routineSettingsPage = new SubPage('routine-settings-screen', {
     onOpen: () => {
-        // コンテナの中身をJSで構築
-        const pageRoot = document.querySelector('#bgm-settings-screen .overflow-y-auto');
-        if(!pageRoot) return;
+        const contentArea = document.getElementById('routine-settings-content');
+        if (!contentArea) return;
 
-        pageRoot.innerHTML = `
-            <div class="space-y-8 pb-10">
-                <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">設定</h3>
-                    <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
-                        <div class="flex items-center justify-between p-4 h-16">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center mr-4 shadow-sm" style="background-color: var(--primary-color);">
-                                    <i data-lucide="music" class="w-4 h-4 text-white"></i>
-                                </div>
-                                <div class="flex flex-col justify-center">
-                                    <span class="text-sm font-bold text-gray-800 dark:text-white">BGM機能</span>
-                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">クエスト中の自動再生</span>
-                                </div>
-                            </div>
-                            <div class="relative">
-                                <input type="checkbox" id="bgm-toggle-sub" class="peer sr-only">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)]"></div>
-                                <label for="bgm-toggle-sub" class="absolute inset-0 cursor-pointer w-full h-full"></label>
-                            </div>
-                        </div>
+        if (routineSortable) {
+            routineSortable.destroy();
+            routineSortable = null;
+        }
+
+        contentArea.innerHTML = `
+            <div class="space-y-4 pb-10">
+                <p class="text-xs text-gray-500 dark:text-gray-400 px-2">
+                    クエスト実行時のパターンを設定します。<br>
+                    スワイプで削除、ドラッグで並び替えができます。
+                </p>
+
+                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                    <div id="routine-list-container" class="divide-y divide-gray-100 dark:divide-gray-700"></div>
+
+                    <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2 border-t border-gray-100 dark:border-gray-700">
+                        <button id="btn-add-section" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center active:scale-95">
+                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> 学習
+                        </button>
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+                        <button id="btn-add-break" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center active:scale-95">
+                            <i data-lucide="coffee" class="w-4 h-4 mr-1"></i> ブレイク
+                        </button>
                     </div>
-                </div>
-
-                <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト (再生順)</h3>
-                    <div id="playlist-container-sub"></div>
-                </div>
-
-                <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリから追加</h3>
-                    <div id="unlocked-music-list-sub" class="flex flex-wrap gap-2"></div>
                 </div>
             </div>
         `;
 
-        // トグル制御
-        const toggle = document.getElementById('bgm-toggle-sub');
-        if (toggle) {
-            toggle.checked = state.settings.bgmEnabled;
-            toggle.onclick = (e) => { 
-                state.settings.bgmEnabled = e.target.checked; 
-                saveState(); 
-            };
-        }
+        const listContainer = document.getElementById('routine-list-container');
 
-        const playlistContainer = document.getElementById('playlist-container-sub');
-        const libraryContainer = document.getElementById('unlocked-music-list-sub');
-
-        // ライブラリ（追加可能リスト）描画関数
-        const renderLibraryList = () => {
-            const available = state.profile.unlockedMusic.filter(id => !state.settings.playlist.includes(id));
-            
-            if (available.length === 0) {
-                libraryContainer.innerHTML = '<span class="text-xs text-gray-400 w-full text-center py-4">追加できる曲がありません</span>';
-            } else {
-                libraryContainer.innerHTML = available.map(id => {
-                    const t = initialData.music[id];
-                    return `
-                        <button class="add-to-playlist-btn group flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border-2 border-transparent hover:border-pink-200 dark:hover:border-pink-900 px-4 py-2.5 rounded-2xl transition-all active:scale-95" data-id="${id}">
-                            <div class="w-6 h-6 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-500 group-hover:scale-110 transition-transform">
-                                <i data-lucide="plus" class="w-3 h-3 stroke-[3]"></i>
-                            </div>
-                            <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${t.name}</span>
-                        </button>
-                    `;
-                }).join('');
-
-                libraryContainer.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        state.settings.playlist.push(btn.dataset.id);
-                        saveState();
-                        renderBgmList(); // リスト再描画
-                        renderLibraryList(); // 自分自身も再描画（追加した曲を消すため）
-                    });
-                });
-            }
-            lucide.createIcons({ root: libraryContainer });
-        };
-
-        // プレイリスト描画関数
-        const renderBgmList = () => {
-            // エラー対策: 既存のSortableインスタンスがあれば確実に破棄
-            if (bgmSortable) {
-                bgmSortable.destroy();
-                bgmSortable = null;
-            }
-
-            // コンテナの基本スタイル設定
-            playlistContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700 mb-6';
-
-            if (state.settings.playlist.length === 0) {
-                playlistContainer.innerHTML = `
-                    <div class="p-8 text-center text-gray-400 dark:text-gray-500">
-                        <i data-lucide="music-2" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
-                        <p class="text-xs font-bold">リストが空です</p>
+        const renderItems = () => {
+            if (state.profile.routineTemplate.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="py-10 text-center text-gray-400 dark:text-gray-500">
+                        <i data-lucide="list-x" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
+                        <p class="text-xs font-bold">ルーティンが空です</p>
                     </div>`;
-            } else {
-                playlistContainer.innerHTML = state.settings.playlist.map((id, index) => {
-                    const track = initialData.music[id];
-                    if(!track) return '';
-                    
-                    return `
-    <div class="bgm-item swipe-container relative overflow-hidden h-[64px] w-full bg-white dark:bg-gray-800 transition-colors group" data-id="${id}">
-        
-        <div class="swipe-actions">
-            <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
-                <i data-lucide="trash-2" class="w-6 h-6"></i>
-                <span>削除</span>
-            </button>
-        </div>
-
-        <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors">
-            
-            <div class="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center mr-3 text-pink-500 flex-shrink-0">
-                <span class="text-xs font-bold">${index + 1}</span>
-            </div>
-
-            <div class="flex-grow min-w-0 mr-2">
-                <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${track.name}</p>
-            </div>
-
-            <button class="preview-bgm-btn p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition flex-shrink-0 mr-1">
-                <i data-lucide="play-circle" class="w-5 h-5"></i>
-            </button>
-
-            <button class="playlist-handle p-2 -mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none flex-shrink-0 h-10 w-10 flex items-center justify-center">
-                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-            </button>
-        </div>
-    </div>
-`;
-                }).join('');
-
-                // イベント設定: 試聴
-                playlistContainer.querySelectorAll('.preview-bgm-btn').forEach(btn => {
-                    const id = btn.closest('.bgm-item').dataset.id;
-                    const url = initialData.music[id].url;
-                    btn.addEventListener('click', () => toggleMusicPreview(url, btn));
-                });
-
-                // スワイプ設定
-                playlistContainer.querySelectorAll('.bgm-item').forEach(itemEl => {
-                    new SwipeHandler(itemEl, {
-                        onDelete: () => {
-                            const id = itemEl.dataset.id;
-                            const index = state.settings.playlist.indexOf(id);
-                            if (index > -1) {
-                                stopMusicPreview();
-                                state.settings.playlist.splice(index, 1);
-                                saveState();
-                                // ★修正: アニメーション完了(300ms)を待ってから再描画
-                                setTimeout(() => {
-                                    renderBgmList(); 
-                                    renderLibraryList();
-                                }, 300);
-                            }
-                        }
-                    });
-                });
+                lucide.createIcons({ root: listContainer });
+                return;
             }
-            lucide.createIcons({ root: playlistContainer });
 
-            // Sortable設定 (リストがある場合のみ)
-            if (state.settings.playlist.length > 0 && playlistContainer) {
-                bgmSortable = Sortable.create(playlistContainer, {
-                    handle: '.playlist-handle',
-                    animation: 200,
-                    ghostClass: 'sortable-ghost',
-                    // ★修正: forceFallback を削除し、Questと同じ設定を適用
-                    delay: 200, // 200ms長押しでドラッグ開始
-                    delayOnTouchOnly: true,
-                    touchStartThreshold: 5,
-                    filter: '.swiped-open, .is-swiping, .swipe-deleting', // スワイプ中はドラッグ不可
-                    onEnd: (evt) => {
-                        const item = state.settings.playlist.splice(evt.oldIndex, 1)[0];
-                        state.settings.playlist.splice(evt.newIndex, 0, item);
+            listContainer.innerHTML = state.profile.routineTemplate.map((item, index) => {
+                let iconHTML = '';
+                let titleHTML = '';
+                
+                if (item.type === 'section') {
+                    // ★変更点: 背景をテーマカラー、アイコンを白に変更
+                    iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm" style="background-color: var(--primary-color);"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
+                    titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
+                } else {
+                    // ブレイクは緑色のまま維持（区別しやすくするため）
+                    iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
+                    titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
+                }
+
+                const durationMin = Math.floor(item.duration / 60);
+
+                return `
+                    <div class="routine-item swipe-container relative overflow-hidden group h-[72px] w-full bg-white dark:bg-gray-800 transition-colors" data-index="${index}">
+                        <div class="swipe-actions">
+                            <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                <span>削除</span>
+                            </button>
+                        </div>
+
+                        <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors">
+                            <div class="mr-3 flex-shrink-0">${iconHTML}</div>
+                            
+                            <div class="flex-grow min-w-0 flex flex-col justify-center mr-2">
+                                ${titleHTML}
+                            </div>
+
+                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-2 py-1 flex-shrink-0 mr-1 h-8">
+                                <input type="number" value="${durationMin}" 
+                                    class="routine-duration-input w-8 bg-transparent text-center font-bold text-sm text-gray-700 dark:text-gray-200 focus:outline-none p-0 appearance-none">
+                                <span class="text-[10px] text-gray-400 font-bold ml-0.5">分</span>
+                            </div>
+
+                            <button class="routine-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none h-10 w-10 flex items-center justify-center">
+                                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listContainer.querySelectorAll('.routine-item').forEach(itemEl => {
+                const index = parseInt(itemEl.dataset.index);
+                const item = state.profile.routineTemplate[index];
+
+                const input = itemEl.querySelector('.routine-duration-input');
+                input.addEventListener('change', (e) => {
+                    let val = parseInt(e.target.value);
+                    if(val < 1) val = 1;
+                    item.duration = val * 60;
+                    saveState();
+                });
+
+                new SwipeHandler(itemEl, {
+                    onDelete: () => {
+                        state.profile.routineTemplate.splice(index, 1);
                         saveState();
-                        renderBgmList(); // 番号振り直しのため再描画
+                        setTimeout(renderItems, 300); 
                     }
                 });
-            }
+            });
+
+            lucide.createIcons({ root: listContainer });
         };
 
-        // 初回描画
-        renderBgmList();
-        renderLibraryList();
+        renderItems();
+
+        if (state.profile.routineTemplate.length > 0) {
+            routineSortable = Sortable.create(listContainer, {
+                handle: '.routine-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                delay: 200, 
+                delayOnTouchOnly: true, 
+                touchStartThreshold: 5,
+                filter: '.swiped-open, .is-swiping, .swipe-deleting',
+                onEnd: (evt) => {
+                    const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
+                    state.profile.routineTemplate.splice(evt.newIndex, 0, item);
+                    saveState();
+                    renderItems();
+                }
+            });
+        }
+
+        document.getElementById('btn-add-section').addEventListener('click', () => {
+            state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: 25 * 60 });
+            saveState();
+            routineSettingsPage.onOpen();
+        });
+
+        document.getElementById('btn-add-break').addEventListener('click', () => {
+            state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: 5 * 60 });
+            saveState();
+            routineSettingsPage.onOpen();
+        });
+
         lucide.createIcons();
-    },
-    onClose: () => { stopMusicPreview(); }
+    }
 });
-// ▲▲▲ 修正ここまで ▲▲▲
             $('#close-bgm-settings-btn').addEventListener('click', () => bgmSettingsPage.close());
 
             // 閉じるボタンの紐付け
@@ -8122,10 +8065,13 @@ const renderGamePreviews = (game) => {
 };
 // ↑↑↑ 修正ここまで ↑↑↑
         
-        // BGM試聴の再生・停止制御
-        const toggleMusicPreview = (url, btnElement) => {
-                // すでに再生中で、かつ同じURLなら「停止」とみなす
-                if (!previewAudio.paused && previewAudio.src === url) {
+        // ▼▼▼ 修正: 再生中のURLを管理する変数を追加 ▼▼▼
+            let currentPreviewUrl = null;
+
+            // BGM試聴の再生・停止制御
+            const toggleMusicPreview = (url, btnElement) => {
+                // 修正: URL文字列での比較ではなく、管理変数と比較して判定する
+                if (currentPreviewUrl === url && !previewAudio.paused) {
                     stopMusicPreview();
                     return;
                 }
@@ -8134,10 +8080,11 @@ const renderGamePreviews = (game) => {
                 stopMusicPreview();
 
                 // 新しく再生
+                currentPreviewUrl = url; // 現在のURLを保存
                 previewAudio.src = url;
                 previewAudio.volume = 0.5;
                 
-                // ★追加: URLから曲データを検索して名前を取得し、ロック画面等に表示
+                // ロック画面等の表示更新
                 const trackEntry = Object.values(initialData.music).find(t => t.url === url);
                 const title = trackEntry ? trackEntry.name : '試聴';
                 updateMediaSession(title);
@@ -8146,9 +8093,12 @@ const renderGamePreviews = (game) => {
                     // ボタンのアイコンを「停止(square)」に変更
                     if (btnElement) {
                         btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
-                        btnElement.classList.add('playing-icon'); // アニメーション用クラス付与
+                        btnElement.classList.add('playing-icon'); 
                         
-                        // アイコン再生成
+                        // アイコンの色をテーマカラーに強制適用（クラスだと上書きされにくいためstyleで）
+                        const icon = btnElement.querySelector('svg');
+                        if(icon) icon.style.color = 'var(--primary-color)';
+                        
                         lucide.createIcons({ root: btnElement });
                     }
                     
@@ -8157,17 +8107,21 @@ const renderGamePreviews = (game) => {
                         stopMusicPreview();
                     }, 30000); 
 
-                }).catch(e => console.error("試聴エラー", e));
+                }).catch(e => {
+                    console.error("試聴エラー", e);
+                    currentPreviewUrl = null;
+                });
             };
-        
-        // ▼▼▼ 修正: 試聴を停止し、ネイティブプレイヤーからも消去する ▼▼▼
+       
+            // 試聴を停止し、ネイティブプレイヤーからも消去する
             const stopMusicPreview = () => {
                 previewAudio.pause();
                 previewAudio.currentTime = 0;
+                currentPreviewUrl = null; // リセット
 
-                // ネイティブの再生画面から消すための処理
+                // ネイティブの再生画面から消す
                 previewAudio.src = "";
-                previewAudio.load();
+                // previewAudio.load(); // 一部ブラウザでエラーになる場合があるためコメントアウト可
 
                 if (previewTimeout) clearTimeout(previewTimeout);
                 
@@ -8175,18 +8129,20 @@ const renderGamePreviews = (game) => {
                 document.querySelectorAll('.preview-bgm-btn').forEach(btn => {
                      btn.innerHTML = '<i data-lucide="play-circle" class="w-5 h-5"></i>';
                      btn.classList.remove('playing-icon');
+                     // 色をテーマカラーに戻す
+                     const icon = btn.querySelector('svg');
+                     if(icon) icon.style.color = 'var(--primary-color)';
                 });
                 
                 // 2. 詳細画面のボタンのリセット
                 const detailIcon = document.getElementById('detail-play-icon');
                 if (detailIcon) {
                     detailIcon.setAttribute('data-lucide', 'play');
-                    detailIcon.classList.add('ml-0.5'); // 位置調整用クラスを戻す
+                    detailIcon.classList.add('ml-0.5');
                 }
                 
                 lucide.createIcons();
             };
-
             // ==========================================
             // ▼▼▼ PWAインストール強制ロジック (改修版) ▼▼▼
             // ==========================================
