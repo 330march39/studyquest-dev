@@ -7682,6 +7682,7 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
             
             // リスト描画関数
             // ▼▼▼ 修正: ルーティン設定 (エラー修正・アニメーション対応) ▼▼▼
+// ▼▼▼ 修正: ルーティン設定 (クエストリストと同じ挙動・設定に統一) ▼▼▼
 const renderRoutineList = () => {
     // 1. 既存のSortableインスタンスがあれば確実に破棄してnullにする
     if (routineSortable) {
@@ -7777,8 +7778,8 @@ const renderRoutineList = () => {
             onDelete: () => {
                 state.profile.routineTemplate.splice(index, 1);
                 saveState();
-                // SwipeHandler側でアニメーション完了を待ってから呼ばれるため、ここでは即座に再描画する
-                renderRoutineList();
+                // ★修正: アニメーション完了(300ms)を待ってから再描画
+                setTimeout(renderRoutineList, 300);
             }
         });
     });
@@ -7815,12 +7816,11 @@ const renderRoutineList = () => {
     if (state.profile.routineTemplate.length > 0 && listContainer) {
         routineSortable = Sortable.create(listContainer, {
             handle: '.routine-handle',
-            animation: 200,
+            animation: 150,
             ghostClass: 'sortable-ghost',
-            forceFallback: true,
-            fallbackClass: 'sortable-drag',
-            delay: 150,
-            delayOnTouchOnly: true,
+            // ★修正: forceFallback を削除し、Questと同じ設定を適用
+            delay: 200, 
+            delayOnTouchOnly: true, 
             touchStartThreshold: 5,
             filter: '.swiped-open, .is-swiping, .swipe-deleting', // スワイプ中はドラッグ不可
             onEnd: (evt) => {
@@ -7860,7 +7860,7 @@ const renderRoutineList = () => {
             // --- 5. BGM設定サブページ ---
             let bgmSortable = null;
             // bgmSettingsPage の onOpen 内の renderBgmPageList と Sortable初期化を以下に置き換えてください
-            // ▼▼▼ 修正: BGMリストのデザイン改修（スワイプ削除・ハンドル右寄せ） ▼▼▼
+            // ▼▼▼ 修正: BGM設定 (クエストリストと同じ挙動・設定に統一) ▼▼▼
 const bgmSettingsPage = new SubPage('bgm-settings-screen', {
     onOpen: () => {
         // コンテナの中身をJSで構築
@@ -8018,10 +8018,11 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                                 stopMusicPreview();
                                 state.settings.playlist.splice(index, 1);
                                 saveState();
-                                // アニメーション後に再描画
-                                // renderBgmList内でSortableを再初期化するため、ここでの呼び出しは安全
-                                renderBgmList(); 
-                                renderLibraryList();
+                                // ★修正: アニメーション完了(300ms)を待ってから再描画
+                                setTimeout(() => {
+                                    renderBgmList(); 
+                                    renderLibraryList();
+                                }, 300);
                             }
                         }
                     });
@@ -8035,9 +8036,8 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                     handle: '.playlist-handle',
                     animation: 200,
                     ghostClass: 'sortable-ghost',
-                    forceFallback: true,
-                    fallbackClass: 'sortable-drag',
-                    delay: 150,
+                    // ★修正: forceFallback を削除し、Questと同じ設定を適用
+                    delay: 200, // 200ms長押しでドラッグ開始
                     delayOnTouchOnly: true,
                     touchStartThreshold: 5,
                     filter: '.swiped-open, .is-swiping, .swipe-deleting', // スワイプ中はドラッグ不可
@@ -8058,7 +8058,7 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
     },
     onClose: () => { stopMusicPreview(); }
 });
-        // ▲▲▲ 修正ここまで ▲▲▲
+// ▲▲▲ 修正ここまで ▲▲▲
             $('#close-bgm-settings-btn').addEventListener('click', () => bgmSettingsPage.close());
 
             // 閉じるボタンの紐付け
