@@ -5963,9 +5963,9 @@ function syncGamesToBreakIcons() {
 // ↑↑↑ 修正ここまで ↑↑↑
 
         // --- 6. ブレイクタイム設定サブページ (新規追加) ---
-          // ▼▼▼ 修正版: ブレイクタイム設定ページ (アニメーション・Sortable管理修正) ▼▼▼
+        // ▼▼▼ 修正版: ブレイクタイム設定ページ (トグルアニメーション対応版) ▼▼▼
 
-// 並び替え管理用の変数をここ（関数の外）で定義します
+// 並び替え管理用の変数をここ（関数の外）で定義
 let breakSortableActive = null;
 let breakSortableInactive = null;
 
@@ -5974,7 +5974,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
         const pageRoot = document.querySelector('#break-settings-screen .overflow-y-auto');
         if (!pageRoot) return;
 
-        // ★重要: 既存のSortableインスタンスを確実に破棄（これで動作不良を防ぎます）
+        // 既存のSortableインスタンスを確実に破棄
         if (breakSortableActive) {
             breakSortableActive.destroy();
             breakSortableActive = null;
@@ -6023,14 +6023,19 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             </div>
         `;
 
-        // 1. トグルスイッチ制御
+        // 1. トグルスイッチ制御 (★ここを修正しました)
         const toggle = document.getElementById('break-style-toggle');
         if (toggle) {
             toggle.checked = isSimple;
             toggle.addEventListener('change', (e) => {
                 state.settings.simpleBreakIcons = e.target.checked;
                 saveState();
-                breakSettingsPage.onOpen(); // 再描画
+                
+                // ★重要: スイッチのアニメーション(transition)を見せるため、
+                // 0.3秒待ってから画面を再描画します。
+                setTimeout(() => {
+                    breakSettingsPage.onOpen(); 
+                }, 300);
             });
         }
 
@@ -6111,7 +6116,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             saveState();
         };
 
-        // --- 4. ボタンクリックイベント (削除・追加のアニメーション修正) ---
+        // --- 4. ボタンクリックイベント ---
         const setupBtnEvents = (container, isRemoving) => {
             const btnClass = isRemoving ? '.remove-break-btn' : '.add-break-btn';
             container.querySelectorAll(btnClass).forEach(btn => {
@@ -6120,18 +6125,16 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     const itemEl = e.target.closest('.break-settings-item');
                     const id = itemEl.dataset.id;
                     
-                    // ★修正: CSSクラスによるアニメーションに戻しました
                     itemEl.classList.add('animate-scale-out');
                     
-                    // アニメーション完了後にデータ更新
                     setTimeout(() => {
                         const icon = state.breakIcons.find(i => i.id === id);
                         if (icon) {
-                            icon.visible = !isRemoving; // 削除ならfalse, 追加ならtrue
+                            icon.visible = !isRemoving;
                             saveState();
-                            breakSettingsPage.onOpen(); // 再描画
+                            breakSettingsPage.onOpen();
                         }
-                    }, 300); // 0.3秒待つ
+                    }, 300);
                 });
             });
         };
@@ -6154,7 +6157,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             }
         };
 
-        // ★変数をローカル変数ではなく、外で定義した変数に代入
         breakSortableActive = Sortable.create(activeContainer, sortableOptions);
         breakSortableInactive = Sortable.create(inactiveContainer, sortableOptions);
     }
