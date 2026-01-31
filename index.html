@@ -7855,7 +7855,61 @@ const renderRoutineList = () => {
             let bgmSortable = null;
             // bgmSettingsPage の onOpen 内の renderBgmPageList と Sortable初期化を以下に置き換えてください
             // ▼▼▼ 修正: BGMリストのデザイン改修（スワイプ削除・ハンドル右寄せ） ▼▼▼
+        const bgmSettingsPage = new SubPage('bgm-settings-screen', {
+    onOpen: () => {
+        // コンテナの中身をJSで構築
+        const pageRoot = document.querySelector('#bgm-settings-screen .overflow-y-auto');
+        if(!pageRoot) return;
+
+        pageRoot.innerHTML = `
+            <div class="space-y-8 pb-10">
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">設定</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                        <div class="flex items-center justify-between p-4 h-16">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center mr-4 shadow-sm" style="background-color: var(--primary-color);">
+                                    <i data-lucide="music" class="w-4 h-4 text-white"></i>
+                                </div>
+                                <div class="flex flex-col justify-center">
+                                    <span class="text-sm font-bold text-gray-800 dark:text-white">BGM機能</span>
+                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">クエスト中の自動再生</span>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <input type="checkbox" id="bgm-toggle-sub" class="peer sr-only">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)]"></div>
+                                <label for="bgm-toggle-sub" class="absolute inset-0 cursor-pointer w-full h-full"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト (再生順)</h3>
+                    <div id="playlist-container-sub" class="divide-y divide-gray-100 dark:divide-gray-700 mb-6"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリから追加</h3>
+                    <div id="unlocked-music-list-sub" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        `;
+
+        // トグル制御
+        const toggle = document.getElementById('bgm-toggle-sub');
+        toggle.checked = state.settings.bgmEnabled;
+        toggle.onclick = (e) => { state.settings.bgmEnabled = e.target.checked; saveState(); };
+
+        const playlistContainer = document.getElementById('playlist-container-sub');
+        const libraryContainer = document.getElementById('unlocked-music-list-sub');
+
+        // ▼▼▼ プレイリスト描画関数 (最新デザイン: スワイプ削除・右ハンドル) ▼▼▼
         const renderBgmList = () => {
+            // 親コンテナのスタイル設定 (カード化)
+            playlistContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700 mb-6';
+
             if (state.settings.playlist.length === 0) {
                 playlistContainer.innerHTML = `
                     <div class="p-8 text-center text-gray-400 dark:text-gray-500">
@@ -7899,14 +7953,14 @@ const renderRoutineList = () => {
                     `;
                 }).join('');
 
-                // イベント設定
+                // イベント設定: 試聴
                 playlistContainer.querySelectorAll('.preview-bgm-btn').forEach(btn => {
                     const id = btn.closest('.bgm-item').dataset.id;
                     const url = initialData.music[id].url;
                     btn.addEventListener('click', () => toggleMusicPreview(url, btn));
                 });
 
-                // スワイプ設定
+                // スワイプ削除設定
                 playlistContainer.querySelectorAll('.bgm-item').forEach(itemEl => {
                     new SwipeHandler(itemEl, {
                         onDelete: () => {
@@ -7917,7 +7971,7 @@ const renderRoutineList = () => {
                                 state.settings.playlist.splice(index, 1);
                                 saveState();
                                 setTimeout(renderBgmList, 300); // アニメーション後に再描画
-                                renderLibraryList(); // 追加可能リスト側も更新（曲を戻すため）
+                                renderLibraryList(); // 追加可能リスト側も更新
                             }
                         }
                     });
@@ -7925,6 +7979,65 @@ const renderRoutineList = () => {
             }
             lucide.createIcons({ root: playlistContainer });
         };
+
+        // ライブラリ（追加可能リスト）描画関数
+        const renderLibraryList = () => {
+            const available = state.profile.unlockedMusic.filter(id => !state.settings.playlist.includes(id));
+            
+            if (available.length === 0) {
+                libraryContainer.innerHTML = '<span class="text-xs text-gray-400 w-full text-center py-4">追加できる曲がありません</span>';
+            } else {
+                libraryContainer.innerHTML = available.map(id => {
+                    const t = initialData.music[id];
+                    return `
+                        <button class="add-to-playlist-btn group flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border-2 border-transparent hover:border-pink-200 dark:hover:border-pink-900 px-4 py-2.5 rounded-2xl transition-all active:scale-95" data-id="${id}">
+                            <div class="w-6 h-6 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-500 group-hover:scale-110 transition-transform">
+                                <i data-lucide="plus" class="w-3 h-3 stroke-[3]"></i>
+                            </div>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${t.name}</span>
+                        </button>
+                    `;
+                }).join('');
+
+                libraryContainer.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        state.settings.playlist.push(btn.dataset.id);
+                        saveState();
+                        renderBgmList();
+                        renderLibraryList();
+                    });
+                });
+            }
+            lucide.createIcons({ root: libraryContainer });
+        };
+
+        // 初回描画
+        renderBgmList();
+        renderLibraryList();
+        lucide.createIcons();
+
+        // Sortable初期化 (並び替え)
+        if (bgmSortable) bgmSortable.destroy();
+        bgmSortable = Sortable.create(playlistContainer, {
+            handle: '.playlist-handle',
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            forceFallback: true,
+            fallbackClass: 'sortable-drag',
+            delay: 150,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
+            filter: '.swiped-open, .is-swiping, .swipe-deleting', // スワイプ中はドラッグ不可
+            onEnd: (evt) => {
+                const item = state.settings.playlist.splice(evt.oldIndex, 1)[0];
+                state.settings.playlist.splice(evt.newIndex, 0, item);
+                saveState();
+                renderBgmList(); // 番号振り直しのため再描画
+            }
+        });
+    },
+    onClose: () => { stopMusicPreview(); }
+});
         // ▲▲▲ 修正ここまで ▲▲▲
             $('#close-bgm-settings-btn').addEventListener('click', () => bgmSettingsPage.close());
 
