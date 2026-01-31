@@ -1174,6 +1174,42 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     /* 元の80px(pb-20) + セーフティエリア */
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
 }
+        /* --- ブレイクタイム設定用アニメーション --- */
+
+/* 削除時のアニメーション */
+@keyframes scaleOutFade {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0); opacity: 0; margin: 0; height: 0; padding: 0; }
+}
+.animate-scale-out {
+    animation: scaleOutFade 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    pointer-events: none; /* アニメーション中は操作不可 */
+}
+
+/* 表示切り替え時のフェードイン */
+@keyframes fadeInList {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-list {
+    animation: fadeInList 0.3s ease-out forwards;
+}
+
+/* ドラッグ中の見た目 (SortableJS用) */
+.sortable-drag {
+    opacity: 0; /* 元の要素は隠す */
+}
+.sortable-ghost {
+    opacity: 0.4;
+    transform: scale(0.95);
+    filter: grayscale(100%);
+}
+/* ドラッグしている手元の要素（SortableJSが生成するクローン）のデザイン調整はJS側で制御されますが、
+   視覚的なフィードバックとして以下を追加 */
+.break-settings-item.sortable-chosen {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+}
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -5869,9 +5905,9 @@ function syncGamesToBreakIcons() {
         const pageRoot = document.querySelector('#break-settings-screen .overflow-y-auto');
         if (!pageRoot) return;
 
-        // 設定値の取得
         const isSimple = state.settings.simpleBreakIcons;
 
+        // HTML生成
         pageRoot.innerHTML = `
             <div class="space-y-8 pb-10">
                 <div>
@@ -5898,7 +5934,7 @@ function syncGamesToBreakIcons() {
 
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">表示中 (ドラッグで並び替え)</h3>
-                    <div id="break-active-list" class="grid grid-cols-4 gap-4 p-2"></div>
+                    <div id="break-active-list" class="grid grid-cols-4 gap-4 p-2 animate-fade-in-list"></div>
                 </div>
 
                 <div>
@@ -5908,13 +5944,14 @@ function syncGamesToBreakIcons() {
             </div>
         `;
 
-        // 1. トグルスイッチ
+        // 1. トグルスイッチ制御
         const toggle = document.getElementById('break-style-toggle');
         toggle.checked = isSimple;
         toggle.addEventListener('change', (e) => {
             state.settings.simpleBreakIcons = e.target.checked;
             saveState();
-            breakSettingsPage.onOpen(); // 再描画
+            // 画面全体を再描画せず、リスト部分だけ更新してアニメーションさせる
+            breakSettingsPage.onOpen();
         });
 
         const activeContainer = document.getElementById('break-active-list');
@@ -5923,29 +5960,30 @@ function syncGamesToBreakIcons() {
         const activeIcons = state.breakIcons.filter(i => i.visible);
         const inactiveIcons = state.breakIcons.filter(i => !i.visible);
 
-        // --- 2. 表示中アイテムの描画 ---
+        // --- 2. 表示中リスト描画 ---
         if (activeIcons.length === 0) {
-            activeContainer.classList.remove('grid', 'grid-cols-4'); // メッセージ表示用
+            activeContainer.classList.remove('grid', 'grid-cols-4');
             activeContainer.innerHTML = `<div class="p-6 text-center text-xs text-gray-400 w-full">表示中のコンテンツはありません</div>`;
         } else {
             activeContainer.innerHTML = activeIcons.map(icon => {
                 let visualHTML = '';
 
                 if (isSimple) {
-                    // ★シンプルモード: テーマカラーの角丸四角 + 白アイコン
+                    // ★シンプルモード: テーマカラー背景 + 白アイコン
                     visualHTML = `
                         <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center transition-transform active:scale-95" style="background-color: var(--primary-color);">
                             <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
                         </div>
                     `;
                 } else {
-                    // ★通常モード: 画像を表示 (背景色クラスを削除してボックスを消す)
+                    // ★通常モード: 画像
                     if (icon.thumbnail) {
+                        // 背景色なし(bg-transparent)、サイズ固定、object-coverで正方形維持
                         visualHTML = `
-                            <img src="${icon.thumbnail}" alt="${icon.name}" class="w-[72px] h-[72px] rounded-2xl shadow-md object-cover transition-transform active:scale-95 bg-transparent">
+                            <img src="${icon.thumbnail}" alt="${icon.name}" class="w-[72px] h-[72px] rounded-2xl shadow-md object-cover bg-transparent pointer-events-none select-none">
                         `;
                     } else {
-                        // 画像がない場合のフォールバック（ダークグレー背景）
+                        // 画像なし: ダークグレー背景
                         visualHTML = `
                             <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center bg-gray-700 transition-transform active:scale-95">
                                 <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
@@ -5955,25 +5993,25 @@ function syncGamesToBreakIcons() {
                 }
 
                 return `
-                    <div class="break-settings-item relative flex flex-col items-center group cursor-grab active:cursor-grabbing touch-none" data-id="${icon.id}">
-                        <div class="relative mb-1">
+                    <div class="break-settings-item relative flex flex-col items-center group cursor-grab active:cursor-grabbing touch-none select-none" data-id="${icon.id}">
+                        <div class="relative mb-1 w-[72px] h-[72px] flex-shrink-0 transition-transform active:scale-95">
                             ${visualHTML}
-                            <button class="remove-break-btn absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-sm z-10 border-2 border-gray-100 dark:border-gray-900">
+                            <button class="remove-break-btn absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm z-10 border-2 border-white dark:border-gray-900 flex items-center justify-center">
                                 <i data-lucide="x" class="w-3 h-3"></i>
                             </button>
                         </div>
-                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-2 w-full px-1 select-none">${icon.name}</span>
+                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-2 w-full px-1">${icon.name}</span>
                     </div>
                 `;
             }).join('');
         }
 
-        // --- 3. 追加可能アイテム ---
+        // --- 3. 追加可能リスト描画 ---
         if (inactiveIcons.length === 0) {
             inactiveContainer.innerHTML = '<p class="text-xs text-gray-400 w-full text-center py-2">すべて追加済みです</p>';
         } else {
             inactiveContainer.innerHTML = inactiveIcons.map(icon => `
-                <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent shadow-sm px-4 py-2 rounded-full transition active:scale-95" data-id="${icon.id}">
+                <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent shadow-sm px-4 py-2 rounded-full transition-all active:scale-95" data-id="${icon.id}">
                     <i data-lucide="plus" class="w-4 h-4 text-green-500"></i>
                     <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${icon.name}</span>
                 </button>
@@ -5982,33 +6020,60 @@ function syncGamesToBreakIcons() {
 
         lucide.createIcons({ root: document.getElementById('break-settings-screen') });
 
-        // --- 4. イベント設定 ---
+        // --- 4. イベント設定（削除アニメーション対応） ---
         activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = e.target.closest('.break-settings-item').dataset.id;
-                const icon = state.breakIcons.find(i => i.id === id);
-                if (icon) { icon.visible = false; saveState(); breakSettingsPage.onOpen(); }
+                e.stopPropagation(); // ドラッグ暴発防止
+                
+                const itemEl = e.target.closest('.break-settings-item');
+                const id = itemEl.dataset.id;
+
+                // 1. アニメーションクラスを付与
+                itemEl.classList.add('animate-scale-out');
+
+                // 2. アニメーション完了後にデータを更新して再描画
+                setTimeout(() => {
+                    const icon = state.breakIcons.find(i => i.id === id);
+                    if (icon) { 
+                        icon.visible = false; 
+                        saveState(); 
+                        breakSettingsPage.onOpen(); 
+                    }
+                }, 300); // CSSアニメーションの時間(0.3s)と合わせる
             });
         });
 
+        // 追加ボタン
         inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = btn.dataset.id;
                 const icon = state.breakIcons.find(i => i.id === id);
-                if (icon) { icon.visible = true; saveState(); breakSettingsPage.onOpen(); }
+                
+                // フェードアウトさせてから追加
+                btn.classList.add('opacity-0', 'scale-90');
+                
+                setTimeout(() => {
+                    if (icon) { 
+                        icon.visible = true; 
+                        saveState(); 
+                        breakSettingsPage.onOpen(); 
+                    }
+                }, 150);
             });
         });
 
-        // --- 5. SortableJS ---
+        // --- 5. SortableJS 設定 (アニメーション強化) ---
         if (breakSortable) { breakSortable.destroy(); breakSortable = null; }
         if (activeIcons.length > 0) {
             breakSortable = Sortable.create(activeContainer, {
                 handle: '.break-settings-item', 
-                animation: 200,
-                delay: 150,
+                animation: 250, // アニメーション時間を少し長くして滑らかに
+                easing: "cubic-bezier(0.25, 1, 0.5, 1)", // イージング追加
+                delay: 150, // 長押し判定
                 delayOnTouchOnly: true,
                 touchStartThreshold: 5,
+                ghostClass: 'sortable-ghost', // ドラッグ元のスタイル
+                dragClass: 'sortable-drag',   // ドラッグ中のスタイル
                 onEnd: (evt) => {
                     const idOrder = Array.from(activeContainer.children).map(c => c.dataset.id);
                     const sorted = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
