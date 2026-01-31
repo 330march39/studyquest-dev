@@ -5963,15 +5963,30 @@ function syncGamesToBreakIcons() {
 // ↑↑↑ 修正ここまで ↑↑↑
 
         // --- 6. ブレイクタイム設定サブページ (新規追加) ---
-          // ▼▼▼ 修正版: ブレイクタイム設定ページ ▼▼▼
+          // ▼▼▼ 修正版: ブレイクタイム設定ページ (アニメーション・Sortable管理修正) ▼▼▼
+
+// 並び替え管理用の変数をここ（関数の外）で定義します
+let breakSortableActive = null;
+let breakSortableInactive = null;
+
 const breakSettingsPage = new SubPage('break-settings-screen', {
     onOpen: () => {
         const pageRoot = document.querySelector('#break-settings-screen .overflow-y-auto');
         if (!pageRoot) return;
 
+        // ★重要: 既存のSortableインスタンスを確実に破棄（これで動作不良を防ぎます）
+        if (breakSortableActive) {
+            breakSortableActive.destroy();
+            breakSortableActive = null;
+        }
+        if (breakSortableInactive) {
+            breakSortableInactive.destroy();
+            breakSortableInactive = null;
+        }
+
         const isSimple = state.settings.simpleBreakIcons;
 
-        // HTML生成 (空の時の分岐処理を削除し、常にgridを表示させます)
+        // HTML生成
         pageRoot.innerHTML = `
             <div class="space-y-8 pb-10">
                 <div>
@@ -6010,12 +6025,14 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
         // 1. トグルスイッチ制御
         const toggle = document.getElementById('break-style-toggle');
-        toggle.checked = isSimple;
-        toggle.addEventListener('change', (e) => {
-            state.settings.simpleBreakIcons = e.target.checked;
-            saveState();
-            breakSettingsPage.onOpen();
-        });
+        if (toggle) {
+            toggle.checked = isSimple;
+            toggle.addEventListener('change', (e) => {
+                state.settings.simpleBreakIcons = e.target.checked;
+                saveState();
+                breakSettingsPage.onOpen(); // 再描画
+            });
+        }
 
         const activeContainer = document.getElementById('break-active-list');
         const inactiveContainer = document.getElementById('break-inactive-list');
@@ -6026,7 +6043,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
         // --- ヘルパー: アイコンHTML生成 ---
         const createIconHTML = (icon, type) => {
             let visualHTML = '';
-            // type: 'active' (×ボタン) or 'inactive' (＋ボタン)
             const badgeColor = type === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
             const badgeIcon = type === 'active' ? 'x' : 'plus';
             const actionClass = type === 'active' ? 'remove-break-btn' : 'add-break-btn';
@@ -6041,14 +6057,12 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             } else {
                 // 通常モード（画像）
                 if (icon.thumbnail) {
-                    // ★修正: 背景色を強制的に透明にする (bg-transparent)
                     visualHTML = `
                         <div class="w-[72px] h-[72px] rounded-2xl shadow-md overflow-hidden bg-transparent transition-transform active:scale-95 relative flex items-center justify-center">
                             <img src="${icon.thumbnail}" alt="${icon.name}" class="w-full h-full object-cover">
                         </div>
                     `;
                 } else {
-                    // 画像がない場合
                     visualHTML = `
                         <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center bg-gray-700 transition-transform active:scale-95">
                             <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
@@ -6057,7 +6071,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }
             }
 
-            // HTML構造: .break-settings-item をルートにする
             return `
                 <div class="break-settings-item relative group cursor-grab active:cursor-grabbing touch-none select-none" data-id="${icon.id}">
                     <div class="relative mb-1 flex-shrink-0">
@@ -6072,13 +6085,12 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
         };
 
         // --- 2. リスト描画 ---
-        // 空の場合の分岐処理を削除し、常に map で生成（空なら空文字列になり、CSSの :empty が反応する）
         activeContainer.innerHTML = activeIcons.map(icon => createIconHTML(icon, 'active')).join('');
         inactiveContainer.innerHTML = inactiveIcons.map(icon => createIconHTML(icon, 'inactive')).join('');
 
         lucide.createIcons({ root: document.getElementById('break-settings-screen') });
 
-        // --- 3. 状態保存・更新処理 (共通) ---
+        // --- 3. 状態保存・更新処理 ---
         const updateStateFromDOM = () => {
             const activeIds = Array.from(activeContainer.querySelectorAll('.break-settings-item')).map(el => el.dataset.id);
             const inactiveIds = Array.from(inactiveContainer.querySelectorAll('.break-settings-item')).map(el => el.dataset.id);
@@ -6099,7 +6111,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             saveState();
         };
 
-        // --- 4. ボタンクリックイベント ---
+        // --- 4. ボタンクリックイベント (削除・追加のアニメーション修正) ---
         const setupBtnEvents = (container, isRemoving) => {
             const btnClass = isRemoving ? '.remove-break-btn' : '.add-break-btn';
             container.querySelectorAll(btnClass).forEach(btn => {
@@ -6108,10 +6120,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     const itemEl = e.target.closest('.break-settings-item');
                     const id = itemEl.dataset.id;
                     
-                    // アニメーション
-                    itemEl.style.transform = 'scale(0)';
-                    itemEl.style.opacity = '0';
+                    // ★修正: CSSクラスによるアニメーションに戻しました
+                    itemEl.classList.add('animate-scale-out');
                     
+                    // アニメーション完了後にデータ更新
                     setTimeout(() => {
                         const icon = state.breakIcons.find(i => i.id === id);
                         if (icon) {
@@ -6119,7 +6131,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             saveState();
                             breakSettingsPage.onOpen(); // 再描画
                         }
-                    }, 200);
+                    }, 300); // 0.3秒待つ
                 });
             });
         };
@@ -6129,7 +6141,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
         // --- 5. SortableJS 設定 ---
         const sortableOptions = {
-            group: 'breakIconsGroup', // 同じグループ名で相互移動可能
+            group: 'breakIconsGroup',
             animation: 250,
             delay: 100,
             delayOnTouchOnly: true,
@@ -6138,16 +6150,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             dragClass: 'sortable-drag',
             onEnd: (evt) => {
                 updateStateFromDOM();
-                // ボタンの入れ替え（×⇔＋）のために再描画
                 setTimeout(() => breakSettingsPage.onOpen(), 50);
             }
         };
 
-        if (this.sortableActive) this.sortableActive.destroy();
-        if (this.sortableInactive) this.sortableInactive.destroy();
-
-        this.sortableActive = Sortable.create(activeContainer, sortableOptions);
-        this.sortableInactive = Sortable.create(inactiveContainer, sortableOptions);
+        // ★変数をローカル変数ではなく、外で定義した変数に代入
+        breakSortableActive = Sortable.create(activeContainer, sortableOptions);
+        breakSortableInactive = Sortable.create(inactiveContainer, sortableOptions);
     }
 });
             // 戻るボタンの紐付け
