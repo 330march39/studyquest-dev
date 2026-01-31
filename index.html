@@ -5900,14 +5900,13 @@ function syncGamesToBreakIcons() {
 // ↑↑↑ 修正ここまで ↑↑↑
 
         // --- 6. ブレイクタイム設定サブページ (新規追加) ---
-            const breakSettingsPage = new SubPage('break-settings-screen', {
+           const breakSettingsPage = new SubPage('break-settings-screen', {
     onOpen: () => {
         const pageRoot = document.querySelector('#break-settings-screen .overflow-y-auto');
         if (!pageRoot) return;
 
         const isSimple = state.settings.simpleBreakIcons;
 
-        // HTML生成
         pageRoot.innerHTML = `
             <div class="space-y-8 pb-10">
                 <div>
@@ -5933,13 +5932,13 @@ function syncGamesToBreakIcons() {
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">表示中 (ドラッグで並び替え)</h3>
-                    <div id="break-active-list" class="grid grid-cols-4 gap-4 p-2 animate-fade-in-list"></div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">表示中 (ドラッグで移動)</h3>
+                    <div id="break-active-list" class="grid grid-cols-4 gap-4 p-2 min-h-[100px] animate-fade-in-list rounded-2xl border-2 border-dashed border-transparent transition-colors"></div>
                 </div>
 
                 <div>
                     <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">追加可能</h3>
-                    <div id="break-inactive-list" class="flex flex-wrap gap-2"></div>
+                    <div id="break-inactive-list" class="grid grid-cols-4 gap-4 p-2 min-h-[100px] animate-fade-in-list"></div>
                 </div>
             </div>
         `;
@@ -5950,7 +5949,6 @@ function syncGamesToBreakIcons() {
         toggle.addEventListener('change', (e) => {
             state.settings.simpleBreakIcons = e.target.checked;
             saveState();
-            // 画面全体を再描画せず、リスト部分だけ更新してアニメーションさせる
             breakSettingsPage.onOpen();
         });
 
@@ -5960,129 +5958,161 @@ function syncGamesToBreakIcons() {
         const activeIcons = state.breakIcons.filter(i => i.visible);
         const inactiveIcons = state.breakIcons.filter(i => !i.visible);
 
-        // --- 2. 表示中リスト描画 ---
-        if (activeIcons.length === 0) {
-            activeContainer.classList.remove('grid', 'grid-cols-4');
-            activeContainer.innerHTML = `<div class="p-6 text-center text-xs text-gray-400 w-full">表示中のコンテンツはありません</div>`;
-        } else {
-            activeContainer.innerHTML = activeIcons.map(icon => {
-                let visualHTML = '';
+        // --- ヘルパー: アイコンHTML生成 (共通化) ---
+        const createIconHTML = (icon, type) => {
+            let visualHTML = '';
+            // type: 'active' (×ボタン) or 'inactive' (＋ボタン)
+            const badgeColor = type === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
+            const badgeIcon = type === 'active' ? 'x' : 'plus';
+            const actionClass = type === 'active' ? 'remove-break-btn' : 'add-break-btn';
 
-                if (isSimple) {
-                    // ★シンプルモード: テーマカラー背景 + 白アイコン
+            if (isSimple) {
+                // シンプルモード
+                visualHTML = `
+                    <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center transition-transform active:scale-95" style="background-color: var(--primary-color);">
+                        <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
+                    </div>
+                `;
+            } else {
+                // 通常モード
+                if (icon.thumbnail) {
                     visualHTML = `
-                        <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center transition-transform active:scale-95" style="background-color: var(--primary-color);">
+                        <img src="${icon.thumbnail}" alt="${icon.name}" class="w-[72px] h-[72px] rounded-2xl shadow-md object-cover bg-transparent pointer-events-none select-none">
+                    `;
+                } else {
+                    visualHTML = `
+                        <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center bg-gray-700 transition-transform active:scale-95">
                             <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
                         </div>
                     `;
-                } else {
-                    // ★通常モード: 画像
-                    if (icon.thumbnail) {
-                        // 背景色なし(bg-transparent)、サイズ固定、object-coverで正方形維持
-                        visualHTML = `
-                            <img src="${icon.thumbnail}" alt="${icon.name}" class="w-[72px] h-[72px] rounded-2xl shadow-md object-cover bg-transparent pointer-events-none select-none">
-                        `;
-                    } else {
-                        // 画像なし: ダークグレー背景
-                        visualHTML = `
-                            <div class="w-[72px] h-[72px] rounded-2xl shadow-md flex items-center justify-center bg-gray-700 transition-transform active:scale-95">
-                                <i data-lucide="${icon.icon}" class="w-8 h-8 text-white"></i>
-                            </div>
-                        `;
-                    }
                 }
+            }
 
-                return `
-                    <div class="break-settings-item relative flex flex-col items-center group cursor-grab active:cursor-grabbing touch-none select-none" data-id="${icon.id}">
-                        <div class="relative mb-1 w-[72px] h-[72px] flex-shrink-0 transition-transform active:scale-95">
-                            ${visualHTML}
-                            <button class="remove-break-btn absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm z-10 border-2 border-white dark:border-gray-900 flex items-center justify-center">
-                                <i data-lucide="x" class="w-3 h-3"></i>
-                            </button>
-                        </div>
-                        <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-2 w-full px-1">${icon.name}</span>
+            return `
+                <div class="break-settings-item relative flex flex-col items-center group cursor-grab active:cursor-grabbing touch-none select-none" data-id="${icon.id}">
+                    <div class="relative mb-1 w-[72px] h-[72px] flex-shrink-0 transition-transform active:scale-95">
+                        ${visualHTML}
+                        <button class="${actionClass} absolute -top-2 -right-2 p-1.5 ${badgeColor} text-white rounded-full transition-colors shadow-sm z-10 border-2 border-white dark:border-gray-900 flex items-center justify-center">
+                            <i data-lucide="${badgeIcon}" class="w-3 h-3"></i>
+                        </button>
                     </div>
-                `;
-            }).join('');
+                    <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-2 w-full px-1 select-none">${icon.name}</span>
+                </div>
+            `;
+        };
+
+        // --- 2. リスト描画 ---
+        if (activeIcons.length === 0) {
+            activeContainer.innerHTML = `<div class="col-span-4 p-6 text-center text-xs text-gray-400 pointer-events-none">ここへドラッグして追加</div>`;
+        } else {
+            activeContainer.innerHTML = activeIcons.map(icon => createIconHTML(icon, 'active')).join('');
         }
 
-        // --- 3. 追加可能リスト描画 ---
         if (inactiveIcons.length === 0) {
-            inactiveContainer.innerHTML = '<p class="text-xs text-gray-400 w-full text-center py-2">すべて追加済みです</p>';
+            inactiveContainer.innerHTML = `<div class="col-span-4 p-6 text-center text-xs text-gray-400 pointer-events-none">すべて追加済みです</div>`;
         } else {
-            inactiveContainer.innerHTML = inactiveIcons.map(icon => `
-                <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent shadow-sm px-4 py-2 rounded-full transition-all active:scale-95" data-id="${icon.id}">
-                    <i data-lucide="plus" class="w-4 h-4 text-green-500"></i>
-                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">${icon.name}</span>
-                </button>
-            `).join('');
+            inactiveContainer.innerHTML = inactiveIcons.map(icon => createIconHTML(icon, 'inactive')).join('');
         }
 
         lucide.createIcons({ root: document.getElementById('break-settings-screen') });
 
-        // --- 4. イベント設定（削除アニメーション対応） ---
+        // --- 3. 状態保存・更新処理 (共通) ---
+        const updateStateFromDOM = () => {
+            // 表示中リストのID順を取得
+            const activeIds = Array.from(activeContainer.querySelectorAll('.break-settings-item')).map(el => el.dataset.id);
+            // 追加可能リストのID順を取得
+            const inactiveIds = Array.from(inactiveContainer.querySelectorAll('.break-settings-item')).map(el => el.dataset.id);
+
+            // stateを再構築
+            const newActive = activeIds.map(id => {
+                const item = state.breakIcons.find(i => i.id === id);
+                if(item) item.visible = true; 
+                return item;
+            }).filter(Boolean);
+
+            const newInactive = inactiveIds.map(id => {
+                const item = state.breakIcons.find(i => i.id === id);
+                if(item) item.visible = false;
+                return item;
+            }).filter(Boolean);
+
+            state.breakIcons = [...newActive, ...newInactive];
+            saveState();
+        };
+
+        // --- 4. ボタンクリックイベント (削除・追加) ---
+        // 削除 (active -> inactive)
         activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // ドラッグ暴発防止
+                e.stopPropagation();
+                const itemEl = e.target.closest('.break-settings-item');
+                const id = itemEl.dataset.id;
                 
+                // アニメーションして消える
+                itemEl.classList.add('animate-scale-out');
+                setTimeout(() => {
+                    // データ更新: visible = false
+                    const icon = state.breakIcons.find(i => i.id === id);
+                    if (icon) { icon.visible = false; saveState(); breakSettingsPage.onOpen(); }
+                }, 300);
+            });
+        });
+
+        // 追加 (inactive -> active)
+        inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const itemEl = e.target.closest('.break-settings-item');
                 const id = itemEl.dataset.id;
 
-                // 1. アニメーションクラスを付与
+                // アニメーションして消える
                 itemEl.classList.add('animate-scale-out');
-
-                // 2. アニメーション完了後にデータを更新して再描画
                 setTimeout(() => {
+                    // データ更新: visible = true
                     const icon = state.breakIcons.find(i => i.id === id);
-                    if (icon) { 
-                        icon.visible = false; 
-                        saveState(); 
-                        breakSettingsPage.onOpen(); 
-                    }
-                }, 300); // CSSアニメーションの時間(0.3s)と合わせる
+                    if (icon) { icon.visible = true; saveState(); breakSettingsPage.onOpen(); }
+                }, 300);
             });
         });
 
-        // 追加ボタン
-        inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = btn.dataset.id;
-                const icon = state.breakIcons.find(i => i.id === id);
+        // --- 5. SortableJS 設定 (ドラッグ移動) ---
+        // 両方のリストをグループ化して相互移動可能にする
+        const sortableOptions = {
+            group: 'breakIconsGroup', // ★同じグループ名にする
+            animation: 250,
+            delay: 100, // 少し長押し
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            onEnd: (evt) => {
+                // ドラッグ終了時にデータを更新
+                updateStateFromDOM();
                 
-                // フェードアウトさせてから追加
-                btn.classList.add('opacity-0', 'scale-90');
-                
+                // DOMの整合性を保つため、ボタン（×や＋）を入れ替えるために再描画
+                // ※少し遅らせないとドラッグのドロップ処理と競合して挙動不審になることがあるため
                 setTimeout(() => {
-                    if (icon) { 
-                        icon.visible = true; 
-                        saveState(); 
-                        breakSettingsPage.onOpen(); 
-                    }
-                }, 150);
-            });
-        });
+                    breakSettingsPage.onOpen();
+                }, 50);
+            }
+        };
 
-        // --- 5. SortableJS 設定 (アニメーション強化) ---
-        if (breakSortable) { breakSortable.destroy(); breakSortable = null; }
-        if (activeIcons.length > 0) {
-            breakSortable = Sortable.create(activeContainer, {
-                handle: '.break-settings-item', 
-                animation: 250, // アニメーション時間を少し長くして滑らかに
-                easing: "cubic-bezier(0.25, 1, 0.5, 1)", // イージング追加
-                delay: 150, // 長押し判定
-                delayOnTouchOnly: true,
-                touchStartThreshold: 5,
-                ghostClass: 'sortable-ghost', // ドラッグ元のスタイル
-                dragClass: 'sortable-drag',   // ドラッグ中のスタイル
-                onEnd: (evt) => {
-                    const idOrder = Array.from(activeContainer.children).map(c => c.dataset.id);
-                    const sorted = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
-                    const hidden = state.breakIcons.filter(i => !i.visible);
-                    state.breakIcons = [...sorted, ...hidden];
-                    saveState();
-                }
-            });
-        }
+        // 既存インスタンスの破棄（グローバル変数などで管理していない場合、ここでの再生成で十分）
+        // ※今回はSubPage再描画ごとに生成するので、ローカル変数管理でOKですが、
+        // 念のためプロパティに保持しておくと安全です。
+        if (this.sortableActive) this.sortableActive.destroy();
+        if (this.sortableInactive) this.sortableInactive.destroy();
+
+        this.sortableActive = Sortable.create(activeContainer, sortableOptions);
+        this.sortableInactive = Sortable.create(inactiveContainer, sortableOptions);
+        
+        // ドラッグ中の領域強調 (Active側)
+        Sortable.utils.on(activeContainer, 'dragenter', () => {
+            activeContainer.classList.add('border-indigo-300', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+        });
+        Sortable.utils.on(activeContainer, 'dragleave', () => {
+            activeContainer.classList.remove('border-indigo-300', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+        });
     }
 });
             // 戻るボタンの紐付け
