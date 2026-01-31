@@ -7657,7 +7657,6 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
 
             let routineSortable = null;
             // ▼▼▼ 修正版: ルーティン設定ページ (重複解消・アニメーション修正・ダークモード対応) ▼▼▼
-// ▼▼▼ 修正版: ルーティン設定 (アイコン色変更対応) ▼▼▼
 const routineSettingsPage = new SubPage('routine-settings-screen', {
     onOpen: () => {
         const contentArea = document.getElementById('routine-settings-content');
@@ -7709,11 +7708,10 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                 let titleHTML = '';
                 
                 if (item.type === 'section') {
-                    // ★変更点: 背景をテーマカラー、アイコンを白に変更
+                    // ★テーマカラー背景、白アイコン
                     iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm" style="background-color: var(--primary-color);"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
                     titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
                 } else {
-                    // ブレイクは緑色のまま維持（区別しやすくするため）
                     iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
                     titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
                 }
