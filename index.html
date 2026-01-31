@@ -1973,37 +1973,21 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     </div>
     </div>
 
-    <div id="routine-settings-screen" class="screen-layer">
-    <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
-        <div class="flex items-center flex-1">
-            <button id="close-routine-settings-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                <div class="flex items-center font-medium primary-text">
-                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
-                    <span>戻る</span>
-                </div>
-            </button>
-        </div>
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white">ルーティン設定</h2>
-        <div class="flex-1"></div>
-    </header>
-
-    <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
-        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-            「今日の予定」を読み込む際のパターンを設定します。<br>
-            このリストの順序に従ってタスクが割り当てられ、最後まで行くと最初に戻って繰り返されます。
-        </p>
-
-        <div id="routine-list" class="space-y-2 mb-4">
+    <div id="routine-settings-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-routine-settings-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
             </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">ルーティン設定</h2>
+            <div class="flex-1"></div>
+        </header>
 
-        <div class="flex justify-between mt-4">
-            <button id="routine-add-section-btn" class="flex-1 mr-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
-                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>セクション
-            </button>
-            <button id="routine-add-break-btn" class="flex-1 ml-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
-                <i data-lucide="coffee" class="w-4 h-4 mr-2"></i>ブレイクタイム
-            </button>
-        </div>
+        <div id="routine-settings-content" class="flex-grow overflow-y-auto p-4 pb-safe"></div>
     </div>
 </div>
 
@@ -7672,191 +7656,174 @@ const backgroundSettingsPage = new SubPage('background-settings-screen', {
             // ▼▼▼ ルーティン設定画面の制御 ▼▼▼
 
             let routineSortable = null;
-            const routineSettingsPage = new SubPage('routine-settings-screen', {
-                onOpen: () => {
-                    renderRoutineList();
-                }
-            });
-            
-            const routineListEl = document.getElementById('routine-list');
-            
-            // リスト描画関数
-            // ▼▼▼ 修正: ルーティン設定 (エラー修正・アニメーション対応) ▼▼▼
-// ▼▼▼ 修正: ルーティン設定 (クエストリストと同じ挙動・設定に統一) ▼▼▼
-const renderRoutineList = () => {
-    // 1. 既存のSortableインスタンスがあれば確実に破棄してnullにする
-    if (routineSortable) {
-        routineSortable.destroy();
-        routineSortable = null;
-    }
+            // ▼▼▼ 修正版: ルーティン設定ページ (重複解消・アニメーション修正・ダークモード対応) ▼▼▼
+const routineSettingsPage = new SubPage('routine-settings-screen', {
+    onOpen: () => {
+        // コンテナを取得
+        const contentArea = document.getElementById('routine-settings-content');
+        if (!contentArea) return;
 
-    routineListEl.innerHTML = '';
-    
-    // 説明文
-    const desc = document.createElement('div');
-    desc.className = 'mb-4 px-2';
-    desc.innerHTML = `<p class="text-xs text-gray-500 dark:text-gray-400">クエスト実行時のパターンを設定します。<br>スワイプで削除、ドラッグで並び替えができます。</p>`;
-    routineListEl.appendChild(desc);
-
-    // カード型コンテナ
-    const cardContainer = document.createElement('div');
-    cardContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden mb-6';
-    routineListEl.appendChild(cardContainer);
-
-    // リスト部分（ここがSortableの対象）
-    const listContainer = document.createElement('div');
-    listContainer.className = 'divide-y divide-gray-100 dark:divide-gray-700';
-    cardContainer.appendChild(listContainer);
-
-    if (state.profile.routineTemplate.length === 0) {
-        listContainer.innerHTML = `
-            <div class="py-10 text-center text-gray-400 dark:text-gray-500">
-                <i data-lucide="list-x" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
-                <p class="text-xs font-bold">ルーティンが空です</p>
-            </div>`;
-    }
-
-    state.profile.routineTemplate.forEach((item, index) => {
-        const itemEl = document.createElement('div');
-        // クエストリストと同じデザイン定義
-        itemEl.className = 'swipe-container relative overflow-hidden group h-[72px] w-full bg-white dark:bg-gray-800 transition-colors';
-        itemEl.setAttribute('data-id', item.id);
-
-        let iconHTML = '';
-        let titleHTML = '';
-        
-        if (item.type === 'section') {
-            iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
-            titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
-        } else {
-            iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
-            titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
+        // 既存のSortableを破棄
+        if (routineSortable) {
+            routineSortable.destroy();
+            routineSortable = null;
         }
 
-        const durationMin = item.duration / 60;
+        // HTMLをJSで一括生成（これで重複を防ぐ）
+        contentArea.innerHTML = `
+            <div class="space-y-4 pb-10">
+                <p class="text-xs text-gray-500 dark:text-gray-400 px-2">
+                    クエスト実行時のパターンを設定します。<br>
+                    スワイプで削除、ドラッグで並び替えができます。
+                </p>
 
-        itemEl.innerHTML = `
-            <div class="swipe-actions">
-                <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
-                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                    <span>削除</span>
-                </button>
-            </div>
+                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                    <div id="routine-list-container" class="divide-y divide-gray-100 dark:divide-gray-700"></div>
 
-            <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                <div class="mr-3 flex-shrink-0">${iconHTML}</div>
-                
-                <div class="flex-grow min-w-0 flex flex-col justify-center mr-2">
-                    ${titleHTML}
+                    <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2 border-t border-gray-100 dark:border-gray-700">
+                        <button id="btn-add-section" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center active:scale-95">
+                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> 学習
+                        </button>
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+                        <button id="btn-add-break" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center active:scale-95">
+                            <i data-lucide="coffee" class="w-4 h-4 mr-1"></i> ブレイク
+                        </button>
+                    </div>
                 </div>
-
-                <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-2 py-1 flex-shrink-0 mr-1 h-8">
-                    <input type="number" value="${durationMin}" 
-                        class="routine-duration-input w-8 bg-transparent text-center font-bold text-sm text-gray-700 dark:text-gray-200 focus:outline-none p-0 appearance-none">
-                    <span class="text-[10px] text-gray-400 font-bold ml-0.5">分</span>
-                </div>
-
-                <button class="routine-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none h-10 w-10 flex items-center justify-center">
-                    <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                </button>
             </div>
         `;
 
-        listContainer.appendChild(itemEl);
+        const listContainer = document.getElementById('routine-list-container');
 
-        // イベント: 時間変更
-        const input = itemEl.querySelector('.routine-duration-input');
-        input.addEventListener('change', (e) => {
-            let val = parseInt(e.target.value);
-            if(val < 1) val = 1;
-            item.duration = val * 60;
+        // --- リストアイテム描画関数 ---
+        const renderItems = () => {
+            if (state.profile.routineTemplate.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="py-10 text-center text-gray-400 dark:text-gray-500">
+                        <i data-lucide="list-x" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
+                        <p class="text-xs font-bold">ルーティンが空です</p>
+                    </div>`;
+                lucide.createIcons({ root: listContainer });
+                return;
+            }
+
+            listContainer.innerHTML = state.profile.routineTemplate.map((item, index) => {
+                let iconHTML = '';
+                let titleHTML = '';
+                
+                if (item.type === 'section') {
+                    iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
+                    titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
+                } else {
+                    iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
+                    titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
+                }
+
+                const durationMin = Math.floor(item.duration / 60);
+
+                // ★修正点: active時の背景色から「/50」を削除して不透明にする
+                return `
+                    <div class="routine-item swipe-container relative overflow-hidden group h-[72px] w-full bg-white dark:bg-gray-800 transition-colors" data-index="${index}">
+                        <div class="swipe-actions">
+                            <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                <span>削除</span>
+                            </button>
+                        </div>
+
+                        <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors">
+                            <div class="mr-3 flex-shrink-0">${iconHTML}</div>
+                            
+                            <div class="flex-grow min-w-0 flex flex-col justify-center mr-2">
+                                ${titleHTML}
+                            </div>
+
+                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-2 py-1 flex-shrink-0 mr-1 h-8">
+                                <input type="number" value="${durationMin}" 
+                                    class="routine-duration-input w-8 bg-transparent text-center font-bold text-sm text-gray-700 dark:text-gray-200 focus:outline-none p-0 appearance-none">
+                                <span class="text-[10px] text-gray-400 font-bold ml-0.5">分</span>
+                            </div>
+
+                            <button class="routine-handle cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-2 -mr-2 flex-shrink-0 touch-none h-10 w-10 flex items-center justify-center">
+                                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // イベント設定
+            listContainer.querySelectorAll('.routine-item').forEach(itemEl => {
+                const index = parseInt(itemEl.dataset.index);
+                const item = state.profile.routineTemplate[index];
+
+                // 時間変更
+                const input = itemEl.querySelector('.routine-duration-input');
+                input.addEventListener('change', (e) => {
+                    let val = parseInt(e.target.value);
+                    if(val < 1) val = 1;
+                    item.duration = val * 60;
+                    saveState();
+                });
+
+                // スワイプ削除
+                new SwipeHandler(itemEl, {
+                    onDelete: () => {
+                        state.profile.routineTemplate.splice(index, 1);
+                        saveState();
+                        // ★ アニメーション完了後に再描画
+                        setTimeout(renderItems, 300); 
+                    }
+                });
+            });
+
+            lucide.createIcons({ root: listContainer });
+        };
+
+        // 初回描画
+        renderItems();
+
+        // Sortable初期化 (リストが空でない場合のみ)
+        // ★修正: delay設定などをクエストリストと統一
+        if (state.profile.routineTemplate.length > 0) {
+            routineSortable = Sortable.create(listContainer, {
+                handle: '.routine-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                delay: 200, 
+                delayOnTouchOnly: true, 
+                touchStartThreshold: 5,
+                filter: '.swiped-open, .is-swiping, .swipe-deleting',
+                onEnd: (evt) => {
+                    const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
+                    state.profile.routineTemplate.splice(evt.newIndex, 0, item);
+                    saveState();
+                    renderItems(); // インデックス振り直しのため再描画
+                }
+            });
+        }
+
+        // ボタンイベント設定
+        document.getElementById('btn-add-section').addEventListener('click', () => {
+            state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: 25 * 60 });
             saveState();
+            // ページ全体をリロードしてSortableを再設定
+            routineSettingsPage.onOpen();
         });
 
-        // イベント: スワイプ削除（アニメーション対応）
-        new SwipeHandler(itemEl, {
-            onDelete: () => {
-                state.profile.routineTemplate.splice(index, 1);
-                saveState();
-                // ★修正: アニメーション完了(300ms)を待ってから再描画
-                setTimeout(renderRoutineList, 300);
-            }
+        document.getElementById('btn-add-break').addEventListener('click', () => {
+            state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: 5 * 60 });
+            saveState();
+            routineSettingsPage.onOpen();
         });
-    });
 
-    // 追加ボタンエリア
-    const buttonsArea = document.createElement('div');
-    buttonsArea.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2 border-t border-gray-100 dark:border-gray-700';
-    buttonsArea.innerHTML = `
-        <button id="routine-add-section-btn-new" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center">
-            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> 学習
-        </button>
-        <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
-        <button id="routine-add-break-btn-new" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center">
-            <i data-lucide="coffee" class="w-4 h-4 mr-1"></i> ブレイク
-        </button>
-    `;
-    cardContainer.appendChild(buttonsArea);
-
-    // ボタンイベント
-    buttonsArea.querySelector('#routine-add-section-btn-new').addEventListener('click', () => {
-        state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: 25 * 60 });
-        saveState();
-        renderRoutineList();
-    });
-    buttonsArea.querySelector('#routine-add-break-btn-new').addEventListener('click', () => {
-        state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: 5 * 60 });
-        saveState();
-        renderRoutineList();
-    });
-
-    lucide.createIcons({ root: routineListEl });
-
-    // Sortable設定 (要素が存在し、かつリストが空でない場合のみ初期化)
-    if (state.profile.routineTemplate.length > 0 && listContainer) {
-        routineSortable = Sortable.create(listContainer, {
-            handle: '.routine-handle',
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            // ★修正: forceFallback を削除し、Questと同じ設定を適用
-            delay: 200, 
-            delayOnTouchOnly: true, 
-            touchStartThreshold: 5,
-            filter: '.swiped-open, .is-swiping, .swipe-deleting', // スワイプ中はドラッグ不可
-            onEnd: (evt) => {
-                const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
-                state.profile.routineTemplate.splice(evt.newIndex, 0, item);
-                saveState();
-            }
-        });
+        lucide.createIcons();
     }
-};
-// ▲▲▲ 修正ここまで ▲▲▲
-            
-            // 追加ボタンイベント
-            document.getElementById('routine-add-section-btn').addEventListener('click', () => {
-                state.profile.routineTemplate.push({
-                    id: Date.now(),
-                    type: 'section',
-                    duration: 25 * 60
-                });
-                saveState();
-                renderRoutineList();
-            });
-            
-            document.getElementById('routine-add-break-btn').addEventListener('click', () => {
-                state.profile.routineTemplate.push({
-                    id: Date.now(),
-                    type: 'break',
-                    duration: 5 * 60
-                });
-                saveState();
-                renderRoutineList();
-            });
-            
-            // 戻るボタン
-            document.getElementById('close-routine-settings-btn').addEventListener('click', () => routineSettingsPage.close());
+});
 
+// 戻るボタンのイベントリスナー（これは変更なし）
+document.getElementById('close-routine-settings-btn').addEventListener('click', () => routineSettingsPage.close());
+// ▲▲▲ 修正ここまで ▲▲▲
             // --- 5. BGM設定サブページ ---
             let bgmSortable = null;
             // bgmSettingsPage の onOpen 内の renderBgmPageList と Sortable初期化を以下に置き換えてください
@@ -7970,35 +7937,35 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                     if(!track) return '';
                     
                     return `
-                        <div class="bgm-item swipe-container relative overflow-hidden h-[64px] w-full bg-white dark:bg-gray-800 transition-colors group" data-id="${id}">
-                            
-                            <div class="swipe-actions">
-                                <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
-                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                                    <span>削除</span>
-                                </button>
-                            </div>
+    <div class="bgm-item swipe-container relative overflow-hidden h-[64px] w-full bg-white dark:bg-gray-800 transition-colors group" data-id="${id}">
+        
+        <div class="swipe-actions">
+            <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                <span>削除</span>
+            </button>
+        </div>
 
-                            <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                
-                                <div class="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center mr-3 text-pink-500 flex-shrink-0">
-                                    <span class="text-xs font-bold">${index + 1}</span>
-                                </div>
+        <div class="swipe-content flex items-center px-4 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors">
+            
+            <div class="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center mr-3 text-pink-500 flex-shrink-0">
+                <span class="text-xs font-bold">${index + 1}</span>
+            </div>
 
-                                <div class="flex-grow min-w-0 mr-2">
-                                    <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${track.name}</p>
-                                </div>
+            <div class="flex-grow min-w-0 mr-2">
+                <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${track.name}</p>
+            </div>
 
-                                <button class="preview-bgm-btn p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition flex-shrink-0 mr-1">
-                                    <i data-lucide="play-circle" class="w-5 h-5"></i>
-                                </button>
+            <button class="preview-bgm-btn p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition flex-shrink-0 mr-1">
+                <i data-lucide="play-circle" class="w-5 h-5"></i>
+            </button>
 
-                                <button class="playlist-handle p-2 -mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none flex-shrink-0 h-10 w-10 flex items-center justify-center">
-                                    <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+            <button class="playlist-handle p-2 -mr-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none flex-shrink-0 h-10 w-10 flex items-center justify-center">
+                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+`;
                 }).join('');
 
                 // イベント設定: 試聴
