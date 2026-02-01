@@ -1540,56 +1540,66 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         </div>
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
             
-            <div id="pwa-start-buttons" class="space-y-4 hidden">
-                <button id="btn-start-new" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105">
-                    初めての方はこちら
+            <div id="pwa-start-buttons" class="space-y-4 hidden w-full px-4">
+                <button id="btn-start-new" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg shadow-indigo-500/30 transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
+                    <span>初めての方はこちら</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
                 </button>
-                <button id="btn-transfer-start" class="w-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl shadow transition-colors border border-gray-200 dark:border-gray-700">
+                
+                <button id="btn-transfer-start" class="w-full bg-transparent text-gray-500 dark:text-gray-400 font-bold py-3 rounded-full transition-colors hover:text-gray-700 dark:hover:text-gray-200 text-sm">
                     以前のデータを引き継ぐ
                 </button>
             </div>
 
-            <div id="pwa-install-trigger-area" class="hidden">
-                <button id="pwa-install-trigger-btn" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105 flex items-center justify-center">
-                    <i data-lucide="download" class="w-5 h-5 mr-2"></i>
-                    アプリをインストールする
+            <div id="pwa-install-trigger-area" class="hidden w-full px-4">
+                <button id="pwa-install-trigger-btn" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-4 px-8 rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 flex items-center justify-center border-4 border-gray-100 dark:border-gray-800">
+                    <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded-full mr-3">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </div>
+                    <span>アプリをインストール</span>
                 </button>
-                <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
-                    ※ ご利用にはホーム画面への追加が必要です
+                <p class="text-xs text-gray-400 dark:text-gray-500 text-center mt-4 font-medium">
+                    ホーム画面に追加して<br>フルスクリーンで体験しましょう
                 </p>
             </div>
 
         </div>
     </div>
 
-    <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col px-6 pb-6 transition-all duration-300 opacity-0 pointer-events-none transform scale-95" style="padding-top: calc(1.5rem + env(safe-area-inset-top));">
-        <header class="flex items-center mb-6">
-            <button id="reg-back-btn" class="p-2 -ml-2"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
-            <h2 class="text-xl font-bold ml-2">プロフィールを設定しよう！</h2>
-        </header>
-        
-        <div class="flex-grow flex flex-col items-center space-y-6 max-w-sm mx-auto w-full">
-            <div class="text-center">
-                <label class="block text-sm font-bold mb-2 text-gray-500">アイコン</label>
-                <div class="relative inline-block">
-                    <input type="text" id="reg-icon" class="w-24 h-24 text-center text-6xl border-2 border-dashed border-gray-300 rounded-full focus:outline-none focus:border-indigo-500 bg-white dark:bg-gray-800" value="🎓" readonly>
-                    <div class="absolute -bottom-2 -right-2 bg-blue-500 text-white p-2 rounded-full shadow cursor-pointer" id="icon-picker-btn">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-400 mt-2">タップしてランダム変更</p>
-            </div>
+    <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col px-6 pb-6 transition-all duration-300 opacity-0 pointer-events-none transform scale-95" style="padding-top: calc(1.5rem + env(safe-area-inset-top));">
+    <header class="flex items-center mb-8">
+        <button id="reg-back-btn" class="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+            <i data-lucide="chevron-left" class="w-8 h-8 text-gray-600 dark:text-gray-300"></i>
+        </button>
+        <div class="flex-1"></div>
+    </header>
+    
+    <div class="flex-grow flex flex-col items-center w-full max-w-sm mx-auto">
+        <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-10 text-center">プロフィール作成</h2>
 
-            <div class="w-full">
-                <label class="block text-sm font-bold mb-2 text-gray-500">ユーザー名</label>
-                <input type="text" id="reg-name" class="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例: スタディ勇者">
+        <div class="mb-10 text-center relative group">
+            <div class="relative inline-block">
+                <input type="text" id="reg-icon" class="w-32 h-32 text-center text-[5rem] border-4 border-white dark:border-gray-800 rounded-full focus:outline-none bg-white dark:bg-gray-800 shadow-xl" value="🎓" readonly>
+                <button id="icon-picker-btn" class="absolute bottom-0 right-0 bg-gray-900 dark:bg-white text-white dark:text-gray-900 p-3 rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer border-4 border-gray-50 dark:border-gray-900">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                </button>
             </div>
+            <p class="text-xs text-gray-400 mt-3 font-bold">アイコンをタップして変更</p>
+        </div>
 
-            <div class="w-full">
-                <label class="block text-sm font-bold mb-2 text-gray-500">学年</label>
+        <div class="w-full space-y-5">
+            <div>
+                <label class="block text-xs font-bold mb-2 text-gray-400 ml-4 uppercase tracking-wider">ニックネーム</label>
                 <div class="relative">
-                    <select id="reg-grade" class="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="" disabled selected>選択してください</option>
+                    <input type="text" id="reg-name" class="w-full py-4 px-6 rounded-full border-none bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white font-bold text-lg focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none transition-all placeholder-gray-300" placeholder="名前を入力">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold mb-2 text-gray-400 ml-4 uppercase tracking-wider">学年</label>
+                <div class="relative">
+                    <select id="reg-grade" class="w-full py-4 px-6 rounded-full border-none bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white font-bold text-lg focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none appearance-none transition-all cursor-pointer">
+                        <option value="" disabled selected class="text-gray-300">選択してください</option>
                         <option value="小学1年生">小学1年生</option>
                         <option value="小学2年生">小学2年生</option>
                         <option value="小学3年生">小学3年生</option>
@@ -1605,17 +1615,20 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                         <option value="大学・専門学生">大学・専門学生</option>
                         <option value="社会人・その他">社会人・その他</option>
                     </select>
-                    <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                    </div>
                 </div>
             </div>
-            
-            <div class="flex-grow"></div>
-
-            <button id="reg-complete-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                次へ進む
-            </button>
         </div>
+        
+        <div class="flex-grow"></div>
+
+        <button id="reg-complete-btn" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-xl shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all hover:scale-[1.02] active:scale-95 mb-4 text-lg" disabled>
+            次へ進む
+        </button>
     </div>
+</div>
 
     <div id="tutorial-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6 hidden">
         
@@ -1626,12 +1639,12 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         <div class="w-full max-w-xs space-y-6 animate-fadeIn text-center z-10" style="animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards;">
 
             <div class="space-y-3">
-                <button id="request-notification-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
+                <button id="request-notification-btn" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
                     <i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>
                     通知を許可して始める
                 </button>
                 
-                <button id="skip-notification-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold text-xs py-2 transition-colors">
+                <button id="skip-notification-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold text-xs py-3 transition-colors">
                     今は設定しない
                 </button>
             </div>
@@ -8719,38 +8732,48 @@ const renderGamePreviews = (game) => {
             init();
         });
     </script>
-    <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden animate-fadeIn" onclick="this.classList.add('hidden')">
+    <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md text-white hidden animate-fadeIn flex-col" onclick="this.classList.add('hidden')">
+    
+    <div class="flex-grow flex flex-col items-center justify-center p-6 text-center pointer-events-none">
         
-        <div class="absolute inset-0 flex flex-col items-center justify-start pt-20 px-6 text-center pointer-events-none">
-
-            <div class="space-y-4 text-left bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-sm w-full max-w-sm">
-                <div class="flex items-center">
-                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3 flex-shrink-0">1</span>
-                    <p class="text-sm">画面下部の <i data-lucide="share" class="inline w-4 h-4 mx-1"></i> 「共有」 をタップ</p>
-                </div>
-                <div class="flex items-center">
-                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3 flex-shrink-0">2</span>
-                    <p class="text-sm"><i data-lucide="plus-square" class="inline w-4 h-4 mx-1"></i>「ホーム画面に追加」を選択</p>
-                </div>
-                <div class="flex items-center">
-                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3 flex-shrink-0">3</span>
-                    <p class="text-sm">右上の「追加」をタップして完了</p>
-                </div>
+        <div class="mb-8 transform scale-110">
+            <div class="w-24 h-24 rounded-[2rem] shadow-2xl mx-auto mb-6 overflow-hidden border border-white/20">
+                <img src="SQ_logo.png" alt="Icon" class="w-full h-full object-cover bg-white">
             </div>
+            <h3 class="text-3xl font-bold mb-2 tracking-tight">StudyQuest</h3>
+            <p class="text-white/70 text-sm font-medium">ホーム画面に追加して始めよう</p>
         </div>
 
-        <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none z-10">
-            <div class="mt-32">
-                <img src="SQ_logo.png" alt="Icon" class="w-20 h-20 rounded-2xl shadow-2xl mx-auto mb-4 border border-white/20">
-                <h3 class="text-2xl font-bold mb-2">アプリをインストールする</h3>
+        <div class="bg-white/10 p-6 rounded-[2rem] border border-white/20 shadow-2xl w-full max-w-sm backdrop-blur-xl">
+            <div class="space-y-6">
+                <div class="flex items-center text-left">
+                    <div class="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center text-lg mr-4 flex-shrink-0 shadow-lg">1</div>
+                    <p class="text-sm font-bold leading-relaxed">
+                        画面下部の <i data-lucide="share" class="inline w-5 h-5 mx-1 align-text-bottom"></i> <span class="text-blue-300">共有</span> をタップ
+                    </p>
+                </div>
+                <div class="w-full h-px bg-white/10"></div>
+                <div class="flex items-center text-left">
+                    <div class="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center text-lg mr-4 flex-shrink-0 shadow-lg">2</div>
+                    <p class="text-sm font-bold leading-relaxed">
+                        メニューから <br><i data-lucide="plus-square" class="inline w-5 h-5 mx-1 align-text-bottom"></i> <span class="text-blue-300">ホーム画面に追加</span> を選択
+                    </p>
+                </div>
+                <div class="w-full h-px bg-white/10"></div>
+                <div class="flex items-center text-left">
+                    <div class="w-10 h-10 rounded-full bg-white text-black font-bold flex items-center justify-center text-lg mr-4 flex-shrink-0 shadow-lg">3</div>
+                    <p class="text-sm font-bold leading-relaxed">
+                        右上の <span class="text-blue-300">追加</span> をタップして完了
+                    </p>
+                </div>
             </div>
-                <p class="mt-12 text-gray-500 text-xs font-bold">※端末やブラウザによって、操作方法が異なる場合があります</p>
-        </div>
-
-        <div class="absolute bottom-6 right-8 flex flex-col items-center animate-bounce pointer-events-none">
-            <p class="text-sm font-bold mb-2">ここをタップ</p>
-            <i data-lucide="arrow-down" class="w-8 h-8 text-white"></i>
         </div>
     </div>
+
+    <div class="pb-10 flex flex-col items-center animate-bounce pointer-events-none opacity-80">
+        <p class="text-sm font-bold mb-2">ここをタップ</p>
+        <i data-lucide="arrow-down" class="w-10 h-10 text-white"></i>
+    </div>
+</div>
 </body>
 </html>
