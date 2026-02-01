@@ -2046,7 +2046,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
 
         </div>
 
-        <button id="save-profile-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center">
+        <button id="save-profile-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-full shadow-lg transition-transform active:scale-95 flex items-center justify-center">
             <i data-lucide="save" class="w-5 h-5 mr-2"></i>
             変更を保存する
         </button>
@@ -7477,13 +7477,13 @@ const openItemDetailScreen = (id, type) => {
         iconContainer.style.backgroundColor = itemData.color;
         iconContainer.className = "w-32 h-32 rounded-full shadow-lg border-4 border-white dark:border-gray-700 mx-auto";
     } else if (type === 'background') {
-        iconContainer.className = "w-32 h-56 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mx-auto";
+        iconContainer.className = "w-32 h-56 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mx-auto";
         const bgStyle = itemData.url ? `background-image: url(${itemData.url}); background-size: cover; background-position: center;` : 'background-color: #6b7280;';
         iconContainer.innerHTML = `<div class="w-full h-full" style="${bgStyle}"></div>`;
     } else {
         // ゲーム または 音楽
         iconContainer.style.backgroundColor = ''; 
-        iconContainer.className = "w-32 h-32 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 relative mx-auto";
+        iconContainer.className = "w-32 h-32 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 relative mx-auto";
         
         // ★修正: ゲームかつサムネイルがある場合は画像を表示
         if (type === 'game' && itemData.thumbnail) {
@@ -8321,7 +8321,7 @@ const renderGamePreviews = (game) => {
         const item = document.createElement('div');
         
         // ★修正: indexによる分岐を削除し、全て aspect-[9/16] で統一
-        item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
+        item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
         
         const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
         
