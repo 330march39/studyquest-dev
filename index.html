@@ -1541,7 +1541,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
             
             <div id="pwa-start-buttons" class="space-y-4 hidden w-full px-4">
-                <button id="btn-start-new" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg shadow-indigo-500/30 transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
+                <button id="btn-start-new" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
                     <span>初めての方はこちら</span>
                     <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
                 </button>
@@ -1552,104 +1552,161 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             </div>
 
             <div id="pwa-install-trigger-area" class="hidden w-full px-4">
-                <button id="pwa-install-trigger-btn" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-4 px-8 rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 flex items-center justify-center border-4 border-gray-100 dark:border-gray-800">
+                <button id="pwa-install-trigger-btn" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-4 px-8 rounded-full shadow-xl transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
                     <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded-full mr-3">
                         <i data-lucide="download" class="w-5 h-5"></i>
                     </div>
                     <span>アプリをインストール</span>
                 </button>
                 <p class="text-xs text-gray-400 dark:text-gray-500 text-center mt-4 font-medium">
-                    ホーム画面に追加して<br>フルスクリーンで体験しましょう
+                    ※ご利用にはホーム画面への追加が必要です
                 </p>
             </div>
 
         </div>
     </div>
 
-    <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col px-6 pb-6 transition-all duration-300 opacity-0 pointer-events-none transform scale-95" style="padding-top: calc(1.5rem + env(safe-area-inset-top));">
-    <header class="flex items-center mb-8">
-        <button id="reg-back-btn" class="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
-            <i data-lucide="chevron-left" class="w-8 h-8 text-gray-600 dark:text-gray-300"></i>
-        </button>
-        <div class="flex-1"></div>
+    <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 opacity-0 pointer-events-none transform scale-95" style="padding-top: calc(1.5rem + env(safe-area-inset-top));">
+    
+    <header class="px-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <button id="reg-step-back-btn" class="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400">
+                <i data-lucide="chevron-left" class="w-8 h-8"></i>
+            </button>
+            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 tracking-widest">
+                STEP <span id="reg-step-number">1</span>/4
+            </div>
+            <div class="w-8"></div> </div>
+        <div class="h-1.5 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div id="reg-progress-bar" class="h-full primary-bg transition-all duration-500 ease-out" style="width: 25%;"></div>
+        </div>
     </header>
     
-    <div class="flex-grow flex flex-col items-center w-full max-w-sm mx-auto">
-        <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-10 text-center">プロフィール作成</h2>
-
-        <div class="mb-10 text-center relative group">
-            <div class="relative inline-block">
-                <input type="text" id="reg-icon" class="w-32 h-32 text-center text-[5rem] border-4 border-white dark:border-gray-800 rounded-full focus:outline-none bg-white dark:bg-gray-800 shadow-xl" value="🎓" readonly>
-                <button id="icon-picker-btn" class="absolute bottom-0 right-0 bg-gray-900 dark:bg-white text-white dark:text-gray-900 p-3 rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer border-4 border-gray-50 dark:border-gray-900">
-                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                </button>
+    <div class="flex-grow relative overflow-hidden w-full max-w-sm mx-auto flex flex-col">
+        
+        <div id="reg-step-1" class="reg-step-view w-full h-full flex flex-col px-6 transition-all duration-300">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">プロフィール設定</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">まずはあなたのことを教えてください</p>
             </div>
-            <p class="text-xs text-gray-400 mt-3 font-bold">アイコンをタップして変更</p>
-        </div>
 
-        <div class="w-full space-y-5">
+            <div class="mb-8 text-center relative group">
+                <div class="relative inline-block">
+                    <input type="text" id="reg-icon" class="w-32 h-32 text-center text-[5rem] border-4 border-white dark:border-gray-800 rounded-full focus:outline-none bg-white dark:bg-gray-800 shadow-xl" value="🎓" readonly>
+                    <button id="icon-picker-btn" class="absolute bottom-0 right-0 bg-gray-900 dark:bg-white text-white dark:text-gray-900 p-3 rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer border-4 border-gray-50 dark:border-gray-900">
+                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-3 font-bold">アイコンをタップして変更</p>
+            </div>
+
             <div>
                 <label class="block text-xs font-bold mb-2 text-gray-400 ml-4 uppercase tracking-wider">ニックネーム</label>
                 <div class="relative">
                     <input type="text" id="reg-name" class="w-full py-4 px-6 rounded-full border-none bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white font-bold text-lg focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none transition-all placeholder-gray-300" placeholder="名前を入力">
                 </div>
             </div>
+            
+            <div class="flex-grow"></div>
+            <button class="reg-next-btn w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-[1.02] active:scale-95 mb-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
+                次へ
+            </button>
+        </div>
 
-            <div>
-                <label class="block text-xs font-bold mb-2 text-gray-400 ml-4 uppercase tracking-wider">学年</label>
-                <div class="relative">
-                    <select id="reg-grade" class="w-full py-4 px-6 rounded-full border-none bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white font-bold text-lg focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none appearance-none transition-all cursor-pointer">
-                        <option value="" disabled selected class="text-gray-300">選択してください</option>
-                        <option value="小学1年生">小学1年生</option>
-                        <option value="小学2年生">小学2年生</option>
-                        <option value="小学3年生">小学3年生</option>
-                        <option value="小学4年生">小学4年生</option>
-                        <option value="小学5年生">小学5年生</option>
-                        <option value="小学6年生">小学6年生</option>
-                        <option value="中学1年生">中学1年生</option>
-                        <option value="中学2年生">中学2年生</option>
-                        <option value="中学3年生">中学3年生</option>
-                        <option value="高校1年生">高校1年生</option>
-                        <option value="高校2年生">高校2年生</option>
-                        <option value="高校3年生">高校3年生</option>
-                        <option value="大学・専門学生">大学・専門学生</option>
-                        <option value="社会人・その他">社会人・その他</option>
-                    </select>
-                    <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+        <div id="reg-step-2" class="reg-step-view w-full h-full flex flex-col px-6 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">学年を選択</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">あなたに合った学習サポートを行います</p>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto max-h-[60vh] px-1 pb-4">
+                <div class="grid grid-cols-2 gap-3" id="reg-grade-buttons">
+                    </div>
+                <input type="hidden" id="reg-grade-value">
+            </div>
+
+            <div class="flex-grow"></div>
+            <button class="reg-next-btn w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-[1.02] active:scale-95 mb-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
+                次へ
+            </button>
+        </div>
+
+        <div id="reg-step-3" class="reg-step-view w-full h-full flex flex-col px-6 hidden transition-all duration-300">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">学習ルーティン</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">クエスト実行時の時間配分を設定します。<br>この設定は<span class="font-bold text-gray-700 dark:text-gray-300">後からいつでも変更できます。</span></p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-md p-6 mb-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">現在の設定 (ポモドーロ風)</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
+                        <div class="flex items-center">
+                            <i data-lucide="book-open" class="w-5 h-5 text-indigo-500 mr-3"></i>
+                            <span class="font-bold text-sm text-gray-700 dark:text-gray-200">学習タイム</span>
+                        </div>
+                        <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-sm">
+                            <input type="number" id="reg-routine-study" value="25" class="w-8 text-center font-bold text-lg bg-transparent outline-none appearance-none">
+                            <span class="text-xs font-bold text-gray-400 ml-1">分</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center text-gray-300">
+                        <i data-lucide="arrow-down" class="w-5 h-5"></i>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-900/50">
+                        <div class="flex items-center">
+                            <i data-lucide="coffee" class="w-5 h-5 text-green-500 mr-3"></i>
+                            <span class="font-bold text-sm text-gray-700 dark:text-gray-200">休憩タイム</span>
+                        </div>
+                        <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg px-3 py-1 shadow-sm">
+                            <input type="number" id="reg-routine-break" value="5" class="w-8 text-center font-bold text-lg bg-transparent outline-none appearance-none">
+                            <span class="text-xs font-bold text-gray-400 ml-1">分</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="flex-grow"></div>
 
-        <button id="reg-complete-btn" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-xl shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all hover:scale-[1.02] active:scale-95 mb-4 text-lg" disabled>
-            次へ進む
-        </button>
-    </div>
-</div>
-
-    <div id="tutorial-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6 hidden">
-        
-        <div class="relative w-full h-[55vh] max-w-[500px] max-h-[700px] flex-shrink-0 mx-auto mb-6 flex items-center justify-center animate-fadeIn">
-            <img src="tutorial_4.png" alt="Notification Request" class="w-full h-full object-contain" onerror="this.src='https://placehold.co/300x500/transparent/4f46e5?text=Notification'">
-        </div>
-        
-        <div class="w-full max-w-xs space-y-6 animate-fadeIn text-center z-10" style="animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards;">
-
-            <div class="space-y-3">
-                <button id="request-notification-btn" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center justify-center">
-                    <i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>
-                    通知を許可して始める
+            <div class="flex-grow"></div>
+            
+            <div class="space-y-3 mb-6">
+                <button class="reg-next-btn w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-lg">
+                    この設定で次へ
                 </button>
-                
-                <button id="skip-notification-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold text-xs py-3 transition-colors">
-                    今は設定しない
+                <button id="reg-skip-routine-btn" class="w-full bg-transparent text-gray-400 font-bold py-3 rounded-full text-sm transition-colors hover:text-gray-600 dark:hover:text-gray-300">
+                    あとで設定する (スキップ)
                 </button>
             </div>
         </div>
+
+        <div id="reg-step-4" class="reg-step-view w-full h-full flex flex-col px-6 hidden transition-all duration-300">
+            <div class="flex-grow flex flex-col items-center justify-center text-center">
+                <div class="w-full max-w-[280px] aspect-square bg-indigo-50 dark:bg-gray-800 rounded-[2rem] flex items-center justify-center mb-8 relative overflow-hidden">
+                    <img src="tutorial_4.png" alt="Notification" class="w-full h-full object-contain" onerror="this.style.display='none'">
+                    <i data-lucide="bell-ring" class="w-24 h-24 text-indigo-500 absolute opacity-20"></i>
+                </div>
+
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-3">通知をオンにする</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    クエストの終了や、学習のリマインダーを受け取るために通知を許可してください。
+                </p>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <button id="reg-finish-btn" class="w-full primary-bg text-white font-bold py-4 rounded-full shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-lg flex items-center justify-center">
+                    <i data-lucide="bell" class="w-5 h-5 mr-2"></i>
+                    許可して始める
+                </button>
+                <button id="reg-finish-skip-btn" class="w-full bg-transparent text-gray-400 font-bold py-3 rounded-full text-sm transition-colors hover:text-gray-600 dark:hover:text-gray-300">
+                    今は許可しない
+                </button>
+            </div>
+        </div>
+
     </div>
+</div>
     
     <div id="migration-screen" class="fixed inset-0 z-[300] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 opacity-0 pointer-events-none transform scale-95">
         <header class="header-safe px-6 py-4 flex items-center justify-between min-h-[60px]">
@@ -6535,47 +6592,202 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 initPeerReceiver();
             });
 
-            // 登録画面
-            const emojis = ['🎓','✏️','🔥','🐱','🐶','🚀','⭐','🍎','⚽','🎵','🎨','💻'];
-            const getRandomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)];
-            
-            $('#icon-picker-btn').addEventListener('click', () => {
-                $('#reg-icon').value = getRandomEmoji();
-            });
-            
-            // 入力チェック
-            const checkRegForm = () => {
-                const name = $('#reg-name').value.trim();
-                const grade = $('#reg-grade').value;
-                $('#reg-complete-btn').disabled = !(name && grade);
+            // ==========================================
+            // ▼▼▼ 新: 初期設定フロー (Step 1〜4) ▼▼▼
+            // ==========================================
+
+            // 1. セットアップ完了処理 (これは既存のロジックを流用・維持)
+            const completeAppSetup = () => {
+                state.user.isRegistered = true;
+                state.settings.themeMode = 'system';
+
+                // 初回ログインボーナス付与
+                addLP(1000, '初回ログインボーナス', true);
+                state.lastLogin = new Date().toDateString();
+
+                saveState();
+                updateAppearance();
+                
+                // 画面遷移: 登録画面を隠してメイン画面を表示
+                $('#registration-screen').classList.add('hidden'); // 新しい登録画面ID
+                $('#app-container').classList.remove('hidden');
+                
+                renderEngine.pages['home-page']();
+                showToast(`ようこそ、${state.user.name}さん！`);
+                
+                lucide.createIcons();
             };
-            $('#reg-name').addEventListener('input', checkRegForm);
-            $('#reg-grade').addEventListener('change', checkRegForm);
 
-            $('#reg-complete-btn').addEventListener('click', () => {
-                // 一時保存してチュートリアルへ
-                state.user.name = $('#reg-name').value.trim();
+            // ------------------------------------------
+            // ここから下が新しいステップ進行ロジックです
+            // ------------------------------------------
+
+            let currentRegStep = 1;
+            const totalRegSteps = 4;
+
+            // ステップ切り替え関数
+            const updateRegStep = (step) => {
+                // 現在のステップを非表示
+                $$('.reg-step-view').forEach(el => {
+                    el.classList.add('hidden');
+                    el.classList.remove('animate-fadeIn');
+                });
+
+                // 次のステップを表示
+                const nextView = $(`#reg-step-${step}`);
+                if(nextView) {
+                    nextView.classList.remove('hidden');
+                    // 少し遅延させてアニメーション
+                    setTimeout(() => nextView.classList.add('animate-fadeIn'), 10);
+                }
+
+                // ヘッダー更新
+                $('#reg-step-number').textContent = step;
+                const progress = (step / totalRegSteps) * 100;
+                $('#reg-progress-bar').style.width = `${progress}%`;
+
+                // 戻るボタンの制御
+                const backBtn = $('#reg-step-back-btn');
+                if (step === 1) {
+                    // Step 1なら登録画面を閉じてWelcome画面に戻る
+                    backBtn.onclick = () => {
+                        const regScreen = $('#registration-screen');
+                        regScreen.classList.remove('opacity-100', 'pointer-events-auto', 'scale-100');
+                        regScreen.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+                        setTimeout(() => { $('#welcome-screen').classList.remove('hidden'); }, 300);
+                    };
+                } else {
+                    // それ以外なら前のステップへ
+                    backBtn.onclick = () => {
+                        currentRegStep--;
+                        updateRegStep(currentRegStep);
+                    };
+                }
+                currentRegStep = step;
+            };
+
+            // --- Step 1: プロフィール (アイコン・名前) ---
+            const regNameInput = $('#reg-name');
+            const step1NextBtn = $('#reg-step-1 .reg-next-btn');
+            
+            regNameInput.addEventListener('input', () => {
+                step1NextBtn.disabled = regNameInput.value.trim() === '';
+            });
+
+            step1NextBtn.addEventListener('click', () => {
+                state.user.name = regNameInput.value.trim();
                 state.user.icon = $('#reg-icon').value;
-                state.user.grade = $('#reg-grade').value;
-                
-                $('#registration-screen').classList.add('hidden');
-                $('#tutorial-screen').classList.remove('hidden');
-                updateTutorialSlide(0);
+                updateRegStep(2);
             });
 
-            $('#reg-back-btn').addEventListener('click', () => {
-                const regScreen = $('#registration-screen');
-                
-                // アニメーションで隠す
-                regScreen.classList.remove('opacity-100', 'pointer-events-auto', 'scale-100');
-                regScreen.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
-
-                // アニメーション完了後にWelcome画面を表示
-                setTimeout(() => {
-                    $('#welcome-screen').classList.remove('hidden');
-                }, 300);
+            // アイコンピッカー
+            const emojis = ['🎓','✏️','🔥','🐱','🐶','🚀','⭐','🍎','⚽','🎵','🎨','💻'];
+            $('#icon-picker-btn').addEventListener('click', () => {
+                $('#reg-icon').value = emojis[Math.floor(Math.random() * emojis.length)];
             });
 
+            // --- Step 2: 学年 ---
+            const gradeContainer = $('#reg-grade-buttons');
+            const step2NextBtn = $('#reg-step-2 .reg-next-btn');
+            const grades = [
+                '小学1年生','小学2年生','小学3年生','小学4年生','小学5年生','小学6年生',
+                '中学1年生','中学2年生','中学3年生',
+                '高校1年生','高校2年生','高校3年生',
+                '大学・専門','社会人'
+            ];
+
+            // 学年ボタン生成 (空の場合のみ生成)
+            if (gradeContainer.innerHTML.trim() === '') {
+                gradeContainer.innerHTML = grades.map(g => `
+                    <button class="grade-select-btn py-3 px-2 rounded-xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-300 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all active:scale-95" data-val="${g}">
+                        ${g}
+                    </button>
+                `).join('');
+            }
+
+            // 学年選択イベント
+            gradeContainer.querySelectorAll('.grade-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 選択状態の切り替え
+                    gradeContainer.querySelectorAll('.grade-select-btn').forEach(b => {
+                        b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-600', 'dark:bg-indigo-900/30', 'dark:text-indigo-400');
+                        b.classList.add('border-gray-100', 'dark:border-gray-700');
+                    });
+                    btn.classList.remove('border-gray-100', 'dark:border-gray-700');
+                    btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-600', 'dark:bg-indigo-900/30', 'dark:text-indigo-400');
+                    
+                    $('#reg-grade-value').value = btn.dataset.val;
+                    step2NextBtn.disabled = false;
+                });
+            });
+
+            step2NextBtn.addEventListener('click', () => {
+                state.user.grade = $('#reg-grade-value').value;
+                updateRegStep(3);
+            });
+
+            // --- Step 3: ルーティン ---
+            // 「この設定で次へ」
+            $('#reg-step-3 .reg-next-btn').addEventListener('click', () => {
+                const studyTime = parseInt($('#reg-routine-study').value) || 25;
+                const breakTime = parseInt($('#reg-routine-break').value) || 5;
+                
+                // テンプレート更新
+                state.profile.routineTemplate = [
+                    { id: Date.now(), type: 'section', duration: studyTime * 60 },
+                    { id: Date.now()+1, type: 'break', duration: breakTime * 60 }
+                ];
+                updateRegStep(4);
+            });
+
+            // 「スキップ」
+            $('#reg-skip-routine-btn').addEventListener('click', () => {
+                // デフォルト値を維持して次へ
+                updateRegStep(4);
+            });
+
+            // --- Step 4: 通知 & 完了 ---
+            const finishSetup = async (allowNotification) => {
+                if (allowNotification && 'Notification' in window) {
+                    try {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            new Notification('StudyQuest', { body: '設定が完了しました！学習を始めましょう。' });
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+                // ★ここで古いロジックの関数を呼び出し、ボーナス付与や画面遷移を行う
+                completeAppSetup(); 
+            };
+
+            $('#reg-finish-btn').addEventListener('click', () => finishSetup(true));
+            $('#reg-finish-skip-btn').addEventListener('click', () => finishSetup(false));
+
+            // --- Welcome画面の「初めての方」ボタン修正 ---
+            const startBtn = document.getElementById('btn-start-new');
+            if(startBtn) {
+                // cloneNodeで既存のリスナーを削除して再登録
+                const newStartBtn = startBtn.cloneNode(true);
+                startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+                
+                newStartBtn.addEventListener('click', () => {
+                    $('#welcome-screen').classList.add('hidden');
+                    
+                    // 登録画面を表示＆初期化
+                    const regScreen = $('#registration-screen');
+                    regScreen.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                    regScreen.classList.add('opacity-100', 'pointer-events-auto', 'scale-100');
+                    
+                    // フォームリセット
+                    $('#reg-name').value = '';
+                    $('#reg-icon').value = '🎓';
+                    step1NextBtn.disabled = true;
+                    
+                    updateRegStep(1); // Step 1から開始
+                });
+            }
             // ==========================================
             // ▼▼▼ 修正: 通知許可画面のロジック ▼▼▼
             // ==========================================
@@ -6602,42 +6814,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 // アイコン再生成
                 lucide.createIcons();
             };
-
-            // プロフィール登録完了ボタン
-            $('#reg-complete-btn').addEventListener('click', () => {
-                // 入力情報を保存
-                state.user.name = $('#reg-name').value.trim();
-                state.user.icon = $('#reg-icon').value;
-                state.user.grade = $('#reg-grade').value;
-                
-                // 画面切り替え: 登録画面 -> 通知許可画面
-                $('#registration-screen').classList.add('hidden');
-                $('#tutorial-screen').classList.remove('hidden');
-                
-                // アイコン生成（ボタン内のベルアイコン用）
-                lucide.createIcons();
-            });
-
-            // 「通知を許可して始める」ボタン
-            $('#request-notification-btn').addEventListener('click', async () => {
-                if ('Notification' in window) {
-                    try {
-                        const permission = await Notification.requestPermission();
-                        if (permission === 'granted') {
-                            new Notification('StudyQuest', { body: '通知設定が完了しました！' });
-                        }
-                    } catch (e) {
-                        console.error('通知設定エラー:', e);
-                    }
-                }
-                // 許可・拒否に関わらずアプリを開始
-                completeAppSetup();
-            });
-
-            // 「今は設定しない」ボタン
-            $('#skip-notification-btn').addEventListener('click', () => {
-                completeAppSetup();
-            });
 
             // ==========================================
             // ▲▲▲ 修正ここまで ▲▲▲
