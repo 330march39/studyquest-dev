@@ -5261,9 +5261,17 @@ const showToast = (message, type = 'normal') => {
 
             startQuestBtn.addEventListener('click', startQuest);
 
-            // クエスト実行画面のボタン
+            // クエスト実行画面の終了ボタン（バツボタン）
             endQuestBtn.addEventListener('click', () => {
-                openModalWithAnim('confirmation-modal', 'confirmation-content');
+                // 新しい「汎用確認モーダル」を使います
+                openGeneralConfirm(
+                    'クエストを終了しますか？', // タイトル
+                    '途中で終了すると、現在のセクションは「中断」として記録されます。', // メッセージ
+                    'alert-triangle', // アイコン
+                    '終了する', // ボタンの文字
+                    'bg-red-500 hover:bg-red-600', // ボタンの色
+                    () => endQuest(false) // 実行時の処理
+                );
             });
 
            // 休憩中のコンテンツ (アイコンホーム画面)
