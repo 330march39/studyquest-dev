@@ -6788,36 +6788,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     updateRegStep(1); // Step 1から開始
                 });
             }
-            // ==========================================
-            // ▼▼▼ 修正: 通知許可画面のロジック ▼▼▼
-            // ==========================================
-
-            // セットアップ完了処理（共通関数）
-            const completeAppSetup = () => {
-                state.user.isRegistered = true;
-                state.settings.themeMode = 'system';
-
-                // 初回ログインボーナス付与
-                addLP(1000, '初回ログインボーナス', true);
-                state.lastLogin = new Date().toDateString();
-
-                saveState();
-                updateAppearance();
-                
-                // 画面遷移
-                $('#tutorial-screen').classList.add('hidden');
-                $('#app-container').classList.remove('hidden');
-                
-                renderEngine.pages['home-page']();
-                showToast(`ようこそ、${state.user.name}さん！`);
-                
-                // アイコン再生成
-                lucide.createIcons();
-            };
-
-            // ==========================================
-            // ▲▲▲ 修正ここまで ▲▲▲
-            // ==========================================
 
             // ▼▼▼ 【追加】クエストページの定義（これが抜けていました） ▼▼▼
             const questPage = new SubPage('quest-view', {
