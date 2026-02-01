@@ -4258,10 +4258,13 @@ const renderDailyDetails = (targetDate) => {
                 chartInstances[canvasId] = new Chart(ctx, { type, data, options });
             };
 
-            // --- トースト通知 (デザイン刷新版) ---
+            // --- トースト通知 (アニメーション修正・ガタつき防止版) ---
 const showToast = (message, type = 'normal') => {
     const toast = document.getElementById('toast');
     
+    // 既存のタイマーがあればクリア
+    if (toast.hideTimer) clearTimeout(toast.hideTimer);
+
     // タイプに応じたアイコンと色設定
     let iconName = 'info';
     let iconColor = 'text-blue-500';
@@ -4274,42 +4277,55 @@ const showToast = (message, type = 'normal') => {
         iconColor = 'text-red-500';
     } else if (type === 'quest') {
         iconName = 'map';
-        iconColor = 'primary-text'; // テーマカラー
+        iconColor = 'primary-text';
     }
 
     // HTML構築
+    // ★ポイント1: テキストに 'whitespace-nowrap' を追加して折り返しによる高さブレを防止
     toast.innerHTML = `
         <div class="flex items-center gap-3">
             <div class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
                 <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
             </div>
-            <span class="font-bold text-sm text-gray-800 dark:text-gray-100 drop-shadow-sm pr-2">${message}</span>
+            <span class="font-bold text-sm text-gray-800 dark:text-gray-100 drop-shadow-sm pr-2 whitespace-nowrap">${message}</span>
         </div>
     `;
-    
-    // クラス設定 (カプセル型に近い丸み、影、背景色)
-    // ※ topの位置はCSSの #toast で制御されているので、ここでは見た目とアニメーション用クラスを設定
-    toast.className = `fixed left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-auto md:min-w-[320px] z-[3000] 
-                       bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-2xl rounded-full px-2 py-2 
-                       transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) transform translate-y-[-150%] opacity-0`;
     
     // アイコン生成
     lucide.createIcons({ root: toast });
 
-    // 表示アニメーション (少し遅延させてtransitionを発火)
+    // --- アニメーションのリセット処理 ---
+    
+    // 1. まずアニメーション(transition)を一時的に無効化し、初期位置(隠れた状態)に強制セット
+    toast.style.transition = 'none';
+    
+    // 基本クラス + 初期状態 (上に隠れて、横に縮んで、透明)
+    // ★ポイント2: scale-x-50 (横幅半分) を初期状態に追加して、横に伸びる演出を強化
+    toast.className = `fixed left-1/2 -translate-x-1/2 z-[3000] 
+                       bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-2xl rounded-full px-2 py-2 
+                       transform translate-y-[-150%] opacity-0 scale-x-50`;
+
+    // 2. ブラウザに「今の初期状態」を強制的に描画させる (リフロー強制)
+    // ★ポイント3: これにより2回目以降も「縮んだ状態」からアニメーションが始まります
+    void toast.offsetWidth;
+
+    // 3. アニメーションを有効化
+    // ios風の弾むようなイージング (cubic-bezier)
+    toast.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+    // 4. 表示状態へ変化 (元の位置、等倍、不透明)
     requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-[-150%]', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
+        toast.classList.remove('translate-y-[-150%]', 'opacity-0', 'scale-x-50');
+        toast.classList.add('translate-y-4', 'opacity-100', 'scale-x-100'); // top-5相当の位置へ (translate-y-4)
     });
 
-    // 自動非表示タイマー
-    if (toast.hideTimer) clearTimeout(toast.hideTimer);
+    // 5. 自動非表示タイマー
     toast.hideTimer = setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-[-150%]', 'opacity-0');
+        // 戻るアニメーション
+        toast.classList.remove('translate-y-4', 'opacity-100', 'scale-x-100');
+        toast.classList.add('translate-y-[-150%]', 'opacity-0', 'scale-x-50');
     }, 3000);
 };
-
             const addLP = (amount, reason, show = true) => {
                 state.profile.lp += amount;
                 updateLpDisplay();
