@@ -2387,20 +2387,6 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             </div>
         </div>
     </div>
-    
-    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black/60 z-[210] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
-        <div id="confirmation-content" class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center transform scale-0 transition-transform duration-300 border border-gray-100 dark:border-gray-700">
-            <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4 text-red-500">
-                <i data-lucide="alert-circle" class="w-8 h-8"></i>
-            </div>
-            <h3 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-2">クエストを終了しますか？</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 font-bold">中断した内容は記録されます。</p>
-            <div class="flex flex-col space-y-3">
-                <button id="modal-confirm-btn" class="w-full py-3.5 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg transition-transform active:scale-95">終了する</button>
-                <button id="modal-cancel-btn" class="w-full py-3.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">キャンセル</button>
-            </div>
-        </div>
-    </div>
 
     <div id="resume-quest-modal" class="hidden fixed inset-0 bg-black/80 z-[210] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm text-center">
@@ -3340,21 +3326,26 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             };
 
             // --- 汎用確認モーダルを開く関数 ---
-const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, onConfirm) => {
-    const modal = $('#general-confirm-modal');
-    const content = $('#general-confirm-content');
+// --- 汎用確認モーダル (キャンセルカスタム対応版) ---
+const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, onConfirm, cancelText = 'キャンセル', onCancel = null) => {
+    const modal = document.getElementById('general-confirm-modal');
+    const content = document.getElementById('general-confirm-content');
     
     // 内容セット
-    $('#general-confirm-title').textContent = title;
-    $('#general-confirm-msg').innerHTML = message.replace(/\n/g, '<br>');
-    $('#general-confirm-icon').setAttribute('data-lucide', iconName || 'alert-circle');
+    document.getElementById('general-confirm-title').textContent = title;
+    document.getElementById('general-confirm-msg').innerHTML = message.replace(/\n/g, '<br>');
+    document.getElementById('general-confirm-icon').setAttribute('data-lucide', iconName || 'alert-circle');
     
-    // ボタン設定
-    const okBtn = $('#general-confirm-ok-btn');
+    // 実行ボタン設定
+    const okBtn = document.getElementById('general-confirm-ok-btn');
     okBtn.textContent = confirmText || '実行する';
     okBtn.className = `w-full py-3.5 rounded-full text-white font-bold shadow-lg transition-transform active:scale-95 ${colorClass || 'primary-bg'}`;
     
-    // イベント設定 (一度削除して再登録)
+    // キャンセルボタン設定
+    const cancelBtn = document.getElementById('general-confirm-cancel-btn');
+    cancelBtn.textContent = cancelText;
+
+    // イベント設定 (Cloneしてリセット)
     const newOkBtn = okBtn.cloneNode(true);
     okBtn.parentNode.replaceChild(newOkBtn, okBtn);
     
@@ -3363,12 +3354,12 @@ const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, o
         if (onConfirm) onConfirm();
     });
 
-    const cancelBtn = $('#general-confirm-cancel-btn');
     const newCancelBtn = cancelBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
     
     newCancelBtn.addEventListener('click', () => {
         closeModalWithAnim('general-confirm-modal', 'general-confirm-content');
+        if (onCancel) onCancel(); // キャンセル時の処理があれば実行
     });
 
     // アイコン更新 & 表示
@@ -4267,10 +4258,57 @@ const renderDailyDetails = (targetDate) => {
                 chartInstances[canvasId] = new Chart(ctx, { type, data, options });
             };
 
-            const showToast = (message) => {
-                const toast = $('#toast'); toast.textContent = message; toast.classList.remove('opacity-0', '-translate-y-10');
-                setTimeout(() => toast.classList.add('opacity-0', '-translate-y-10'), 2000);
-            };
+            // --- トースト通知 (デザイン刷新版) ---
+const showToast = (message, type = 'normal') => {
+    const toast = document.getElementById('toast');
+    
+    // タイプに応じたアイコンと色設定
+    let iconName = 'info';
+    let iconColor = 'text-blue-500';
+    
+    if (type === 'success') {
+        iconName = 'check-circle';
+        iconColor = 'text-green-500';
+    } else if (type === 'error') {
+        iconName = 'alert-triangle';
+        iconColor = 'text-red-500';
+    } else if (type === 'quest') {
+        iconName = 'map';
+        iconColor = 'primary-text'; // テーマカラー
+    }
+
+    // HTML構築
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <div class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+            </div>
+            <span class="font-bold text-sm text-gray-800 dark:text-gray-100 drop-shadow-sm pr-2">${message}</span>
+        </div>
+    `;
+    
+    // クラス設定 (カプセル型に近い丸み、影、背景色)
+    // ※ topの位置はCSSの #toast で制御されているので、ここでは見た目とアニメーション用クラスを設定
+    toast.className = `fixed left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-auto md:min-w-[320px] z-[3000] 
+                       bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-2xl rounded-full px-2 py-2 
+                       transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) transform translate-y-[-150%] opacity-0`;
+    
+    // アイコン生成
+    lucide.createIcons({ root: toast });
+
+    // 表示アニメーション (少し遅延させてtransitionを発火)
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+    });
+
+    // 自動非表示タイマー
+    if (toast.hideTimer) clearTimeout(toast.hideTimer);
+    toast.hideTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-150%]', 'opacity-0');
+    }, 3000);
+};
 
             const addLP = (amount, reason, show = true) => {
                 state.profile.lp += amount;
@@ -6940,50 +6978,46 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             // ==========================================
 
             // ★新規追加: クエストの復元チェック関数
-            const checkQuestResume = () => {
-                if (state.savedQuest && state.savedQuest.active) {
-                    // モーダルを表示
-                    const modal = $('#resume-quest-modal');
-                    modal.classList.remove('hidden');
-                    
-                    // 「再開する」ボタン
-                    $('#resume-quest-yes-btn').onclick = () => {
-                        modal.classList.add('hidden');
-                        resumeQuestProcess();
-                    };
+            // --- クエスト復元チェック (汎用モーダル版) ---
+const checkQuestResume = () => {
+    if (state.savedQuest && state.savedQuest.active) {
+        openGeneralConfirm(
+            'クエストを再開しますか？',
+            '中断されたクエストデータがあります。\n前回の続きから再開しますか？',
+            'rotate-ccw', // 再開アイコン
+            '再開する',   // 肯定ボタン
+            'primary-bg', // テーマカラー
+            () => { 
+                // OK時の処理
+                resumeQuestProcess();
+                showToast('クエストを再開しました', 'quest');
+            },
+            '破棄して終了', // キャンセルボタンのテキスト
+            () => { 
+                // キャンセル(破棄)時の処理
+                const saved = state.savedQuest;
+                const currentStep = saved.plan[saved.currentIndex];
+                
+                // 経過時間を計算してログに残す（任意）
+                const now = Date.now();
+                const elapsedSeconds = Math.floor((now - saved.startTime) / 1000);
+                const actualDuration = Math.min(elapsedSeconds, currentStep.duration);
 
-                    // 「終了してホームへ」ボタン
-                    $('#resume-quest-no-btn').onclick = () => {
-                        modal.classList.add('hidden');
-
-                        // ★追加: 中断としてログに記録する処理
-                        const saved = state.savedQuest;
-                        const currentStep = saved.plan[saved.currentIndex];
-                        
-                        // 実際に経過した時間（開始〜現在）を計算
-                        const now = Date.now();
-                        const elapsedSeconds = Math.floor((now - saved.startTime) / 1000);
-                        
-                        // もしステップの予定時間を超えていたら、予定時間分だけ記録（完了扱い）
-                        // 超えていなければ、経過時間分だけ記録（中断扱い）
-                        const actualDuration = Math.min(elapsedSeconds, currentStep.duration);
-
-                        if (currentStep.type === 'section' && actualDuration > 0) {
-                            const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
-                            recordSession(currentStep.text + statusText, actualDuration);
-                            
-                            // 少しだけLPをあげる（任意）
-                            if (actualDuration > 60) {
-                                addLP(Math.floor(actualDuration / 60), 'クエスト終了');
-                            }
-                        }
-                        
-                        state.savedQuest = null;
-                        saveState();
-                        showToast('クエストを破棄しました');
-                    };
+                if (currentStep.type === 'section' && actualDuration > 0) {
+                    const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
+                    recordSession(currentStep.text + statusText, actualDuration);
+                    if (actualDuration > 60) {
+                        addLP(Math.floor(actualDuration / 60), 'クエスト終了');
+                    }
                 }
-            };
+                
+                state.savedQuest = null;
+                saveState();
+                showToast('クエストを破棄しました', 'info');
+            }
+        );
+    }
+};
 
             // ★新規追加: クエスト復元実行プロセス
             const resumeQuestProcess = () => {
