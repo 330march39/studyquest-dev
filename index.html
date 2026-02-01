@@ -6037,7 +6037,6 @@ const showToast = (message, type = 'normal') => {
             $('nav').style.display = '';
 
             document.body.style.overflow = 'auto';
-            closeModalWithAnim('confirmation-modal', 'confirmation-content');
             closeIframe();
             if (completed) {
                 showToast('クエスト完了！お疲れ様でした！');
