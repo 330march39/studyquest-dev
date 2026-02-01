@@ -1363,9 +1363,9 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                 
                 <div id="focus-main-view" class="flex flex-col h-full p-4 space-y-4">
                     <div class="flex-shrink-0">
-                        <button id="show-quest-btn" class="w-full py-4 px-6 rounded-super font-bold text-lg shadow-modern flex items-center justify-center space-x-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98] border border-transparent dark:border-gray-700" data-mode="quest">
+                        <button id="show-quest-btn" class="w-full py-4 px-6 rounded-full font-bold text-lg shadow-modern flex items-center justify-center space-x-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98] border border-transparent dark:border-gray-700" data-mode="quest">
                             <i data-lucide="map" class="w-6 h-6 text-indigo-500"></i>
-                            <span>クエストを開く</span>
+                            <span>クエスト</span>
                         </button>
                     </div>
             
@@ -1394,15 +1394,15 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             
                             <div id="focus-timer-display" class="text-7xl font-black tracking-tighter tabular-nums mb-10 drop-shadow-lg">30:00</div>
                             
-                            <button id="focus-start-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 px-8 rounded-2xl text-xl shadow-lg flex items-center justify-center transition-transform active:scale-95">
+                            <button id="focus-start-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg flex items-center justify-center transition-transform active:scale-95">
                                 <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> スタート
                             </button>
                             
                             <div id="focus-controls" class="hidden flex flex-col gap-3 w-full">
-                                <button id="focus-pause-btn" class="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md border border-white/10 transition-colors flex items-center justify-center">
+                                <button id="focus-pause-btn" class="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-4 rounded-full text-lg backdrop-blur-md border border-white/10 transition-colors flex items-center justify-center">
                                     <i data-lucide="pause" class="w-6 h-6 mr-2 fill-current"></i> 一時停止
                                 </button>
-                                <button id="focus-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md transition-colors flex items-center justify-center">
+                                <button id="focus-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-full text-lg backdrop-blur-md transition-colors flex items-center justify-center">
                                     <i data-lucide="square" class="w-6 h-6 mr-2 fill-current"></i> 終了
                                 </button>
                             </div>
@@ -1414,16 +1414,16 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                         <div class="relative z-10 p-6 w-full max-w-sm mx-auto">
                             <div id="stopwatch-display" class="text-7xl font-black tracking-tighter tabular-nums mb-10 drop-shadow-lg">00:00</div>
                             
-                            <button id="stopwatch-start-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 px-8 rounded-2xl text-xl shadow-lg flex items-center justify-center transition-transform active:scale-95">
+                            <button id="stopwatch-start-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg flex items-center justify-center transition-transform active:scale-95">
                                 <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> スタート
                             </button>
                             
                             <div id="stopwatch-controls" class="hidden flex flex-col gap-3 w-full">
-                                <button id="stopwatch-pause-btn" class="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md border border-white/10 transition-colors flex items-center justify-center">
+                                <button id="stopwatch-pause-btn" class="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-4 rounded-full text-lg backdrop-blur-md border border-white/10 transition-colors flex items-center justify-center">
                                     <i data-lucide="pause" class="w-6 h-6 mr-2 fill-current"></i> 一時停止
                                 </button>
-                                <button id="stopwatch-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-2xl text-lg backdrop-blur-md transition-colors flex items-center justify-center">
-                                    <i data-lucide="flag" class="w-6 h-6 mr-2 fill-current"></i> 記録して終了
+                                <button id="stopwatch-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-full text-lg backdrop-blur-md transition-colors flex items-center justify-center">
+                                    <i data-lucide="flag" class="w-6 h-6 mr-2 fill-current"></i> 終了
                                 </button>
                             </div>
                         </div>
@@ -1871,7 +1871,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
 
         <div class="flex-grow overflow-y-auto p-4 pb-36 bg-gray-100 dark:bg-gray-900">
             <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm mb-4">
-                <button id="load-tasks-btn" class="w-full mb-2 primary-bg primary-bg-hover text-white py-2 px-4 rounded-lg font-bold flex items-center justify-center space-x-2">
+                <button id="load-tasks-btn" class="w-full mb-2 primary-bg primary-bg-hover text-white py-3 px-6 rounded-full font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center space-x-2">
                     <i data-lucide="check-square" class="w-5 h-5"></i>
                     <span>「今日の予定」を読み込む</span>
                 </button>
@@ -1895,7 +1895,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         </div>
 
         <div class="fixed bottom-safe-16 left-0 right-0 max-w-lg mx-auto p-4 z-20 pointer-events-none">
-            <button id="start-quest-btn" class="w-full primary-bg primary-bg-hover text-white py-3 px-4 rounded-lg font-bold text-lg shadow-md hover:scale-105 transition-transform transform flex items-center justify-center space-x-2 pointer-events-auto">
+            <button id="start-quest-btn" class="w-full primary-bg primary-bg-hover text-white py-4 px-8 rounded-full font-bold text-lg shadow-lg hover:scale-105 transition-transform transform flex items-center justify-center space-x-2 pointer-events-auto">
                 <i data-lucide="play" class="w-6 h-6"></i>
                 <span>クエストを開始する</span>
             </button>
