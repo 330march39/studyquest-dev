@@ -3501,7 +3501,36 @@ const openPurchaseConfirm = (item, type, onConfirm) => {
     lucide.createIcons({ root: previewContainer });
     openModalWithAnim('purchase-confirm-modal', 'purchase-confirm-content');
 };
+// ▼▼▼ 追加: 画面の向きを制御する関数 ▼▼▼
+const controlScreenOrientation = async (mode) => {
+    // APIがサポートされていない、またはiOSの場合は何もしない（エラー防止）
+    if (!screen.orientation || !screen.orientation.lock) return;
 
+    try {
+        if (mode === 'quest') {
+            // クエスト開始時: フルスクリーンにして横画面を許可/固定
+            // Androidではフルスクリーンにしないとlockが効かないことが多いです
+            await document.documentElement.requestFullscreen().catch(() => {}); // エラー無視
+            
+            // 'landscape' で横向きに固定します
+            await screen.orientation.lock('landscape').catch(() => {
+                // ロック失敗時はロック解除（自然な回転に任せる）
+                screen.orientation.unlock();
+            });
+        } else {
+            // 通常時: フルスクリーン解除して縦画面に固定
+            if (document.fullscreenElement) {
+                await document.exitFullscreen().catch(() => {});
+            }
+            
+            // 'portrait' で縦向きに固定します
+            await screen.orientation.lock('portrait').catch(() => {});
+        }
+    } catch (e) {
+        console.warn('画面回転の制御に失敗しました:', e);
+    }
+};
+// ▲▲▲ 追加ここまで ▲▲▲
             const renderEngine = {
                 pages: {
                     'home-page': () => {
@@ -6053,6 +6082,8 @@ const showToast = (message, type = 'normal') => {
                 showToast('クエストの予定がありません。');
                 return;
             }
+            // ▼▼▼ 追加: クエスト開始時に横画面固定（フルスクリーン）にする ▼▼▼
+            controlScreenOrientation('quest');
 
             quest.plan.forEach(item => {
                 // セクションで、かつテキストがない（またはスペースのみ）場合
@@ -6121,6 +6152,8 @@ const showToast = (message, type = 'normal') => {
 
             document.body.style.overflow = 'auto';
             closeIframe();
+            // ▼▼▼ 追加: クエスト終了時に縦画面に戻す（フルスクリーン解除） ▼▼▼
+            controlScreenOrientation('default');
             if (completed) {
                 showToast('クエスト完了！お疲れ様でした！');
             }
@@ -9121,7 +9154,8 @@ const renderGamePreviews = (game) => {
             // ==========================================
             // ▲▲▲ 改修ここまで ▲▲▲
             // ==========================================
-            
+            // ▼▼▼ 追加: 起動時に縦画面固定を試みる ▼▼▼
+            controlScreenOrientation('default');
             init();
         });
     </script>
