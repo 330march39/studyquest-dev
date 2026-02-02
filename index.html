@@ -6801,11 +6801,24 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     $('#edit-profile-name').value = state.user.name;
                     
                     const gradeSelect = $('#edit-profile-grade');
-                    // 選択肢が空なら登録画面からコピーしてくる（未初期化対策）
+                    
+                    // ▼▼▼ 修正: 選択肢が存在しない場合、JSで直接生成する ▼▼▼
                     if (gradeSelect.children.length <= 1) { 
-                        const originalOptions = document.getElementById('reg-grade').innerHTML;
-                        gradeSelect.innerHTML = originalOptions;
+                        const allGrades = [
+                            '小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生',
+                            '中学1年生', '中学2年生', '中学3年生',
+                            '高校1年生', '高校2年生', '高校3年生',
+                            '大学・専門学生', '社会人・その他'
+                        ];
+                        
+                        let optionsHTML = '<option value="" disabled>選択してください</option>';
+                        allGrades.forEach(g => {
+                            optionsHTML += `<option value="${g}">${g}</option>`;
+                        });
+                        gradeSelect.innerHTML = optionsHTML;
                     }
+                    // ▲▲▲ 修正ここまで ▲▲▲
+
                     gradeSelect.value = state.user.grade;
                 }
             });
