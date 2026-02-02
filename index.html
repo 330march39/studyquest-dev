@@ -6539,7 +6539,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
         };
 
             // ==========================================
-            // ▼▼▼ 初期設定ウィザードロジック (UI改善・バグ修正版) ▼▼▼
+            // ▼▼▼ 初期設定ウィザードロジック (デザイン統一・コンパクト版) ▼▼▼
             // ==========================================
 
             const wizardData = {
@@ -6583,19 +6583,15 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     const welcome = $('#welcome-screen');
                     welcome.classList.remove('hidden');
                     
-                    // ★バグ修正: スライドショーのアニメーションをリセットして再生
+                    // アニメーションリセット
                     const slides = welcome.querySelectorAll('.welcome-slide-item');
                     slides.forEach(el => {
-                        // 一旦アニメーションを外す
                         el.style.animation = 'none';
                         el.style.opacity = '0';
-                        el.offsetHeight; // リフロー発生
-                        
-                        // アニメーション再適用（CSSで定義された animation プロパティに戻す）
+                        el.offsetHeight; 
                         el.style.animation = ''; 
                     });
                     
-                    // チュートリアル要素などもリセット
                     const fadeIns = welcome.querySelectorAll('.animate-fadeIn');
                     fadeIns.forEach(el => {
                         el.classList.remove('animate-fadeIn');
@@ -6649,8 +6645,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 void content.offsetWidth;
                 content.classList.add(enterClass);
 
-                // --- インジケーター更新（アニメーション対応）---
-                // 中身を全置換せず、クラスの付け替えだけを行うことでtransitionを有効にする
+                // インジケーター更新
                 if (indicator.children.length !== 4) {
                     indicator.innerHTML = Array(4).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
                 }
@@ -6660,7 +6655,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 });
 
                 // ボタン制御
+                // 戻るボタンのデザイン修正 (shadow-modern適用)
+                prevBtn.className = "w-14 h-14 flex-shrink-0 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full shadow-modern flex items-center justify-center transition-transform active:scale-95 border-none";
                 prevBtn.classList.remove('hidden');
+                
                 if (wizardData.step === 0) {
                     prevBtn.disabled = true;
                     prevBtn.style.opacity = '0.3';
@@ -6695,7 +6693,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
                             <div class="w-full max-w-xs">
                                 <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider text-center">ニックネーム</label>
-                                <input type="text" id="wiz-name-input" class="w-full p-4 rounded-2xl input-modern text-lg font-bold text-center text-gray-800 dark:text-white dark:bg-gray-800 placeholder-gray-300" placeholder="例: スタディ勇者" value="${wizardData.tempProfile.name}">
+                                <input type="text" id="wiz-name-input" class="w-full p-4 rounded-super shadow-modern border-none outline-none text-lg font-bold text-center text-gray-800 dark:text-white dark:bg-gray-800 placeholder-gray-300 focus:ring-2 primary-ring" placeholder="例: スタディ勇者" value="${wizardData.tempProfile.name}">
                             </div>
                         </div>
                     `;
@@ -6715,7 +6713,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     nextBtn.disabled = !wizardData.tempProfile.name;
                 }
 
-                // --- Step 1: 学年設定 (DOM書き換え方式に変更) ---
+                // --- Step 1: 学年設定 ---
                 else if (wizardData.step === 1) {
                     content.innerHTML = `
                         <div class="w-full">
@@ -6729,8 +6727,9 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     nextBtn.disabled = !wizardData.tempProfile.grade;
 
                     Object.entries(gradeCategories).forEach(([key, data]) => {
+                        // デザイン統一: rounded-super, shadow-modern
                         const container = document.createElement('div');
-                        container.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300 border border-transparent";
+                        container.className = "bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden transition-all duration-300 border border-transparent";
                         const isContainsSelected = data.grades.includes(wizardData.tempProfile.grade);
                         
                         if (isContainsSelected) container.classList.add('primary-border', 'border-2');
@@ -6762,13 +6761,11 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             btn.className = `p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn ${selectedClass}`;
                             btn.textContent = g;
                             
-                            // ★修正: ページ全体の再描画(renderWizardStep)ではなく、クラスの付け替えのみ行う
                             btn.onclick = (e) => {
-                                // 他のすべてのボタンの選択状態を解除
+                                // クラス付け替えのみ（画面再描画しない）
                                 area.querySelectorAll('.grade-btn').forEach(b => {
                                     b.className = 'p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600';
                                 });
-                                // 自分を選択状態に
                                 e.currentTarget.className = 'p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn primary-bg text-white shadow-md transform scale-[1.02]';
                                 
                                 wizardData.tempProfile.grade = g;
@@ -6805,44 +6802,36 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     });
                 }
 
-                // --- Step 2: ルーティン設定 (説明追加・UI統一) ---
+                // --- Step 2: ルーティン設定 (説明エリアのコンパクト化) ---
                 else if (wizardData.step === 2) {
                     content.innerHTML = `
                         <div class="w-full h-full flex flex-col">
                             <div class="flex-shrink-0 text-center mb-2">
                                 <h2 class="text-2xl font-bold mb-1 text-gray-800 dark:text-white">学習ルーティン</h2>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                    学習スタイルに合わせて編集できます
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold mb-3">
+                                    ドラッグで並び替え・スワイプで削除
                                 </p>
                             </div>
 
-                            <div class="flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl mb-4 border border-indigo-100 dark:border-indigo-900/50">
-                                <div class="flex items-center mb-3">
-                                    <div class="w-8 h-8 rounded-full bg-white dark:bg-indigo-800 flex items-center justify-center mr-3 shadow-sm text-indigo-600 dark:text-indigo-300">
-                                        <i data-lucide="map" class="w-4 h-4"></i>
+                            <div class="flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-super border border-indigo-100 dark:border-indigo-900/50 mb-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-white dark:bg-indigo-800 flex items-center justify-center shadow-sm text-indigo-600 dark:text-indigo-300 mt-1">
+                                        <i data-lucide="map" class="w-5 h-5"></i>
                                     </div>
-                                    <p class="text-sm font-bold text-indigo-900 dark:text-indigo-200">クエストとは？</p>
-                                </div>
-                                <p class="text-xs text-indigo-800 dark:text-indigo-300 mb-3 leading-relaxed">
-                                    今日の予定などを学習スタイルに合わせて行うことができます。
-                                </p>
-                                <div class="space-y-2">
-                                    <div class="flex items-start">
-                                        <div class="w-5 h-5 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
-                                            <i data-lucide="book-open" class="w-3 h-3 text-indigo-700 dark:text-indigo-300"></i>
-                                        </div>
-                                        <div>
-                                            <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200">学習セクション</span>
-                                            <p class="text-[10px] text-indigo-700 dark:text-indigo-400">BGMなどをかけながら集中学習</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start">
-                                        <div class="w-5 h-5 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
-                                            <i data-lucide="coffee" class="w-3 h-3 text-green-700 dark:text-green-300"></i>
-                                        </div>
-                                        <div>
-                                            <span class="text-xs font-bold text-green-900 dark:text-green-200">ブレイクタイム</span>
-                                            <p class="text-[10px] text-green-700 dark:text-green-400">SNSやゲームをしながら休憩</p>
+                                    <div class="flex-grow">
+                                        <h4 class="text-xs font-bold text-indigo-900 dark:text-indigo-200 mb-1">クエスト機能について</h4>
+                                        <p class="text-[10px] text-indigo-800 dark:text-indigo-300 leading-tight mb-2">
+                                            今日の予定を「学習」と「休憩」のセットで実行し、メリハリをつけて進めます。
+                                        </p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div class="flex items-center bg-white/60 dark:bg-black/20 rounded-lg p-1.5">
+                                                <i data-lucide="book-open" class="w-3 h-3 text-indigo-500 mr-1.5 flex-shrink-0"></i>
+                                                <span class="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold truncate">BGMで集中学習</span>
+                                            </div>
+                                            <div class="flex items-center bg-white/60 dark:bg-black/20 rounded-lg p-1.5">
+                                                <i data-lucide="coffee" class="w-3 h-3 text-green-500 mr-1.5 flex-shrink-0"></i>
+                                                <span class="text-[10px] text-green-700 dark:text-green-300 font-bold truncate">SNS等で休憩</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -6873,7 +6862,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                     </button>
                                 </div>
                                 <div class="swipe-content flex items-center p-3 h-full relative z-10 w-full bg-white dark:bg-gray-800 rounded-xl">
-                                    <div class="w-10 h-10 rounded-full ${item.type==='section'?'bg-indigo-100 dark:bg-indigo-900/30':'bg-green-100 dark:bg-green-900/30'} flex items-center justify-center mr-3 flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${item.type==='section'?'bg-indigo-100 dark:bg-indigo-900/30':'bg-green-100 dark:bg-green-900/30'}">
                                         <i data-lucide="${item.type==='section'?'book-open':'coffee'}" class="w-5 h-5 ${item.type==='section'?'text-indigo-500':'text-green-500'}"></i>
                                     </div>
                                     <div class="flex-grow min-w-0">
@@ -6937,7 +6926,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     };
                 }
 
-                // --- Step 3: 通知許可 (画像大きく・注釈配置変更) ---
+                // --- Step 3: 通知許可 ---
                 else if (wizardData.step === 3) {
                     nextBtn.innerHTML = '通知を許可して始める';
                     
