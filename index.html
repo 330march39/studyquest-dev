@@ -1340,15 +1340,15 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
 .step-dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: 999px; /* 完全な円/カプセル */
     background-color: #e5e7eb; /* gray-200 */
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* なめらかに */
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: center;
 }
 .dark .step-dot { background-color: #374151; }
 .step-dot.active {
     background-color: var(--primary-color);
-    width: 32px; /* 少し長くして進行感を出す */
-    border-radius: 10px;
+    width: 32px; /* アクティブ時は横に伸びる */
 }
 
 /* ウィザード画面遷移 (よりリッチな動き) */
@@ -6539,7 +6539,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
         };
 
             // ==========================================
-            // ▼▼▼ 新しい初期設定ウィザードロジック (UI統一・完全版) ▼▼▼
+            // ▼▼▼ 初期設定ウィザードロジック (UI改善・バグ修正版) ▼▼▼
             // ==========================================
 
             const wizardData = {
@@ -6550,10 +6550,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             };
 
             const gradeCategories = {
-                'elementary': { label: '小学生', grades: ['小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生'] },
-                'middle': { label: '中学生', grades: ['中学1年生', '中学2年生', '中学3年生'] },
-                'high': { label: '高校生', grades: ['高校1年生', '高校2年生', '高校3年生'] },
-                'other': { label: 'その他', grades: ['大学・専門学生', '社会人・その他'] }
+                'elementary': { label: '小学生', color: 'text-orange-500 bg-orange-50 dark:bg-orange-900/20', grades: ['小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生'] },
+                'middle': { label: '中学生', color: 'text-green-500 bg-green-50 dark:bg-green-900/20', grades: ['中学1年生', '中学2年生', '中学3年生'] },
+                'high': { label: '高校生', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', grades: ['高校1年生', '高校2年生', '高校3年生'] },
+                'other': { label: 'その他', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', grades: ['大学・専門学生', '社会人・その他'] }
             };
 
             const startRegistrationWizard = () => {
@@ -6583,14 +6583,26 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     const welcome = $('#welcome-screen');
                     welcome.classList.remove('hidden');
                     
-                    // ★バグ修正: アニメーションをリセットして確実に再表示させる
-                    const animatedEls = welcome.querySelectorAll('.animate-fadeIn');
-                    animatedEls.forEach(el => {
-                        el.style.opacity = '1'; // 強制的に表示
-                        el.style.animation = 'none'; // 一旦アニメーションを切る
-                        el.offsetHeight; // リフロー
-                        // 必要であれば再度アニメーションを適用するが、戻るだけなら表示だけで十分
+                    // ★バグ修正: スライドショーのアニメーションをリセットして再生
+                    const slides = welcome.querySelectorAll('.welcome-slide-item');
+                    slides.forEach(el => {
+                        // 一旦アニメーションを外す
+                        el.style.animation = 'none';
+                        el.style.opacity = '0';
+                        el.offsetHeight; // リフロー発生
+                        
+                        // アニメーション再適用（CSSで定義された animation プロパティに戻す）
+                        el.style.animation = ''; 
                     });
+                    
+                    // チュートリアル要素などもリセット
+                    const fadeIns = welcome.querySelectorAll('.animate-fadeIn');
+                    fadeIns.forEach(el => {
+                        el.classList.remove('animate-fadeIn');
+                        el.offsetHeight;
+                        el.classList.add('animate-fadeIn');
+                    });
+
                 }, 300);
             };
 
@@ -6631,25 +6643,32 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 const prevBtn = $('#wizard-prev-btn');
                 const indicator = $('#wizard-steps');
 
-                // ページ遷移アニメーションクラス適用
+                // アニメーションクラス適用
                 const enterClass = wizardData.direction === 'next' ? 'wizard-anim-next-enter' : 'wizard-anim-prev-enter';
                 content.classList.remove('wizard-anim-next-enter', 'wizard-anim-prev-enter');
                 void content.offsetWidth;
                 content.classList.add(enterClass);
 
-                // インジケーター生成
-                indicator.innerHTML = Array(4).fill(0).map((_, i) => 
-                    `<div class="step-dot ${i === wizardData.step ? 'active' : ''}"></div>`
-                ).join('');
+                // --- インジケーター更新（アニメーション対応）---
+                // 中身を全置換せず、クラスの付け替えだけを行うことでtransitionを有効にする
+                if (indicator.children.length !== 4) {
+                    indicator.innerHTML = Array(4).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
+                }
+                Array.from(indicator.children).forEach((dot, i) => {
+                    if (i === wizardData.step) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                });
 
-                // ★戻るボタンの制御（Step0でも表示するが、薄くして押せないようにする）
+                // ボタン制御
                 prevBtn.classList.remove('hidden');
                 if (wizardData.step === 0) {
                     prevBtn.disabled = true;
                     prevBtn.style.opacity = '0.3';
+                    prevBtn.style.cursor = 'default';
                 } else {
                     prevBtn.disabled = false;
                     prevBtn.style.opacity = '1';
+                    prevBtn.style.cursor = 'pointer';
                 }
 
                 nextBtn.innerHTML = '次へ';
@@ -6696,7 +6715,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     nextBtn.disabled = !wizardData.tempProfile.name;
                 }
 
-                // --- Step 1: 学年設定 (アコーディオンUI・デザイン統一) ---
+                // --- Step 1: 学年設定 (DOM書き換え方式に変更) ---
                 else if (wizardData.step === 1) {
                     content.innerHTML = `
                         <div class="w-full">
@@ -6714,13 +6733,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         container.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300 border border-transparent";
                         const isContainsSelected = data.grades.includes(wizardData.tempProfile.grade);
                         
-                        // 選択中のアコーディオンは枠線を付ける
                         if (isContainsSelected) container.classList.add('primary-border', 'border-2');
 
                         const headerBtn = document.createElement('button');
                         headerBtn.className = "w-full p-5 flex items-center justify-between font-bold text-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors";
-                        
-                        // カテゴリ丸印はそのままの色で維持（視認性のため）、ただし選択時はテキスト色を変えるなどの調整も可
                         headerBtn.innerHTML = `
                             <div class="flex items-center">
                                 <span class="w-2 h-2 rounded-full mr-3" style="background-color: var(--primary-color);"></span>
@@ -6739,18 +6755,24 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         data.grades.forEach(g => {
                             const btn = document.createElement('button');
                             const isSelected = wizardData.tempProfile.grade === g;
-                            
-                            // 選択時のスタイルをテーマカラー準拠に変更
                             const selectedClass = isSelected 
                                 ? 'primary-bg text-white shadow-md transform scale-[1.02]' 
                                 : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600';
 
-                            btn.className = `p-3 rounded-xl text-sm font-bold transition-all text-center ${selectedClass}`;
+                            btn.className = `p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn ${selectedClass}`;
                             btn.textContent = g;
                             
+                            // ★修正: ページ全体の再描画(renderWizardStep)ではなく、クラスの付け替えのみ行う
                             btn.onclick = (e) => {
+                                // 他のすべてのボタンの選択状態を解除
+                                area.querySelectorAll('.grade-btn').forEach(b => {
+                                    b.className = 'p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600';
+                                });
+                                // 自分を選択状態に
+                                e.currentTarget.className = 'p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn primary-bg text-white shadow-md transform scale-[1.02]';
+                                
                                 wizardData.tempProfile.grade = g;
-                                renderWizardStep(); // 再描画してスタイル適用
+                                nextBtn.disabled = false;
                             };
                             grid.appendChild(btn);
                         });
@@ -6763,7 +6785,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         headerBtn.onclick = () => {
                             const isOpen = listDiv.style.maxHeight !== "0px";
                             if (!isOpen) {
-                                // 他を閉じる
                                 area.querySelectorAll('.grade-list').forEach(el => el.style.maxHeight = "0px");
                                 area.querySelectorAll('.accordion-icon').forEach(el => el.style.transform = "rotate(0deg)");
                                 area.querySelectorAll('.border-2').forEach(el => el.classList.remove('primary-border', 'border-2'));
@@ -6784,19 +6805,50 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     });
                 }
 
-                // --- Step 2: ルーティン設定 ---
+                // --- Step 2: ルーティン設定 (説明追加・UI統一) ---
                 else if (wizardData.step === 2) {
                     content.innerHTML = `
                         <div class="w-full h-full flex flex-col">
-                            <div class="flex-shrink-0 text-center mb-4">
-                                <h2 class="text-2xl font-bold mb-2 text-gray-800 dark:text-white">学習ルーティン</h2>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    学習スタイルに合わせて編集できます<br>
-                                    <span class="text-xs opacity-70">長押しで並び替え・スワイプで削除</span>
+                            <div class="flex-shrink-0 text-center mb-2">
+                                <h2 class="text-2xl font-bold mb-1 text-gray-800 dark:text-white">学習ルーティン</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                    学習スタイルに合わせて編集できます
                                 </p>
                             </div>
 
-                            <div class="flex-grow overflow-hidden flex flex-col bg-white dark:bg-gray-800 rounded-super shadow-modern p-1 border border-gray-100 dark:border-gray-700">
+                            <div class="flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl mb-4 border border-indigo-100 dark:border-indigo-900/50">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-white dark:bg-indigo-800 flex items-center justify-center mr-3 shadow-sm text-indigo-600 dark:text-indigo-300">
+                                        <i data-lucide="map" class="w-4 h-4"></i>
+                                    </div>
+                                    <p class="text-sm font-bold text-indigo-900 dark:text-indigo-200">クエストとは？</p>
+                                </div>
+                                <p class="text-xs text-indigo-800 dark:text-indigo-300 mb-3 leading-relaxed">
+                                    今日の予定などを学習スタイルに合わせて行うことができます。
+                                </p>
+                                <div class="space-y-2">
+                                    <div class="flex items-start">
+                                        <div class="w-5 h-5 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                                            <i data-lucide="book-open" class="w-3 h-3 text-indigo-700 dark:text-indigo-300"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200">学習セクション</span>
+                                            <p class="text-[10px] text-indigo-700 dark:text-indigo-400">BGMなどをかけながら集中学習</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="w-5 h-5 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                                            <i data-lucide="coffee" class="w-3 h-3 text-green-700 dark:text-green-300"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold text-green-900 dark:text-green-200">ブレイクタイム</span>
+                                            <p class="text-[10px] text-green-700 dark:text-green-400">SNSやゲームをしながら休憩</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex-grow overflow-hidden flex flex-col bg-white dark:bg-gray-800 rounded-super shadow-modern p-1 border border-gray-100 dark:border-gray-700 mb-2">
                                 <div id="wiz-routine-list" class="flex-grow overflow-y-auto p-1 space-y-2"></div>
                                 
                                 <div class="flex items-center justify-between p-2 gap-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-[20px]">
@@ -6821,7 +6873,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                     </button>
                                 </div>
                                 <div class="swipe-content flex items-center p-3 h-full relative z-10 w-full bg-white dark:bg-gray-800 rounded-xl">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 ${item.type==='section'?'bg-indigo-100 dark:bg-indigo-900/30':'bg-green-100 dark:bg-green-900/30'}">
+                                    <div class="w-10 h-10 rounded-full ${item.type==='section'?'bg-indigo-100 dark:bg-indigo-900/30':'bg-green-100 dark:bg-green-900/30'} flex items-center justify-center mr-3 flex-shrink-0">
                                         <i data-lucide="${item.type==='section'?'book-open':'coffee'}" class="w-5 h-5 ${item.type==='section'?'text-indigo-500':'text-green-500'}"></i>
                                     </div>
                                     <div class="flex-grow min-w-0">
