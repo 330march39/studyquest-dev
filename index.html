@@ -7120,6 +7120,44 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             }
 
             // ==========================================
+            // ▼▼▼ 追加: 起動時の登録チェック関数 ▼▼▼
+            // ==========================================
+            const checkUserRegistration = () => {
+                const appContainer = document.getElementById('app-container');
+                const welcomeScreen = document.getElementById('welcome-screen');
+                const wizardScreen = document.getElementById('registration-wizard');
+
+                if (state.user.isRegistered) {
+                    // 登録済みの場合: アプリ本体を表示
+                    appContainer.classList.remove('hidden');
+                    if(welcomeScreen) welcomeScreen.classList.add('hidden');
+                    if(wizardScreen) wizardScreen.classList.add('hidden');
+                    
+                    // スプラッシュスクリーンを消す処理（既存の処理がある場合はそちらに任せる）
+                    const splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        setTimeout(() => {
+                            splash.style.opacity = '0';
+                            setTimeout(() => splash.style.display = 'none', 500);
+                        }, 1000);
+                    }
+                } else {
+                    // 未登録の場合: アプリ本体を隠し、ウェルカム画面を表示
+                    appContainer.classList.add('hidden');
+                    if(welcomeScreen) welcomeScreen.classList.remove('hidden');
+                    
+                    // スプラッシュスクリーンを消す
+                    const splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        setTimeout(() => {
+                            splash.style.opacity = '0';
+                            setTimeout(() => splash.style.display = 'none', 500);
+                        }, 500);
+                    }
+                }
+            };
+
+            // ==========================================
             // ▲▲▲ 新規追加ロジック終了 ▲▲▲
             // ==========================================
 
