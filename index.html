@@ -1602,27 +1602,36 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     </div>
 
     <div id="registration-wizard" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 hidden opacity-0 transform scale-95">
+        
+        <header class="px-6 py-4 flex-shrink-0 flex items-center justify-between relative">
+            <button id="wizard-close-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-gray-800">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <div class="wizard-step-indicator absolute left-1/2 -translate-x-1/2" id="wizard-steps">
+                </div>
+            
+            <div class="w-8"></div> </header>
     
-    <header class="px-6 py-4 flex-shrink-0 flex items-center justify-between">
-        <button id="wizard-back-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors hidden">
-            <i data-lucide="chevron-left" class="w-6 h-6"></i>
-        </button>
-        <div class="wizard-step-indicator" id="wizard-steps">
+        <div id="wizard-content" class="flex-grow flex flex-col items-center justify-start pt-4 px-6 overflow-y-auto pb-4 w-full max-w-md mx-auto">
             </div>
-        <div class="w-8"></div> </header>
-
-    <div id="wizard-content" class="flex-grow flex flex-col items-center justify-center px-6 overflow-y-auto pb-4">
+    
+        <div class="p-6 flex-shrink-0 w-full max-w-sm mx-auto">
+            <div class="flex items-center gap-3">
+                <button id="wizard-prev-btn" class="hidden w-14 h-14 flex-shrink-0 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full shadow-md flex items-center justify-center transition-transform active:scale-95 border border-gray-100 dark:border-gray-700">
+                    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                </button>
+                
+                <button id="wizard-next-btn" class="flex-grow primary-bg hover:opacity-90 text-white font-bold h-14 rounded-full shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                    次へ
+                </button>
+            </div>
+            
+            <button id="wizard-skip-btn" class="w-full text-gray-400 hover:text-gray-600 font-bold text-xs py-3 mt-1 hidden">
+                あとで設定する
+            </button>
         </div>
-
-    <div class="p-6 flex-shrink-0 w-full max-w-sm mx-auto space-y-3">
-        <button id="wizard-next-btn" class="w-full primary-bg hover:opacity-90 text-white font-bold py-4 rounded-full shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
-            次へ
-        </button>
-        <button id="wizard-skip-btn" class="w-full text-gray-400 hover:text-gray-600 font-bold text-sm py-2 hidden">
-            あとで設定する
-        </button>
     </div>
-</div>
     
     <div id="migration-screen" class="fixed inset-0 z-[300] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 opacity-0 pointer-events-none transform scale-95">
         <header class="header-safe px-6 py-4 flex items-center justify-between min-h-[60px]">
@@ -6456,7 +6465,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
         };
 
             // ==========================================
-            // ▼▼▼ 新しい初期設定ウィザードロジック ▼▼▼
+            // ▼▼▼ 新しい初期設定ウィザードロジック (改修版) ▼▼▼
             // ==========================================
 
             const wizardData = {
@@ -6468,10 +6477,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             // 学年データの定義（階層構造）
             const gradeCategories = {
-                'elementary': { label: '小学生', grades: ['小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生'] },
-                'middle': { label: '中学生', grades: ['中学1年生', '中学2年生', '中学3年生'] },
-                'high': { label: '高校生', grades: ['高校1年生', '高校2年生', '高校3年生'] },
-                'other': { label: 'その他', grades: ['大学・専門学生', '社会人・その他'] }
+                'elementary': { label: '小学生', color: 'text-orange-500 bg-orange-50 dark:bg-orange-900/20', grades: ['小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生'] },
+                'middle': { label: '中学生', color: 'text-green-500 bg-green-50 dark:bg-green-900/20', grades: ['中学1年生', '中学2年生', '中学3年生'] },
+                'high': { label: '高校生', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', grades: ['高校1年生', '高校2年生', '高校3年生'] },
+                'other': { label: 'その他', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', grades: ['大学・専門学生', '社会人・その他'] }
             };
 
             // ウィザードを開始する関数
@@ -6487,16 +6496,30 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 });
 
                 wizardData.step = 0;
-                wizardData.tempProfile.icon = $('#reg-icon') ? $('#reg-icon').value : '🎓'; // 既存の値があれば
+                // アイコンの初期値
+                const currentIcon = $('#reg-icon') ? $('#reg-icon').value : '🎓';
+                wizardData.tempProfile.icon = currentIcon;
                 renderWizardStep();
+            };
+
+            // ウィザードを閉じる関数（ウェルカム画面に戻る）
+            const closeWizard = () => {
+                const wizard = $('#registration-wizard');
+                wizard.classList.remove('opacity-100', 'scale-100');
+                wizard.classList.add('opacity-0', 'scale-95');
+                
+                setTimeout(() => {
+                    wizard.classList.add('hidden');
+                    $('#welcome-screen').classList.remove('hidden');
+                }, 300);
             };
 
             // ステップごとの描画関数
             const renderWizardStep = () => {
                 const content = $('#wizard-content');
                 const nextBtn = $('#wizard-next-btn');
+                const prevBtn = $('#wizard-prev-btn'); // 戻るボタン(下)
                 const skipBtn = $('#wizard-skip-btn');
-                const backBtn = $('#wizard-back-btn');
                 const indicator = $('#wizard-steps');
 
                 // インジケーター更新
@@ -6504,33 +6527,40 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     `<div class="step-dot ${i === wizardData.step ? 'active' : ''}"></div>`
                 ).join('');
 
-                // 戻るボタン表示制御
-                backBtn.classList.toggle('hidden', wizardData.step === 0);
+                // ボタン表示制御
+                // Step 0 では「戻る」非表示、それ以外は表示
+                if (wizardData.step === 0) {
+                    prevBtn.classList.add('hidden');
+                } else {
+                    prevBtn.classList.remove('hidden');
+                }
+
                 skipBtn.classList.add('hidden'); // デフォルトは非表示
                 nextBtn.innerHTML = '次へ';
                 nextBtn.onclick = handleNextStep;
 
-                content.innerHTML = ''; // クリア
+                content.innerHTML = ''; // コンテンツクリア
 
                 // --- ステップ0: プロフィール設定 ---
                 if (wizardData.step === 0) {
                     content.innerHTML = `
-                        <h2 class="text-2xl font-bold mb-2 text-center">プロフィール設定</h2>
-                        <p class="text-sm text-gray-500 mb-8 text-center">まずはニックネームを決めましょう</p>
-                        
-                        <div class="relative group cursor-pointer mb-6" id="wiz-icon-picker">
-                            <div class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-700 shadow-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-6xl select-none">
-                                ${wizardData.tempProfile.icon || '🎓'}
+                        <div class="flex-grow flex flex-col items-center justify-center w-full">
+                            <h2 class="text-2xl font-bold mb-2 text-center text-gray-800 dark:text-white">プロフィール設定</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-10 text-center">まずはニックネームを決めましょう</p>
+                            
+                            <div class="relative group cursor-pointer mb-8" id="wiz-icon-picker">
+                                <div class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-700 shadow-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-6xl select-none transition-transform active:scale-95">
+                                    ${wizardData.tempProfile.icon || '🎓'}
+                                </div>
+                                <div class="absolute bottom-0 right-0 bg-indigo-500 text-white p-3 rounded-full shadow-lg border-4 border-white dark:border-gray-900">
+                                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                                </div>
                             </div>
-                            <div class="absolute bottom-0 right-0 bg-indigo-500 text-white p-3 rounded-full shadow-lg">
-                                <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mb-6">アイコンをタップして変更</p>
 
-                        <div class="w-full max-w-xs">
-                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">ニックネーム</label>
-                            <input type="text" id="wiz-name-input" class="w-full p-4 rounded-2xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-indigo-500 focus:outline-none text-lg font-bold text-center shadow-sm" placeholder="例: スタディ勇者" value="${wizardData.tempProfile.name}">
+                            <div class="w-full max-w-xs">
+                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider text-center">ニックネーム</label>
+                                <input type="text" id="wiz-name-input" class="w-full p-4 rounded-2xl bg-white dark:bg-gray-800 border-2 border-transparent focus:border-indigo-500 focus:outline-none text-lg font-bold text-center shadow-sm text-gray-800 dark:text-white placeholder-gray-300" placeholder="例: スタディ勇者" value="${wizardData.tempProfile.name}">
+                            </div>
                         </div>
                     `;
 
@@ -6550,71 +6580,97 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     nextBtn.disabled = !wizardData.tempProfile.name;
                 }
 
-                // --- ステップ1: 学年設定 (階層化) ---
+                // --- ステップ1: 学年設定 (アコーディオンUI) ---
                 else if (wizardData.step === 1) {
                     content.innerHTML = `
-                        <h2 class="text-2xl font-bold mb-2 text-center">学年を選択</h2>
-                        <p class="text-sm text-gray-500 mb-8 text-center">学習内容の参考にします</p>
-                        <div id="grade-selection-area" class="w-full max-w-sm"></div>
+                        <div class="w-full">
+                            <h2 class="text-2xl font-bold mb-2 text-center text-gray-800 dark:text-white">学年を選択</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center">学習内容の参考にします</p>
+                            <div id="grade-accordion-area" class="w-full space-y-3"></div>
+                        </div>
                     `;
                     
-                    const area = content.querySelector('#grade-selection-area');
+                    const area = content.querySelector('#grade-accordion-area');
                     nextBtn.disabled = !wizardData.tempProfile.grade;
 
-                    // カテゴリ表示関数
-                    const renderCategories = () => {
-                        area.innerHTML = '<div class="grade-grid"></div>';
-                        const grid = area.querySelector('.grade-grid');
+                    // アコーディオン生成
+                    Object.entries(gradeCategories).forEach(([key, data]) => {
+                        // コンテナ
+                        const container = document.createElement('div');
+                        container.className = "bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300";
                         
-                        Object.entries(gradeCategories).forEach(([key, data]) => {
-                            const btn = document.createElement('button');
-                            btn.className = "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-6 rounded-2xl shadow-sm font-bold text-lg text-gray-800 dark:text-gray-200 transition-transform active:scale-95 flex flex-col items-center justify-center h-32 border-2 border-transparent";
-                            if (wizardData.tempProfile.grade && data.grades.includes(wizardData.tempProfile.grade)) {
-                                btn.classList.add('border-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
-                            }
-                            btn.innerHTML = `<span>${data.label}</span>`;
-                            btn.onclick = () => renderGrades(key);
-                            grid.appendChild(btn);
-                        });
-                    };
-
-                    // 詳細学年表示関数
-                    const renderGrades = (categoryKey) => {
-                        const data = gradeCategories[categoryKey];
-                        area.innerHTML = `
-                            <button class="mb-4 text-sm text-gray-400 font-bold flex items-center" id="back-to-cat">
-                                <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> カテゴリに戻る
-                            </button>
-                            <h3 class="text-lg font-bold mb-4 text-center">${data.label}</h3>
-                            <div class="flex flex-col gap-3"></div>
+                        // カテゴリが選択中の学年を含んでいるか
+                        const isContainsSelected = data.grades.includes(wizardData.tempProfile.grade);
+                        
+                        // ヘッダーボタン
+                        const headerBtn = document.createElement('button');
+                        headerBtn.className = "w-full p-5 flex items-center justify-between font-bold text-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors";
+                        headerBtn.innerHTML = `
+                            <div class="flex items-center">
+                                <span class="${data.color} w-2 h-2 rounded-full mr-3"></span>
+                                <span>${data.label}</span>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform duration-300 accordion-icon"></i>
                         `;
-                        
-                        const list = area.querySelector('.flex-col');
+
+                        // 詳細リスト
+                        const listDiv = document.createElement('div');
+                        listDiv.className = "grade-list overflow-hidden transition-all duration-300 ease-in-out bg-gray-50 dark:bg-gray-900/30";
+                        listDiv.style.maxHeight = isContainsSelected ? "500px" : "0px"; // 初期状態
+
+                        const grid = document.createElement('div');
+                        grid.className = "p-3 grid grid-cols-2 gap-2";
+
                         data.grades.forEach(g => {
                             const btn = document.createElement('button');
                             const isSelected = wizardData.tempProfile.grade === g;
-                            btn.className = `w-full p-4 rounded-xl font-bold text-left transition-all ${isSelected ? 'primary-bg text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'}`;
-                            btn.innerHTML = `<div class="flex justify-between items-center"><span>${g}</span>${isSelected ? '<i data-lucide="check" class="w-5 h-5"></i>' : ''}</div>`;
                             
-                            btn.onclick = () => {
+                            btn.className = `p-3 rounded-xl text-sm font-bold transition-all text-center border-2 ${isSelected 
+                                ? 'bg-white dark:bg-gray-700 border-indigo-500 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                                : 'bg-transparent border-transparent text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5'}`;
+                            btn.textContent = g;
+                            
+                            btn.onclick = (e) => {
+                                // 全選択解除
+                                area.querySelectorAll('button').forEach(b => {
+                                    b.classList.remove('bg-white', 'dark:bg-gray-700', 'border-indigo-500', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                                    b.classList.add('bg-transparent', 'border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                                });
+                                // 選択適用
+                                e.currentTarget.classList.remove('bg-transparent', 'border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                                e.currentTarget.classList.add('bg-white', 'dark:bg-gray-700', 'border-indigo-500', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                                
                                 wizardData.tempProfile.grade = g;
-                                renderGrades(categoryKey); // 再描画して選択状態反映
                                 nextBtn.disabled = false;
                             };
-                            list.appendChild(btn);
+                            grid.appendChild(btn);
                         });
 
-                        area.querySelector('#back-to-cat').onclick = renderCategories;
-                        lucide.createIcons({ root: area });
-                    };
+                        listDiv.appendChild(grid);
+                        container.appendChild(headerBtn);
+                        container.appendChild(listDiv);
+                        area.appendChild(container);
 
-                    // 初期表示は、選択済みならその詳細へ、そうでなければカテゴリへ
-                    const selectedCat = Object.keys(gradeCategories).find(k => gradeCategories[k].grades.includes(wizardData.tempProfile.grade));
-                    if (selectedCat) {
-                        renderGrades(selectedCat);
-                    } else {
-                        renderCategories();
-                    }
+                        // アコーディオン開閉ロジック
+                        headerBtn.onclick = () => {
+                            const isOpen = listDiv.style.maxHeight !== "0px";
+                            const icon = headerBtn.querySelector('.accordion-icon');
+                            
+                            // 他を閉じる（任意：排他制御にする場合）
+                            area.querySelectorAll('.grade-list').forEach(el => el.style.maxHeight = "0px");
+                            area.querySelectorAll('.accordion-icon').forEach(el => el.style.transform = "rotate(0deg)");
+
+                            if (!isOpen) {
+                                listDiv.style.maxHeight = "500px"; // 十分な高さ
+                                icon.style.transform = "rotate(180deg)";
+                            }
+                        };
+                        
+                        // 初期アイコン回転
+                        if (isContainsSelected) {
+                            headerBtn.querySelector('.accordion-icon').style.transform = "rotate(180deg)";
+                        }
+                    });
                 }
 
                 // --- ステップ2: ルーティン設定 ---
@@ -6626,33 +6682,39 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     };
 
                     content.innerHTML = `
-                        <h2 class="text-2xl font-bold mb-2 text-center">学習ルーティン</h2>
-                        <p class="text-sm text-gray-500 mb-6 text-center px-4">
-                            「25分勉強＋5分休憩」のような<br>繰り返しセットを設定します。<br>
-                            <span class="text-xs opacity-70">※ドラッグで並び替えできます（後から変更可能）</span>
-                        </p>
+                        <div class="w-full">
+                            <h2 class="text-2xl font-bold mb-2 text-center text-gray-800 dark:text-white">学習ルーティン</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center px-4">
+                                「学習」と「休憩」のセットを設定します。<br>
+                                <span class="text-xs opacity-70">※長押しドラッグで順番を入れ替え可能</span>
+                            </p>
 
-                        <div class="w-full max-w-sm bg-white dark:bg-gray-800 rounded-3xl shadow-modern overflow-hidden p-2">
-                            <div id="wiz-routine-list" class="space-y-2"></div>
+                            <div class="w-full bg-white dark:bg-gray-800 rounded-3xl shadow-modern overflow-hidden p-2 mb-4">
+                                <div id="wiz-routine-list" class="space-y-2"></div>
+                            </div>
+                            
+                            <div class="flex items-center justify-center space-x-2 text-xs text-gray-400">
+                                <i data-lucide="info" class="w-3 h-3"></i>
+                                <span>後から「設定」で自由に変更できます</span>
+                            </div>
                         </div>
-                        <p class="text-xs text-center text-gray-400 mt-4">初期設定: ポモドーロ・テクニック (25分+5分)</p>
                     `;
 
                     // リスト描画
                     const listEl = content.querySelector('#wiz-routine-list');
                     const renderList = () => {
                         listEl.innerHTML = state.profile.routineTemplate.map((item, idx) => `
-                            <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl cursor-grab active:cursor-grabbing">
-                                <div class="w-8 h-8 rounded-full ${item.type==='section'?'bg-indigo-100 text-indigo-500':'bg-green-100 text-green-500'} flex items-center justify-center mr-3">
-                                    <i data-lucide="${item.type==='section'?'book-open':'coffee'}" class="w-4 h-4"></i>
+                            <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl cursor-grab active:cursor-grabbing border border-gray-100 dark:border-gray-700">
+                                <div class="w-10 h-10 rounded-full ${item.type==='section'?'bg-indigo-100 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400':'bg-green-100 text-green-500 dark:bg-green-900/30 dark:text-green-400'} flex items-center justify-center mr-3 shadow-sm">
+                                    <i data-lucide="${item.type==='section'?'book-open':'coffee'}" class="w-5 h-5"></i>
                                 </div>
-                                <div class="flex-grow font-bold text-sm text-gray-700 dark:text-gray-200">
-                                    ${item.type==='section'?'学習セクション':'ブレイクタイム'}
+                                <div class="flex-grow">
+                                    <p class="font-bold text-sm text-gray-800 dark:text-gray-200 leading-tight">
+                                        ${item.type==='section'?'学習セクション':'ブレイクタイム'}
+                                    </p>
+                                    <p class="text-xs text-gray-400 font-bold">${Math.floor(item.duration/60)}分</p>
                                 </div>
-                                <div class="font-mono font-bold text-gray-500 dark:text-gray-400 text-sm">
-                                    ${Math.floor(item.duration/60)}分
-                                </div>
-                                <i data-lucide="grip-vertical" class="ml-2 text-gray-300 w-4 h-4"></i>
+                                <i data-lucide="grip-vertical" class="ml-2 text-gray-300 w-5 h-5"></i>
                             </div>
                         `).join('');
                         lucide.createIcons({ root: listEl });
@@ -6664,6 +6726,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         Sortable.create(listEl, {
                             animation: 150,
                             ghostClass: 'sortable-ghost',
+                            delay: 150, 
+                            delayOnTouchOnly: true,
                             onEnd: (evt) => {
                                 const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
                                 state.profile.routineTemplate.splice(evt.newIndex, 0, item);
@@ -6684,13 +6748,16 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     skipBtn.onclick = completeWizard;
 
                     content.innerHTML = `
-                        <div class="relative w-full max-w-[280px] aspect-[3/4] mb-6">
-                            <img src="tutorial_4.png" class="w-full h-full object-contain drop-shadow-xl" alt="Notification" onerror="this.style.display='none'">
+                        <div class="flex-grow flex flex-col items-center justify-center">
+                            <div class="relative w-full max-w-[240px] aspect-square mb-8">
+                                <img src="tutorial_4.png" class="w-full h-full object-contain drop-shadow-2xl" alt="Notification" onerror="this.style.display='none'">
+                            </div>
+                            <h2 class="text-2xl font-bold mb-3 text-center text-gray-800 dark:text-white">通知設定</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 text-center px-4 leading-relaxed">
+                                タイマーの終了や、習慣化のリマインダーを受け取ることができます。<br>
+                                <span class="text-xs opacity-70">※設定からいつでも変更可能です</span>
+                            </p>
                         </div>
-                        <h2 class="text-2xl font-bold mb-2 text-center">通知設定</h2>
-                        <p class="text-sm text-gray-500 text-center px-4">
-                            タイマー終了時や、習慣化のリマインダーを受け取ることができます。
-                        </p>
                     `;
                 }
 
@@ -6745,8 +6812,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }, 300);
             };
 
-            // 戻るボタン
-            $('#wizard-back-btn').addEventListener('click', () => {
+            // イベントリスナー
+            $('#wizard-close-btn').addEventListener('click', closeWizard);
+            
+            $('#wizard-prev-btn').addEventListener('click', () => {
                 if (wizardData.step > 0) {
                     wizardData.step--;
                     renderWizardStep();
