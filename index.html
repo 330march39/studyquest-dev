@@ -1390,6 +1390,26 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     outline: none;
     transform: scale(1.01);
 }
+        /* ▼▼▼ 追加: 横画面制御用のCSS ▼▼▼ */
+
+/* デフォルトでは警告を隠す */
+#orientation-lock-overlay {
+    display: none !important;
+}
+
+/* 端末が「横向き」の場合のルール */
+@media (orientation: landscape) {
+    /* bodyに 'is-quest-mode' クラスが無い場合のみ、警告を表示する */
+    body:not(.is-quest-mode) #orientation-lock-overlay {
+        display: flex !important;
+    }
+
+    /* 警告が出ている間は、後ろのコンテンツをスクロールさせない */
+    body:not(.is-quest-mode) {
+        overflow: hidden !important;
+    }
+}
+/* ▲▲▲ 追加ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -2568,7 +2588,13 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         </div>
     </div>
 </div>
-    
+    <div id="orientation-lock-overlay" class="fixed inset-0 z-[10000] bg-gray-900 text-white flex-col items-center justify-center text-center p-6 hidden touch-none">
+    <div class="animate-bounce mb-6">
+        <i data-lucide="smartphone" class="w-24 h-24 rotate-90 text-gray-400"></i>
+    </div>
+    <h2 class="text-2xl font-bold mb-2">画面を縦に戻してください</h2>
+    <p class="text-sm text-gray-400 font-bold">横画面には対応していません</p>
+</div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const initialData = {
@@ -6084,6 +6110,7 @@ const showToast = (message, type = 'normal') => {
             }
             // ▼▼▼ 追加: クエスト開始時に横画面固定（フルスクリーン）にする ▼▼▼
             controlScreenOrientation('quest');
+            document.body.classList.add('is-quest-mode');
 
             quest.plan.forEach(item => {
                 // セクションで、かつテキストがない（またはスペースのみ）場合
@@ -6154,6 +6181,7 @@ const showToast = (message, type = 'normal') => {
             closeIframe();
             // ▼▼▼ 追加: クエスト終了時に縦画面に戻す（フルスクリーン解除） ▼▼▼
             controlScreenOrientation('default');
+            document.body.classList.remove('is-quest-mode');
             if (completed) {
                 showToast('クエスト完了！お疲れ様でした！');
             }
@@ -7477,6 +7505,7 @@ const checkQuestResume = () => {
             // ★新規追加: クエスト復元実行プロセス
             const resumeQuestProcess = () => {
                 const saved = state.savedQuest;
+                document.body.classList.add('is-quest-mode');
                 quest.plan = saved.plan;
                 quest.currentIndex = saved.currentIndex;
                 quest.active = true;
