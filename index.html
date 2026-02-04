@@ -9187,6 +9187,33 @@ const renderGamePreviews = (game) => {
             controlScreenOrientation('default');
             init();
         });
+        // ▼▼▼ 追加: 画面回転・リサイズ時のバナー位置ズレ修正 ▼▼▼
+window.addEventListener('resize', () => {
+    // 回転アニメーションが終わるのを少し待つ（これが重要です）
+    setTimeout(() => {
+        const carousel = document.getElementById('home-banner-carousel');
+        if (!carousel) return;
+
+        const item = carousel.querySelector('.banner-item');
+        if (!item) return;
+
+        // バナー1枚分の幅 + 隙間(12px) を計算
+        // ※CSSで gap: 12px を指定しているため
+        const gap = 12; 
+        const oneSlideWidth = item.offsetWidth + gap;
+
+        // 現在のスクロール位置から、一番近いバナーのインデックスを計算
+        const scrollPos = carousel.scrollLeft;
+        const nearestIndex = Math.round(scrollPos / oneSlideWidth);
+
+        // そのバナーの位置へ瞬時に移動させる
+        carousel.scrollTo({
+            left: nearestIndex * oneSlideWidth,
+            behavior: 'instant' // アニメーションなしで即座に合わせる
+        });
+    }, 300); // 0.3秒待機（iOSの回転アニメーション時間に合わせる）
+});
+// ▲▲▲ 追加ここまで ▲▲▲
     </script>
     <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden animate-fadeIn" onclick="this.classList.add('hidden')">
         
