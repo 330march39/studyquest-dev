@@ -7023,13 +7023,60 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 lucide.createIcons();
             };
 
+            // ▼▼▼ 修正版: 通知設定のハンドリング (ブロック時対応) ▼▼▼
             const handleNotificationRequest = async () => {
-                if ('Notification' in window) {
-                    try {
-                        await Notification.requestPermission();
-                    } catch (e) { console.error(e); }
+                // 1. ブラウザが通知非対応の場合
+                if (!('Notification' in window)) {
+                    completeWizard();
+                    return;
                 }
-                completeWizard();
+
+                // 2. 既に許可されている場合
+                if (Notification.permission === 'granted') {
+                    completeWizard();
+                    return;
+                }
+
+                // 3. 以前に「ブロック」されている場合 (ネイティブのポップアップが出ない)
+                if (Notification.permission === 'denied') {
+                    openGeneralConfirm(
+                        '通知がオフになっています',
+                        '端末またはブラウザの設定で通知がブロックされています。\n\n設定を変更するか、このまま通知なしで開始してください。',
+                        'bell-off',     // アイコン
+                        '通知なしで開始', // 肯定ボタン (進む)
+                        'bg-gray-500 hover:bg-gray-600', // ボタン色 (グレーで控えめに)
+                        () => completeWizard(), // 実行: そのまま完了へ
+                        '設定を確認する', // キャンセルボタン (実際は閉じるだけだが誘導用)
+                        () => {} // 何もしない（設定を見に行く時間を与える）
+                    );
+                    return;
+                }
+
+                // 4. まだ選択していない場合 (ネイティブのポップアップを出す)
+                try {
+                    const permission = await Notification.requestPermission();
+                    
+                    if (permission === 'granted') {
+                        // 許可されたら完了
+                        completeWizard();
+                    } else {
+                        // 「ブロック」または「閉じる」が押された場合
+                        // ここでもポップアップで確認を出す
+                        openGeneralConfirm(
+                            '通知が許可されませんでした',
+                            '通知機能を使用せずにアプリを開始しますか？\n(後から設定画面で変更できます)',
+                            'bell-off',
+                            '開始する',
+                            'primary-bg',
+                            () => completeWizard(),
+                            'もう一度試す',
+                            () => handleNotificationRequest() // 再帰呼び出し (ブロックされていなければ再度出る)
+                        );
+                    }
+                } catch (e) {
+                    console.error(e);
+                    completeWizard();
+                }
             };
 
             const completeWizard = () => {
@@ -7060,6 +7107,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             $('#wizard-prev-btn').addEventListener('click', handlePrevStep);
             
             $('#btn-start-new').addEventListener('click', startRegistrationWizard);
+            // ▼▼▼ 追加: 引き継ぎボタンのイベント設定 ▼▼▼
+            const transferStartBtn = document.getElementById('btn-transfer-start');
+            if (transferStartBtn) {
+                transferStartBtn.addEventListener('click', () => {
+                    openMigrationModal(true);
+                });
+            }
 
             // ==========================================
             // ▲▲▲ 新しい初期設定ウィザード終了 ▲▲▲
