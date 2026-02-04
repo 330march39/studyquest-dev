@@ -1419,6 +1419,11 @@ html.dark .center-fab {
     }
 }
 /* ▲▲▲ 追加ここまで ▲▲▲ */
+        /* ▼▼▼ 追加: ヘッダーとタブバーの影を強制的に削除 ▼▼▼ */
+.header-safe,
+#bottom-nav {
+    box-shadow: none !important;
+}
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -4492,7 +4497,7 @@ const showToast = (message, type = 'normal') => {
                 }, 300);
             };
 
-            // ポップアップを表示する関数 (LP用)
+            // ▼▼▼ 修正版: 自動クローズを削除した showLpPopup ▼▼▼
             const showLpPopup = (amount, reason) => {
                 // UIをLPモードにリセット
                 $('#popup-title').textContent = 'GET!';
@@ -4514,13 +4519,14 @@ const showToast = (message, type = 'normal') => {
                 
                 lucide.createIcons();
 
-                if (popupAutoCloseTimer) clearTimeout(popupAutoCloseTimer);
-                popupAutoCloseTimer = setTimeout(() => {
-                    closeLpPopup();
-                }, 10000);
+                // ★修正: 既存のタイマーがあればクリアし、新しいタイマーはセットしない（自動で閉じない）
+                if (popupAutoCloseTimer) {
+                    clearTimeout(popupAutoCloseTimer);
+                    popupAutoCloseTimer = null;
+                }
             };
 
-            // ▼▼▼ 追加: アイテム獲得ポップアップを表示する関数 ▼▼▼
+            // ▼▼▼ 修正版: 自動クローズを削除した showItemPopup ▼▼▼
             const showItemPopup = (item, type) => {
                 // UIをアイテムモードに切り替え
                 $('#popup-title').textContent = 'UNLOCK!';
@@ -4561,8 +4567,11 @@ const showToast = (message, type = 'normal') => {
                 
                 lucide.createIcons(); // アイコン再生成
 
-                if (popupAutoCloseTimer) clearTimeout(popupAutoCloseTimer);
-                popupAutoCloseTimer = setTimeout(closeLpPopup, 10000);
+                // ★修正: 既存のタイマーがあればクリアし、新しいタイマーはセットしない
+                if (popupAutoCloseTimer) {
+                    clearTimeout(popupAutoCloseTimer);
+                    popupAutoCloseTimer = null;
+                }
             };
 
             // 数字アニメーション（変更なし）
