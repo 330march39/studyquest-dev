@@ -715,47 +715,55 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         #bottom-nav .tab-btn svg {
             stroke: currentColor;
         }
-        /* --- 真ん中の強調ボタン (崩れ防止・完全版) --- */
-        .center-fab {
-            position: absolute;
-            left: 50%;
-            top: -24px; /* バーから上に飛び出す量 */
-            transform: translateX(-50%);
-            
-            /* ★ここが重要: サイズと形を固定 */
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            
-            /* ★ここが重要: アイコンをど真ん中に配置 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            /* 色設定（強制） */
-            color: #ffffff !important; /* アイコンは常に白 */
-            
-            /* 背景と同じ色の太い枠線で「くり抜き」効果 */
-            border: 6px solid #ffffff; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            
-            z-index: 60;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            
-            /* タップ時のハイライト消去 */
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        /* --- 真ん中の強調ボタン (デザインアップデート版) --- */
+.center-fab {
+    position: absolute;
+    left: 50%;
+    /* 位置を下げる: 元の -24px から -12px に変更 (1/10程度飛び出す設定) */
+    top: -12px; 
+    transform: translateX(-50%);
+    
+    /* サイズ設定 */
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    
+    /* アイコンと文字を縦に並べる設定 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    /* 色設定 */
+    color: #ffffff !important;
+    
+    /* 枠線を削除し、影をモダンにする */
+    border: none !important; 
+    box-shadow: 0 8px 20px -5px rgba(var(--primary-rgb, 79, 70, 229), 0.5); /* テーマカラーの影 */
+    
+    z-index: 60;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        /* ダークモード時の枠線色（背景色に合わせる） */
-        html.dark .center-fab {
-            border-color: #111827; 
-        }
+/* ダークモード時の枠線設定も不要なので削除または上書き */
+html.dark .center-fab {
+    border: none !important;
+}
 
-        /* 押した時のアニメーション */
-        .center-fab:active {
-            transform: translateX(-50%) scale(0.9);
-        }
+/* 押した時のアニメーション */
+.center-fab:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* --- クエスト開始ボタンの強制配置用 --- */
+.force-bottom {
+    bottom: 0 !important;
+    padding-bottom: 1.5rem !important; /* 画面端すぎないように少し余白 */
+    z-index: 50;
+}
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
         /* calc() を使って「元の位置 + セーフティエリア」を計算 */
@@ -1638,11 +1646,9 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
 
             <div class="w-16 flex-shrink-0 h-full relative">
                 <button class="center-fab primary-bg tab-btn" data-page="focus-page" data-title="集中">
-                    <i data-lucide="timer" class="w-8 h-8"></i>
+                    <i data-lucide="timer" class="w-7 h-7 mb-0.5"></i>
+                    <span class="text-[9px] font-bold leading-none">集中</span>
                 </button>
-                <div class="absolute bottom-1 w-full text-center pointer-events-none">
-                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-400">集中</span>
-                </div>
             </div>
 
             <div class="flex-1 flex justify-around items-center h-full">
@@ -1981,7 +1987,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             </div>
         </div>
 
-        <div class="fixed bottom-safe-16 left-0 right-0 max-w-lg mx-auto p-4 z-20 pointer-events-none">
+        <div class="fixed force-bottom left-0 right-0 max-w-lg mx-auto p-4 pointer-events-none">
             <button id="start-quest-btn" class="w-full primary-bg primary-bg-hover text-white py-4 px-8 rounded-full font-bold text-lg shadow-lg hover:scale-105 transition-transform transform flex items-center justify-center space-x-2 pointer-events-auto">
                 <i data-lucide="play" class="w-6 h-6"></i>
                 <span>クエストを開始する</span>
