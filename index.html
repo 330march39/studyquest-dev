@@ -734,12 +734,13 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     align-items: center;
     justify-content: center;
     
-    /* 色設定 */
+    gap: 3px; 
+    
     color: #ffffff !important;
     
-    /* 枠線を削除し、影をモダンにする */
     border: none !important; 
-    box-shadow: 0 8px 20px -5px rgba(var(--primary-rgb, 79, 70, 229), 0.5); /* テーマカラーの影 */
+    /* ★ここを変更: 影をなしにする */
+    box-shadow: none !important;
     
     z-index: 60;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1646,7 +1647,7 @@ html.dark .center-fab {
 
             <div class="w-16 flex-shrink-0 h-full relative">
                 <button class="center-fab primary-bg tab-btn" data-page="focus-page" data-title="集中">
-                    <i data-lucide="timer" class="w-7 h-7 mb-0.5"></i>
+                    <i data-lucide="timer" class="w-7 h-7"></i>
                     <span class="text-[9px] font-bold leading-none">集中</span>
                 </button>
             </div>
@@ -4759,8 +4760,13 @@ const showToast = (message, type = 'normal') => {
         };
             
             // ▼▼▼ renderHomeTasks 関数全体を書き換え ▼▼▼
+            // ▼▼▼ 修正版: スクロール位置を維持する renderHomeTasks ▼▼▼
             const renderHomeTasks = () => {
                 if (!homeTaskListEl) return;
+
+                // ★1. 現在のスクロール位置を保存
+                const mainContainer = document.querySelector('main');
+                const savedScrollTop = mainContainer ? mainContainer.scrollTop : 0;
             
                 // 1. 空の状態 (Empty State)
                 if (!state.tasks || state.tasks.length === 0) {
@@ -4781,23 +4787,21 @@ const showToast = (message, type = 'normal') => {
                         
                         // 完了時のスタイル定義
                         const bgStyle = isCompleted ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
-                        const numBgStyle = isCompleted ? 'background-color: #9ca3af;' : 'background-color: var(--primary-color);'; // 完了:グレー, 未完了:テーマ色
+                        const numBgStyle = isCompleted ? 'background-color: #9ca3af;' : 'background-color: var(--primary-color);';
                         const textColor = isCompleted ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200';
                         const subTextColor = isCompleted ? 'text-gray-300 dark:text-gray-600 line-through' : 'text-gray-400 dark:text-gray-400';
             
                         const taskEl = document.createElement('div');
                         taskEl.setAttribute('data-id', task.id);
                         
-                        // ★高さ固定の肝: h-[72px] (約4.5rem) を指定して高さを完全に固定する
+                        // 高さ固定
                         taskEl.className = `task-item swipe-container relative overflow-hidden group h-[72px] w-full`;
             
-                        // --- 2. テキスト解析 (サブタイトル処理) ---
-                        // 全角・半角スペースで分割
+                        // テキスト解析
                         const match = task.text.match(/^(.+?)[\s　]+(.+)$/);
                         let displayHTML = '';
             
                         if (match) {
-                            // [メインタイトル + サブタイトル]
                             displayHTML = `
                                 <div class="flex flex-col justify-center h-full pointer-events-none">
                                     <span class="text-sm font-bold leading-tight ${textColor} mb-0.5 truncate">${match[1]}</span>
@@ -4805,7 +4809,6 @@ const showToast = (message, type = 'normal') => {
                                 </div>
                             `;
                         } else {
-                            // [1行のみ]
                             displayHTML = `
                                 <div class="flex items-center h-full pointer-events-none">
                                     <span class="text-sm font-bold leading-tight ${textColor} truncate">${task.text}</span>
@@ -4813,7 +4816,7 @@ const showToast = (message, type = 'normal') => {
                             `;
                         }
             
-                        // --- 3. HTML構築 ---
+                        // HTML構築
                         taskEl.innerHTML = `
                             <div class="swipe-actions">
                                 <button class="btn-complete swipe-btn bg-gray-300 dark:bg-gray-600 w-[70px]">
@@ -4832,7 +4835,6 @@ const showToast = (message, type = 'normal') => {
                                 </div>
                                 
                                 <div class="flex-grow min-w-0 relative h-full">
-                                    
                                     <div class="task-view-layer absolute inset-0 cursor-text select-none"
                                          onclick="if(!${isCompleted}) { this.classList.add('opacity-0', 'pointer-events-none'); this.nextElementSibling.classList.remove('opacity-0', 'pointer-events-none'); this.nextElementSibling.focus(); }">
                                         ${displayHTML}
@@ -4853,9 +4855,7 @@ const showToast = (message, type = 'normal') => {
                         
                         homeTaskListEl.appendChild(taskEl);
                         
-                        // --- 4. イベント設定 ---
-                        
-                        // スワイプ機能
+                        // イベント設定: スワイプ
                         new SwipeHandler(taskEl, {
                             onComplete: () => {
                                 const taskToUpdate = state.tasks.find(t => t.id === task.id);
@@ -4868,20 +4868,19 @@ const showToast = (message, type = 'normal') => {
                             onDelete: () => {
                                 state.tasks = state.tasks.filter(t => t.id !== task.id);
                                 saveState();
-                                // アニメーションのため少し待つ
                                 setTimeout(renderHomeTasks, 300);
                                 showToast('タスクを削除しました');
                             }
                         });
             
-                        // テキスト変更保存
+                        // イベント設定: テキスト編集
                         const input = taskEl.querySelector('.task-edit-input');
                         input.addEventListener('change', (e) => {
                             const taskToUpdate = state.tasks.find(t => t.id === task.id);
                             if (taskToUpdate) {
                                 taskToUpdate.text = e.target.value;
                                 saveState();
-                                renderHomeTasks(); // 再描画してサブタイトル表示を反映
+                                renderHomeTasks();
                             }
                         });
                     });
@@ -4892,9 +4891,14 @@ const showToast = (message, type = 'normal') => {
                     root: homeTaskListEl,
                     attrs: { class: "w-5 h-5" }
                 });
-            };
-            // ▲▲▲ 変更ここまで ▲▲▲
 
+                // ★2. スクロール位置を復元 (描画完了後に実行)
+                if (mainContainer) {
+                    requestAnimationFrame(() => {
+                        mainContainer.scrollTop = savedScrollTop;
+                    });
+                }
+            };
             document.body.addEventListener('click', e => {
                 const quizCard = e.target.closest('.quiz-card');
                 if (quizCard && !e.target.closest('.pin-btn')) {
