@@ -3433,7 +3433,7 @@ html.dark .center-fab {
             };
 
             // --- 汎用確認モーダルを開く関数 ---
-// --- 汎用確認モーダル (キャンセルカスタム対応版) ---
+// --- 汎用確認モーダル (キャンセル非表示対応版) ---
 const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, onConfirm, cancelText = 'キャンセル', onCancel = null) => {
     const modal = document.getElementById('general-confirm-modal');
     const content = document.getElementById('general-confirm-content');
@@ -3448,10 +3448,6 @@ const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, o
     okBtn.textContent = confirmText || '実行する';
     okBtn.className = `w-full py-3.5 rounded-full text-white font-bold shadow-lg transition-transform active:scale-95 ${colorClass || 'primary-bg'}`;
     
-    // キャンセルボタン設定
-    const cancelBtn = document.getElementById('general-confirm-cancel-btn');
-    cancelBtn.textContent = cancelText;
-
     // イベント設定 (Cloneしてリセット)
     const newOkBtn = okBtn.cloneNode(true);
     okBtn.parentNode.replaceChild(newOkBtn, okBtn);
@@ -3461,13 +3457,24 @@ const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, o
         if (onConfirm) onConfirm();
     });
 
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    // キャンセルボタン設定
+    const cancelBtn = document.getElementById('general-confirm-cancel-btn');
     
-    newCancelBtn.addEventListener('click', () => {
-        closeModalWithAnim('general-confirm-modal', 'general-confirm-content');
-        if (onCancel) onCancel(); // キャンセル時の処理があれば実行
-    });
+    // ★修正: cancelText が null の場合はボタンを隠す
+    if (cancelText === null) {
+        cancelBtn.style.display = 'none';
+    } else {
+        cancelBtn.style.display = ''; // 表示
+        cancelBtn.textContent = cancelText;
+        
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        
+        newCancelBtn.addEventListener('click', () => {
+            closeModalWithAnim('general-confirm-modal', 'general-confirm-content');
+            if (onCancel) onCancel();
+        });
+    }
 
     // アイコン更新 & 表示
     lucide.createIcons({ root: content });
@@ -4150,10 +4157,32 @@ const controlScreenOrientation = async (mode) => {
                         if (!('Notification' in window) || Notification.permission !== 'granted') {
                             generalList.appendChild(createListItem('bell', '通知を許可する', 'bg-yellow-500', async () => {
                                 if (!('Notification' in window)) { showToast('非対応です'); return; }
+                                
+                                // ブロックされている場合の共通処理
+                                const showDeniedPopup = () => {
+                                    openGeneralConfirm(
+                                        '通知が拒否されました',
+                                        '端末の設定画面で変更することができます。',
+                                        'bell-off',
+                                        'OK',
+                                        'primary-bg',
+                                        () => {}, // 閉じるだけ
+                                        null // ★キャンセルボタンなし
+                                    );
+                                };
+
+                                if (Notification.permission === 'denied') {
+                                    showDeniedPopup();
+                                    return;
+                                }
+                                
+                                // 許可を求める
                                 const permission = await Notification.requestPermission();
                                 if (permission === 'granted') { 
                                     showToast('通知が許可されました！'); 
                                     renderEngine.pages['settings-page'](); 
+                                } else {
+                                    showDeniedPopup();
                                 }
                             }));
                         }
@@ -7023,55 +7052,46 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 lucide.createIcons();
             };
 
-            // ▼▼▼ 修正版: 通知設定のハンドリング (ブロック時対応) ▼▼▼
+            // ▼▼▼ 修正版: ようこそ画面の通知許可ロジック ▼▼▼
             const handleNotificationRequest = async () => {
-                // 1. ブラウザが通知非対応の場合
                 if (!('Notification' in window)) {
                     completeWizard();
                     return;
                 }
 
-                // 2. 既に許可されている場合
+                // 既に許可されている場合
                 if (Notification.permission === 'granted') {
                     completeWizard();
                     return;
                 }
 
-                // 3. 以前に「ブロック」されている場合 (ネイティブのポップアップが出ない)
-                if (Notification.permission === 'denied') {
+                // ブロックされている場合（またはこれから拒否した場合）の共通処理
+                const showDeniedPopup = () => {
                     openGeneralConfirm(
-                        '通知がオフになっています',
-                        '端末またはブラウザの設定で通知がブロックされています。\n\n設定を変更するか、このまま通知なしで開始してください。',
-                        'bell-off',     // アイコン
-                        '通知なしで開始', // 肯定ボタン (進む)
-                        'bg-gray-500 hover:bg-gray-600', // ボタン色 (グレーで控えめに)
-                        () => completeWizard(), // 実行: そのまま完了へ
-                        '設定を確認する', // キャンセルボタン (実際は閉じるだけだが誘導用)
-                        () => {} // 何もしない（設定を見に行く時間を与える）
+                        '通知が拒否されました',
+                        '端末の設定画面で変更することができます。',
+                        'bell-off',
+                        'OK',
+                        'primary-bg',
+                        () => completeWizard(), // OKを押したら完了して進む
+                        null // ★キャンセルボタンなし
                     );
+                };
+
+                // 以前にブロックされている場合
+                if (Notification.permission === 'denied') {
+                    showDeniedPopup();
                     return;
                 }
 
-                // 4. まだ選択していない場合 (ネイティブのポップアップを出す)
+                // まだ未選択の場合 -> ネイティブの許可ダイアログを出す
                 try {
                     const permission = await Notification.requestPermission();
-                    
                     if (permission === 'granted') {
-                        // 許可されたら完了
                         completeWizard();
                     } else {
-                        // 「ブロック」または「閉じる」が押された場合
-                        // ここでもポップアップで確認を出す
-                        openGeneralConfirm(
-                            '通知が許可されませんでした',
-                            '通知機能を使用せずにアプリを開始しますか？\n(後から設定画面で変更できます)',
-                            'bell-off',
-                            '開始する',
-                            'primary-bg',
-                            () => completeWizard(),
-                            'もう一度試す',
-                            () => handleNotificationRequest() // 再帰呼び出し (ブロックされていなければ再度出る)
-                        );
+                        // 今回「許可しない」を選んだ場合
+                        showDeniedPopup();
                     }
                 } catch (e) {
                     console.error(e);
