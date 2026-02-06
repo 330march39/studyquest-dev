@@ -8172,7 +8172,7 @@ const checkQuestResume = () => {
                     showToast('適用しました');
                 };
             
-// ▼▼▼ 【再々々修正版】ストア画面描画ロジック (右端揃え・余白調整) ▼▼▼
+// ▼▼▼ 【名前中央揃え修正版】ストア画面描画ロジック ▼▼▼
 
 // 並び順を管理する変数（グローバルスコープ）
 let currentStoreSort = 'default';
@@ -8190,20 +8190,16 @@ const renderStatusPageContent = () => {
         sortContainer = document.createElement('div');
         sortContainer.id = 'status-sort-container';
         
-        // ★修正点: 
-        // 1. px-6 py-4 を削除し、親のpadding(p-4)に合わせることでリストの右端と揃える
-        // 2. justify-end で右寄せ
-        // 3. mb-2 でリストとの間隔を適度に確保
         sortContainer.className = "w-full flex justify-end items-center mb-2"; 
         
         sortContainer.innerHTML = `
-    <div class="relative group">
-        <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 pl-4 pr-9 rounded-full border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 primary-ring">
-                    <option value="default">デフォルト</option>
-                    <option value="lp">LP（昇順）</option>
-                    <option value="name">名前</option>
+            <div class="relative group">
+                <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 pl-4 pr-9 rounded-full border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+                    <option value="default">デフォルト順</option>
+                    <option value="lp">LP (小さい順)</option>
+                    <option value="name">名前順</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 group-hover:primary-text transition-colors">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 group-hover:text-indigo-500 transition-colors">
                     <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
                 </div>
             </div>
@@ -8265,7 +8261,7 @@ const renderStatusPageContent = () => {
         const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
 
         return `
-            <div class="text-center cursor-pointer item-btn group relative p-1 select-none tap-highlight-transparent" data-id="${id}" data-type="${type}">
+            <div class="text-center cursor-pointer item-btn group relative p-1" data-id="${id}" data-type="${type}">
                 <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
                     ${iconHTML}
                     ${lockOverlay}
