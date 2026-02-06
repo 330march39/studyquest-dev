@@ -8172,7 +8172,7 @@ const checkQuestResume = () => {
                     showToast('適用しました');
                 };
             
-// ▼▼▼ 【修正版】ストア画面の描画ロジック (並び替え・表示生成すべて含む) ▼▼▼
+// ▼▼▼ 【再々修正版】ストア画面描画ロジック (辞書削除・スクロール連動) ▼▼▼
 
 // 並び順を管理する変数（グローバルスコープ）
 let currentStoreSort = 'default';
@@ -8182,26 +8182,28 @@ const renderStatusPageContent = () => {
     const lpDisplay = $('#status-lp-display');
     if (lpDisplay) lpDisplay.textContent = state.profile.lp;
 
-    // 2. ソートUIの設置（まだなければ追加）
-    const tabsContainerParent = document.querySelector('#status-tabs-container').parentElement;
+    // 2. ソートUIの設置 (スクロール領域の先頭に追加)
+    const scrollContainer = document.querySelector('#status-screen .overflow-y-auto');
     let sortContainer = document.getElementById('status-sort-container');
 
-    if (!sortContainer) {
+    if (scrollContainer && !sortContainer) {
         sortContainer = document.createElement('div');
         sortContainer.id = 'status-sort-container';
-        sortContainer.className = "px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex justify-end items-center border-b border-gray-100 dark:border-gray-700 transition-colors";
+        // アイテムリストの上に配置（スクロールすると一緒に流れる）
+        sortContainer.className = "px-4 py-2 mb-2 flex justify-end items-center"; 
         sortContainer.innerHTML = `
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-600">
                 <i data-lucide="arrow-up-down" class="w-3 h-3 text-gray-400"></i>
-                <select id="store-sort-select" class="text-xs font-bold bg-transparent outline-none text-gray-600 dark:text-gray-300 cursor-pointer appearance-none pr-4 relative z-10">
+                <select id="store-sort-select" class="text-xs font-bold bg-transparent outline-none text-gray-600 dark:text-gray-300 cursor-pointer appearance-none pr-6 relative z-10">
                     <option value="default">デフォルト</option>
                     <option value="lp">LP（小さい順）</option>
                     <option value="name">名前順</option>
                 </select>
+                <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 absolute right-3 pointer-events-none"></i>
             </div>
         `;
-        // タブコンテナの下に挿入
-        tabsContainerParent.insertAdjacentElement('afterend', sortContainer);
+        // 先頭に挿入
+        scrollContainer.prepend(sortContainer);
         
         // イベントリスナー設定
         const select = sortContainer.querySelector('#store-sort-select');
@@ -8210,8 +8212,6 @@ const renderStatusPageContent = () => {
             currentStoreSort = e.target.value;
             renderStatusPageContent(); // 再描画
         });
-        
-        lucide.createIcons({ root: sortContainer });
     }
 
     // --- ヘルパー関数: アイテムのHTML生成 ---
@@ -8276,7 +8276,7 @@ const renderStatusPageContent = () => {
         const items = Object.entries(dataObj);
 
         // デフォルトアイテム（コスト0）とそれ以外に分離
-        // ※テーマや壁紙のデフォルトは必ず先頭にする仕様
+        // ※「デフォルト優先」の仕様
         const defaults = items.filter(([, item]) => item.cost === 0);
         const others = items.filter(([, item]) => item.cost > 0);
 
@@ -8286,10 +8286,11 @@ const renderStatusPageContent = () => {
             const itemB = b[1];
 
             if (currentStoreSort === 'lp') {
-                // LP昇順。同じなら登録順（元の順序を保持）
+                // LP昇順
                 return itemA.cost - itemB.cost;
             } else if (currentStoreSort === 'name') {
-                // 名前順（日本語対応）
+                // 名前順（簡易比較）
+                // 読み仮名辞書を使わないため、漢字の並び順は文字コードに依存します
                 return itemA.name.localeCompare(itemB.name, 'ja');
             } else {
                 // デフォルト（登録順）: そのまま
@@ -8328,6 +8329,8 @@ const renderStatusPageContent = () => {
     }).join('');
 
     lucide.createIcons();
+    // もしソートコンテナ内にもアイコンがあるならそこも
+    if(sortContainer) lucide.createIcons({ root: sortContainer });
 
     // クリックイベント設定（再描画ごとに再設定）
     $$('.item-btn').forEach(btn => {
@@ -8337,6 +8340,7 @@ const renderStatusPageContent = () => {
         });
     });
 };
+            
             // ▼▼▼ 修正: ピン留め一覧を描画する関数を独立定義 ▼▼▼
             const renderPinnedListPageContent = () => {
                 const container = $('#pinned-list-full-content');
