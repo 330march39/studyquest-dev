@@ -8172,96 +8172,118 @@ const checkQuestResume = () => {
                     showToast('適用しました');
                 };
             
-            const renderStatusPageContent = () => {
-                // LP表示更新
-                $('#status-lp-display').textContent = state.profile.lp;
+            // ▼▼▼ 【追加・修正】ストアの並び替え機能とリスト描画ロジック ▼▼▼
 
-                // 共通のクリックハンドラ
-// ↓↓↓ createItemHTML をこのコードに置き換えてください ↓↓↓
-const createItemHTML = (id, item, type, isUnlocked, isActive) => {
-    let iconHTML = '';
-    let statusBadge = '';
-    let activeClass = isActive ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : '';
-    
-    const checkMarkBadge = `<div class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 rounded-full p-1.5 shadow-md z-10"><i data-lucide="check" class="w-4 h-4 primary-text"></i></div>`;
+// 並び順を管理する変数
+let currentStoreSort = 'default';
 
-    // 基本は正方形
-    let containerClass = 'w-full aspect-square rounded-3xl'; // 👈 ここを変更
-    
-    if (type === 'theme') {
-        containerClass = 'w-20 h-20 rounded-full';
-        iconHTML = `<div class="w-full h-full rounded-full shadow-inner" style="background-color: ${item.color}"></div>`;
-        if (isUnlocked) statusBadge = checkMarkBadge;
+const renderStatusPageContent = () => {
+    // 1. LP表示更新
+    const lpDisplay = $('#status-lp-display');
+    if (lpDisplay) lpDisplay.textContent = state.profile.lp;
 
-    } else if (type === 'background') {
-        containerClass = 'w-full aspect-[9/16] rounded-3xl'; // 👈 ここを変更
-        const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
-        iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
-        if (isUnlocked) statusBadge = checkMarkBadge;
+    // 2. ソートUIの設置（まだなければ追加）
+    const tabsContainerParent = document.querySelector('#status-tabs-container').parentElement;
+    let sortContainer = document.getElementById('status-sort-container');
 
-    } else if (type === 'game') {
-        // ★修正: thumbnail(正方形アイコン)があればそれを表示。なければpreview[0]、それもなければアイコン。
-        if (item.thumbnail) {
-            iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${item.thumbnail}')"></div>`;
-        } else if (item.previews && item.previews.length > 0) {
-            const previewUrl = item.previews[0];
-            iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${previewUrl}')"></div>`;
-        } else {
-            iconHTML = `<i data-lucide="${item.icon || 'gamepad-2'}" class="w-10 h-10 text-indigo-500"></i>`;
-        }
-        if (isUnlocked) statusBadge = checkMarkBadge;
-
-    } else {
-        // 音楽など
-        const iconName = item.icon || 'music';
-        const colorClass = 'text-pink-500';
-        iconHTML = `<i data-lucide="${iconName}" class="w-10 h-10 ${colorClass}"></i>`;
-        if (isUnlocked) statusBadge = checkMarkBadge;
+    if (!sortContainer) {
+        sortContainer = document.createElement('div');
+        sortContainer.id = 'status-sort-container';
+        sortContainer.className = "px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex justify-end items-center border-b border-gray-100 dark:border-gray-700 transition-colors";
+        sortContainer.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i data-lucide="arrow-up-down" class="w-3 h-3 text-gray-400"></i>
+                <select id="store-sort-select" class="text-xs font-bold bg-transparent outline-none text-gray-600 dark:text-gray-300 cursor-pointer appearance-none pr-4 relative z-10">
+                    <option value="default">デフォルト</option>
+                    <option value="lp">LP（小さい順）</option>
+                    <option value="name">名前順</option>
+                </select>
+            </div>
+        `;
+        // タブコンテナの下に挿入
+        tabsContainerParent.insertAdjacentElement('afterend', sortContainer);
+        
+        // イベントリスナー設定
+        const select = sortContainer.querySelector('#store-sort-select');
+        select.value = currentStoreSort;
+        select.addEventListener('change', (e) => {
+            currentStoreSort = e.target.value;
+            renderStatusPageContent(); // 再描画
+        });
+        
+        lucide.createIcons({ root: sortContainer });
     }
 
-    const shadowClass = isActive ? 'shadow-none' : 'shadow-md dark:shadow-gray-900/50';
-    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
+    // 共通のアイテム描画関数（前回修正分を利用）
+    // createItemHTML は変更なしでOK
 
-    return `
-        <div class="text-center cursor-pointer item-btn group relative p-1" data-id="${id}" data-type="${type}">
-            <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
-                ${iconHTML}
-                ${lockOverlay}
-                ${statusBadge}
-            </div>
-            <p class="text-xs mt-3 font-bold truncate px-1 text-gray-700 dark:text-gray-300">${item.name}</p>
-        </div>
-    `;
+    // 3. データソート関数
+    const getSortedItems = (dataObj) => {
+        // [id, itemData] の配列に変換
+        const items = Object.entries(dataObj);
+
+        // デフォルトアイテム（コスト0）とそれ以外に分離
+        // ※テーマや壁紙のデフォルトは必ず先頭にする仕様
+        const defaults = items.filter(([, item]) => item.cost === 0);
+        const others = items.filter(([, item]) => item.cost > 0);
+
+        // othersをソート
+        others.sort((a, b) => {
+            const itemA = a[1];
+            const itemB = b[1];
+
+            if (currentStoreSort === 'lp') {
+                // LP昇順。同じなら登録順（元の順序を保持）
+                return itemA.cost - itemB.cost;
+            } else if (currentStoreSort === 'name') {
+                // 名前順（日本語対応）
+                return itemA.name.localeCompare(itemB.name, 'ja');
+            } else {
+                // デフォルト（登録順）: そのまま
+                return 0;
+            }
+        });
+
+        // 結合して返す
+        return [...defaults, ...others];
+    };
+
+    // 4. 各リストの描画（ソート適用）
+    
+    // テーマ
+    const sortedThemes = getSortedItems(initialData.themes);
+    $('#status-theme-list').innerHTML = sortedThemes.map(([id, theme]) => {
+        return createItemHTML(id, theme, 'theme', state.profile.unlockedThemes.includes(id), state.profile.activeTheme === id);
+    }).join('');
+
+    // 壁紙
+    const sortedBackgrounds = getSortedItems(initialData.backgrounds);
+    $('#status-background-list').innerHTML = sortedBackgrounds.map(([id, bg]) => {
+        return createItemHTML(id, bg, 'background', state.profile.unlockedBackgrounds.includes(id), state.profile.activeBackground === id);
+    }).join('');
+
+    // ゲーム
+    const sortedGames = getSortedItems(initialData.games);
+    $('#status-game-list').innerHTML = sortedGames.map(([id, game]) => {
+        return createItemHTML(id, game, 'game', state.profile.unlockedGames.includes(id), false);
+    }).join('');
+
+    // 音楽
+    const sortedMusic = getSortedItems(initialData.music);
+    $('#status-music-list').innerHTML = sortedMusic.map(([id, music]) => {
+        return createItemHTML(id, music, 'music', state.profile.unlockedMusic.includes(id), false);
+    }).join('');
+
+    lucide.createIcons();
+
+    // 5. クリックイベント設定（再描画ごとに必要）
+    $$('.item-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const { id, type } = btn.dataset;
+            openItemDetailScreen(id, type);
+        });
+    });
 };
-// ↑↑↑ 修正ここまで ↑↑↑
-                // 各リストの描画
-                $('#status-theme-list').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
-                    return createItemHTML(id, theme, 'theme', state.profile.unlockedThemes.includes(id), state.profile.activeTheme === id);
-                }).join('');
-
-                $('#status-background-list').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
-                    return createItemHTML(id, bg, 'background', state.profile.unlockedBackgrounds.includes(id), state.profile.activeBackground === id);
-                }).join('');
-
-                $('#status-game-list').innerHTML = Object.entries(initialData.games).map(([id, game]) => {
-                    return createItemHTML(id, game, 'game', state.profile.unlockedGames.includes(id), false);
-                }).join('');
-
-                $('#status-music-list').innerHTML = Object.entries(initialData.music).map(([id, music]) => {
-                    return createItemHTML(id, music, 'music', state.profile.unlockedMusic.includes(id), false);
-                }).join('');
-
-                lucide.createIcons();
-
-                // クリックイベント
-                $$('.item-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const { id, type } = btn.dataset;
-                        openItemDetailScreen(id, type);
-                    });
-                });
-            };
-
             // ▼▼▼ 修正: ピン留め一覧を描画する関数を独立定義 ▼▼▼
             const renderPinnedListPageContent = () => {
                 const container = $('#pinned-list-full-content');
