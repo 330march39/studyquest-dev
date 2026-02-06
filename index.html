@@ -8265,7 +8265,7 @@ const renderStatusPageContent = () => {
         const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
 
         return `
-            <div class="text-center cursor-pointer item-btn group relative p-1 select-none" data-id="${id}" data-type="${type}">
+            <div class="text-center cursor-pointer item-btn group relative p-1 select-none tap-highlight-transparent" data-id="${id}" data-type="${type}">
                 <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
                     ${iconHTML}
                     ${lockOverlay}
