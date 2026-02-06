@@ -8172,7 +8172,7 @@ const checkQuestResume = () => {
                     showToast('適用しました');
                 };
             
-// ▼▼▼ 【デザインアップデート版】ストア画面描画ロジック ▼▼▼
+// ▼▼▼ 【再々々修正版】ストア画面描画ロジック (右端揃え・余白調整) ▼▼▼
 
 // 並び順を管理する変数（グローバルスコープ）
 let currentStoreSort = 'default';
@@ -8189,17 +8189,21 @@ const renderStatusPageContent = () => {
     if (scrollContainer && !sortContainer) {
         sortContainer = document.createElement('div');
         sortContainer.id = 'status-sort-container';
-        // コンテナ自体の余白を設定（左右に余裕を持たせ、リストとの間隔も調整）
-        sortContainer.className = "w-full px-6 py-4 flex justify-end items-center"; 
+        
+        // ★修正点: 
+        // 1. px-6 py-4 を削除し、親のpadding(p-4)に合わせることでリストの右端と揃える
+        // 2. justify-end で右寄せ
+        // 3. mb-2 でリストとの間隔を適度に確保
+        sortContainer.className = "w-full flex justify-end items-center mb-2"; 
         
         sortContainer.innerHTML = `
             <div class="relative group">
-                <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold py-2.5 pl-5 pr-10 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+                <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 pl-4 pr-9 rounded-full border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
                     <option value="default">デフォルト順</option>
                     <option value="lp">LP (小さい順)</option>
                     <option value="name">名前順</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover:text-indigo-500 transition-colors">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 group-hover:text-indigo-500 transition-colors">
                     <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
                 </div>
             </div>
@@ -8278,7 +8282,6 @@ const renderStatusPageContent = () => {
         const items = Object.entries(dataObj);
 
         // デフォルトアイテム（コスト0）とそれ以外に分離
-        // ※「デフォルト優先」の仕様
         const defaults = items.filter(([, item]) => item.cost === 0);
         const others = items.filter(([, item]) => item.cost > 0);
 
@@ -8294,12 +8297,12 @@ const renderStatusPageContent = () => {
                 // 名前順（簡易比較）
                 return itemA.name.localeCompare(itemB.name, 'ja');
             } else {
-                // デフォルト（登録順）: そのまま
+                // デフォルト（登録順）
                 return 0;
             }
         });
 
-        // 結合して返す
+        // 結合して返す（デフォルト優先）
         return [...defaults, ...others];
     };
 
