@@ -8172,7 +8172,7 @@ const checkQuestResume = () => {
                     showToast('適用しました');
                 };
             
-// ▼▼▼ 【再々修正版】ストア画面描画ロジック (辞書削除・スクロール連動) ▼▼▼
+// ▼▼▼ 【デザインアップデート版】ストア画面描画ロジック ▼▼▼
 
 // 並び順を管理する変数（グローバルスコープ）
 let currentStoreSort = 'default';
@@ -8189,17 +8189,19 @@ const renderStatusPageContent = () => {
     if (scrollContainer && !sortContainer) {
         sortContainer = document.createElement('div');
         sortContainer.id = 'status-sort-container';
-        // アイテムリストの上に配置（スクロールすると一緒に流れる）
-        sortContainer.className = "px-4 py-2 mb-2 flex justify-end items-center"; 
+        // コンテナ自体の余白を設定（左右に余裕を持たせ、リストとの間隔も調整）
+        sortContainer.className = "w-full px-6 py-4 flex justify-end items-center"; 
+        
         sortContainer.innerHTML = `
-            <div class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-600">
-                <i data-lucide="arrow-up-down" class="w-3 h-3 text-gray-400"></i>
-                <select id="store-sort-select" class="text-xs font-bold bg-transparent outline-none text-gray-600 dark:text-gray-300 cursor-pointer appearance-none pr-6 relative z-10">
-                    <option value="default">デフォルト</option>
-                    <option value="lp">LP（小さい順）</option>
+            <div class="relative group">
+                <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold py-2.5 pl-5 pr-10 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+                    <option value="default">デフォルト順</option>
+                    <option value="lp">LP (小さい順)</option>
                     <option value="name">名前順</option>
                 </select>
-                <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 absolute right-3 pointer-events-none"></i>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover:text-indigo-500 transition-colors">
+                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
+                </div>
             </div>
         `;
         // 先頭に挿入
@@ -8290,7 +8292,6 @@ const renderStatusPageContent = () => {
                 return itemA.cost - itemB.cost;
             } else if (currentStoreSort === 'name') {
                 // 名前順（簡易比較）
-                // 読み仮名辞書を使わないため、漢字の並び順は文字コードに依存します
                 return itemA.name.localeCompare(itemB.name, 'ja');
             } else {
                 // デフォルト（登録順）: そのまま
