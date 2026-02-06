@@ -1471,12 +1471,12 @@ html.dark .center-fab {
                 </button>
 
                  <div>
-                    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">今日の予定</h2>
+                    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">今日のタスク</h2>
                     
                     <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
                         
                         <div id="home-task-list" class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <p class="text-center text-sm text-gray-400 py-6">今日の予定はありません。</p>
+                            <p class="text-center text-sm text-gray-400 py-6">今日のタスクはありません。</p>
                         </div>
                 
                         <div class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
@@ -1973,7 +1973,7 @@ html.dark .center-fab {
         <div class="flex-grow overflow-y-auto p-4 pb-36 bg-gray-100 dark:bg-gray-900">
             <button id="load-tasks-btn" class="w-full mb-6 primary-bg primary-bg-hover text-white py-3 px-6 rounded-full font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center space-x-2">
                 <i data-lucide="check-square" class="w-5 h-5"></i>
-                <span>「今日の予定」を読み込む</span>
+                <span>「今日のタスク」を読み込む</span>
             </button>
             
             <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden mb-24">
@@ -3756,7 +3756,7 @@ const controlScreenOrientation = async (mode) => {
                             // 空の状態のデザイン修正
                             countdownContainer.innerHTML = `
                                 <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern p-6 text-center">
-                                    <p class="text-sm text-gray-400">予定はありません</p>
+                                    <p class="text-sm text-gray-400">イベントはありません</p>
                                     <p class="text-xs text-gray-300 mt-1">右上の「+」で追加</p>
                                 </div>
                             `;
@@ -4813,7 +4813,7 @@ const showToast = (message, type = 'normal') => {
                             <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-full mb-3">
                                 <i data-lucide="clipboard-list" class="w-8 h-8 opacity-50"></i>
                             </div>
-                            <p class="text-sm font-bold">今日の予定はありません</p>
+                            <p class="text-sm font-bold">今日のタスクはありません</p>
                             <p class="text-xs mt-1 opacity-70">下の入力欄からタスクを追加できます</p>
                         </div>
                     `;
@@ -6930,7 +6930,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                     <div class="flex-grow">
                                         <h4 class="text-xs font-bold primary-text mb-1">クエストについて</h4>
                                         <p class="text-[10px] text-gray-600 dark:text-gray-300 leading-tight mb-2">
-                                            今日の予定などを「学習」と「休憩」のセットで行うことで、メリハリをつけて進めることができます。
+                                            今日のタスクなどを「学習」と「休憩」のセットで行うことで、メリハリをつけて進めることができます。
                                         </p>
                                         <div class="grid grid-cols-2 gap-2">
                                             <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1.5">
@@ -7952,7 +7952,7 @@ const checkQuestResume = () => {
                         const activeTasks = state.tasks.filter(t => !t.completed);
             
                         if (activeTasks.length === 0) {
-                            showToast('「今日の予定」に未完了のタスクがありません。');
+                            showToast('「今日のタスク」に未完了のタスクがありません。');
                             return;
                         }
             
