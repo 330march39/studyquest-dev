@@ -8172,9 +8172,9 @@ const checkQuestResume = () => {
                     showToast('適用しました');
                 };
             
-            // ▼▼▼ 【追加・修正】ストアの並び替え機能とリスト描画ロジック ▼▼▼
+// ▼▼▼ 【修正版】ストア画面の描画ロジック (並び替え・表示生成すべて含む) ▼▼▼
 
-// 並び順を管理する変数
+// 並び順を管理する変数（グローバルスコープ）
 let currentStoreSort = 'default';
 
 const renderStatusPageContent = () => {
@@ -8214,10 +8214,63 @@ const renderStatusPageContent = () => {
         lucide.createIcons({ root: sortContainer });
     }
 
-    // 共通のアイテム描画関数（前回修正分を利用）
-    // createItemHTML は変更なしでOK
+    // --- ヘルパー関数: アイテムのHTML生成 ---
+    const createItemHTML = (id, item, type, isUnlocked, isActive) => {
+        let iconHTML = '';
+        let statusBadge = '';
+        let activeClass = isActive ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : '';
+        
+        const checkMarkBadge = `<div class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 rounded-full p-1.5 shadow-md z-10"><i data-lucide="check" class="w-4 h-4 primary-text"></i></div>`;
 
-    // 3. データソート関数
+        // 基本は正方形
+        let containerClass = 'w-full aspect-square rounded-3xl';
+        
+        if (type === 'theme') {
+            containerClass = 'w-20 h-20 rounded-full';
+            iconHTML = `<div class="w-full h-full rounded-full shadow-inner" style="background-color: ${item.color}"></div>`;
+            if (isUnlocked) statusBadge = checkMarkBadge;
+
+        } else if (type === 'background') {
+            containerClass = 'w-full aspect-[9/16] rounded-3xl';
+            const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
+            iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
+            if (isUnlocked) statusBadge = checkMarkBadge;
+
+        } else if (type === 'game') {
+            if (item.thumbnail) {
+                iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${item.thumbnail}')"></div>`;
+            } else if (item.previews && item.previews.length > 0) {
+                const previewUrl = item.previews[0];
+                iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${previewUrl}')"></div>`;
+            } else {
+                iconHTML = `<i data-lucide="${item.icon || 'gamepad-2'}" class="w-10 h-10 text-indigo-500"></i>`;
+            }
+            if (isUnlocked) statusBadge = checkMarkBadge;
+
+        } else {
+            // 音楽など
+            const iconName = item.icon || 'music';
+            const colorClass = 'text-pink-500';
+            iconHTML = `<i data-lucide="${iconName}" class="w-10 h-10 ${colorClass}"></i>`;
+            if (isUnlocked) statusBadge = checkMarkBadge;
+        }
+
+        const shadowClass = isActive ? 'shadow-none' : 'shadow-md dark:shadow-gray-900/50';
+        const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${type === 'theme' ? 'rounded-full' : 'rounded-2xl'} text-white backdrop-blur-[1px]"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold tracking-wider">${item.cost}</span></div>` : '';
+
+        return `
+            <div class="text-center cursor-pointer item-btn group relative p-1" data-id="${id}" data-type="${type}">
+                <div class="${containerClass} mx-auto relative ${activeClass} ${shadowClass} bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-transform active:scale-95 duration-200">
+                    ${iconHTML}
+                    ${lockOverlay}
+                    ${statusBadge}
+                </div>
+                <p class="text-xs mt-3 font-bold truncate px-1 text-gray-700 dark:text-gray-300">${item.name}</p>
+            </div>
+        `;
+    };
+
+    // --- データソート関数 ---
     const getSortedItems = (dataObj) => {
         // [id, itemData] の配列に変換
         const items = Object.entries(dataObj);
@@ -8248,7 +8301,7 @@ const renderStatusPageContent = () => {
         return [...defaults, ...others];
     };
 
-    // 4. 各リストの描画（ソート適用）
+    // --- 各リストの描画（ソート適用）---
     
     // テーマ
     const sortedThemes = getSortedItems(initialData.themes);
@@ -8276,7 +8329,7 @@ const renderStatusPageContent = () => {
 
     lucide.createIcons();
 
-    // 5. クリックイベント設定（再描画ごとに必要）
+    // クリックイベント設定（再描画ごとに再設定）
     $$('.item-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const { id, type } = btn.dataset;
