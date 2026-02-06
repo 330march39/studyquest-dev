@@ -3485,28 +3485,60 @@ const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, o
     openModalWithAnim('general-confirm-modal', 'general-confirm-content');
 };
 
-// --- 購入確認モーダルを開く関数 ---
+// --- 購入確認モーダルを開く関数 (デザインアップデート版) ---
 const openPurchaseConfirm = (item, type, onConfirm) => {
     const modal = $('#purchase-confirm-modal');
     const content = $('#purchase-confirm-content');
     
+    // カテゴリ名の日本語マッピング
+    const typeMap = {
+        theme: 'テーマカラー',
+        background: '壁紙',
+        game: 'ゲーム',
+        music: 'BGM'
+    };
+
     // アイテム情報セット
     $('#purchase-item-name').textContent = item.name;
-    $('#purchase-item-type').textContent = type.toUpperCase(); // THEME, GAME etc.
+    $('#purchase-item-type').textContent = typeMap[type] || type.toUpperCase();
     
-    // プレビューアイコン生成
+    // プレビュー表示の生成
     const previewContainer = $('#purchase-item-preview');
     previewContainer.innerHTML = '';
     
+    // プレビューのスタイル調整 (アイテムタイプごとに最適化)
     if (type === 'theme') {
-        previewContainer.innerHTML = `<div class="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm" style="background-color: ${item.color}"></div>`;
+        previewContainer.innerHTML = `
+            <div class="w-16 h-16 rounded-full border-4 border-white dark:border-gray-700 shadow-lg" 
+                 style="background-color: ${item.color}">
+            </div>`;
     } else if (type === 'background') {
         const bgStyle = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280';
-        previewContainer.innerHTML = `<div class="w-10 h-16 rounded-md bg-cover bg-center border border-gray-200 shadow-sm" style="${bgStyle}"></div>`;
+        previewContainer.innerHTML = `
+            <div class="w-16 h-24 rounded-xl bg-cover bg-center border-2 border-white dark:border-gray-700 shadow-lg" 
+                 style="${bgStyle}">
+            </div>`;
+    } else if (type === 'game') {
+        // ゲームの場合: サムネイルがあれば画像を表示、なければアイコン
+        if (item.thumbnail) {
+            previewContainer.innerHTML = `
+                <div class="w-20 h-20 rounded-2xl border-2 border-white dark:border-gray-700 shadow-lg overflow-hidden bg-gray-100">
+                    <img src="${item.thumbnail}" alt="game" class="w-full h-full object-cover">
+                </div>`;
+        } else {
+            const iconName = item.icon || 'gamepad-2';
+            previewContainer.innerHTML = `
+                <div class="w-20 h-20 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-500 shadow-lg">
+                    <i data-lucide="${iconName}" class="w-10 h-10"></i>
+                </div>`;
+        }
     } else {
-        // Game, Music
-        const iconName = item.icon || (type === 'music' ? 'music' : 'gamepad-2');
-        previewContainer.innerHTML = `<div class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500"><i data-lucide="${iconName}" class="w-6 h-6"></i></div>`;
+        // 音楽など
+        const iconName = item.icon || 'music';
+        previewContainer.innerHTML = `
+            <div class="w-20 h-20 rounded-2xl bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-500 shadow-lg">
+                <i data-lucide="${iconName}" class="w-10 h-10"></i>
+            </div>`;
     }
 
     // LP計算表示
@@ -3519,19 +3551,24 @@ const openPurchaseConfirm = (item, type, onConfirm) => {
     const afterEl = $('#purchase-after-lp');
     afterEl.textContent = afterLP.toLocaleString();
     
-    // 色分け（足りるかどうか）
+    // ボタンの状態設定 (色が足りるかどうか)
     const okBtn = $('#purchase-confirm-ok-btn');
+    // 汎用ポップアップに合わせてスタイルを統一
+    okBtn.className = "w-full py-3.5 rounded-full font-bold shadow-lg transition-transform active:scale-95 flex items-center justify-center";
+
     if (afterLP >= 0) {
         afterEl.className = "font-black text-xl primary-text";
         okBtn.disabled = false;
-        okBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        okBtn.classList.add('primary-bg', 'text-white');
+        okBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
     } else {
         afterEl.className = "font-black text-xl text-red-500";
         okBtn.disabled = true;
-        okBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        okBtn.classList.remove('primary-bg', 'text-white');
+        okBtn.classList.add('bg-gray-400', 'text-white', 'cursor-not-allowed');
     }
 
-    // イベント設定
+    // イベントリスナーの再設定 (cloneNodeで古いイベントを削除)
     const newOkBtn = okBtn.cloneNode(true);
     okBtn.parentNode.replaceChild(newOkBtn, okBtn);
     
@@ -3543,11 +3580,12 @@ const openPurchaseConfirm = (item, type, onConfirm) => {
     const cancelBtn = $('#purchase-confirm-cancel-btn');
     const newCancelBtn = cancelBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
     newCancelBtn.addEventListener('click', () => {
         closeModalWithAnim('purchase-confirm-modal', 'purchase-confirm-content');
     });
 
-    lucide.createIcons({ root: previewContainer });
+    lucide.createIcons({ root: content });
     openModalWithAnim('purchase-confirm-modal', 'purchase-confirm-content');
 };
 // ▼▼▼ 追加: 画面の向きを制御する関数 ▼▼▼
@@ -4530,82 +4568,127 @@ const showToast = (message, type = 'normal') => {
                 }, 300);
             };
 
-            // ▼▼▼ 修正版: 自動クローズを削除した showLpPopup ▼▼▼
-            const showLpPopup = (amount, reason) => {
-                // UIをLPモードにリセット
-                $('#popup-title').textContent = 'GET!';
-                $('#popup-coin-img').classList.remove('hidden');
-                $('#popup-lp-container').classList.remove('hidden');
-                $('#popup-item-icon').classList.add('hidden');
-                $('#popup-item-name').classList.add('hidden');
+            // --- LP獲得ポップアップを表示する関数 ---
+const showLpPopup = (amount, reason) => {
+    // UIをLP獲得モードにリセット
+    $('#popup-title').textContent = 'GET!';
+    
+    // アイテム関連を隠す
+    $('#popup-item-icon').classList.add('hidden');
+    $('#popup-item-name').classList.add('hidden');
 
-                $('#lp-popup-reason').textContent = reason;
-                
-                $('#lp-popup-modal').classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    $('#lp-popup-modal').style.opacity = '1';
-                    $('#lp-popup-content').classList.remove('scale-0');
-                    $('#lp-popup-content').classList.add('animate-pop-elastic');
-                });
+    // コイン関連を表示
+    $('#popup-coin-img').classList.remove('hidden');
+    $('#popup-lp-container').classList.remove('hidden');
 
-                animateValue($('#lp-popup-amount'), 0, amount, 1000);
-                
-                lucide.createIcons();
+    $('#lp-popup-reason').textContent = reason;
+    
+    // モーダル表示
+    const modal = $('#lp-popup-modal');
+    const content = $('#lp-popup-content');
 
-                // ★修正: 既存のタイマーがあればクリアし、新しいタイマーはセットしない（自動で閉じない）
-                if (popupAutoCloseTimer) {
-                    clearTimeout(popupAutoCloseTimer);
-                    popupAutoCloseTimer = null;
-                }
-            };
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+        content.classList.remove('scale-0');
+        content.classList.add('animate-pop-elastic');
+    });
 
-            // ▼▼▼ 修正版: 自動クローズを削除した showItemPopup ▼▼▼
-            const showItemPopup = (item, type) => {
-                // UIをアイテムモードに切り替え
-                $('#popup-title').textContent = 'UNLOCK!';
-                $('#popup-coin-img').classList.add('hidden');
-                $('#popup-lp-container').classList.add('hidden');
-                
-                $('#popup-item-icon').classList.remove('hidden');
-                $('#popup-item-name').classList.remove('hidden');
+    animateValue($('#lp-popup-amount'), 0, amount, 1000);
+    
+    lucide.createIcons();
 
-                // テキスト設定
-                const categoryName = (type === 'theme' ? 'テーマ' : type === 'background' ? '壁紙' : type === 'game' ? 'ゲーム' : 'BGM');
-                $('#lp-popup-reason').textContent = `${categoryName}を交換しました`;
-                $('#popup-item-name').textContent = item.name;
+    if (popupAutoCloseTimer) {
+        clearTimeout(popupAutoCloseTimer);
+        popupAutoCloseTimer = null;
+    }
+};
 
-                // アイコン生成
-                const iconContainer = $('#popup-item-icon');
-                iconContainer.innerHTML = ''; // クリア
+            // --- アイテム獲得ポップアップを表示する関数 (デザインアップデート版) ---
+const showItemPopup = (item, type) => {
+    // UIをアイテム獲得モードに切り替え
+    $('#popup-title').textContent = 'UNLOCK!';
+    
+    // コイン関連を隠す
+    $('#popup-coin-img').classList.add('hidden');
+    $('#popup-lp-container').classList.add('hidden');
+    
+    // アイテム関連を表示
+    const iconContainer = $('#popup-item-icon');
+    const nameLabel = $('#popup-item-name');
+    
+    iconContainer.classList.remove('hidden');
+    nameLabel.classList.remove('hidden');
 
-                if (type === 'theme') {
-                    iconContainer.innerHTML = `<div class="w-full h-full rounded-full shadow-lg border-4 border-white dark:border-gray-700" style="background-color: ${item.color}"></div>`;
-                } else if (type === 'background') {
-                    const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
-                    iconContainer.innerHTML = `<div class="w-full h-full rounded-xl shadow-lg border-2 border-white dark:border-gray-700 bg-cover bg-center" style="${style}"></div>`;
-                } else {
-                    // ゲーム・音楽
-                    const iconName = item.icon || (type === 'music' ? 'music' : 'gamepad-2');
-                    const colorClass = type === 'game' ? 'text-indigo-500' : 'text-pink-500';
-                    iconContainer.innerHTML = `<div class="bg-white dark:bg-gray-700 p-4 rounded-2xl shadow-lg"><i data-lucide="${iconName}" class="w-16 h-16 ${colorClass}"></i></div>`;
-                }
+    // テキスト設定
+    const categoryName = (type === 'theme' ? 'テーマ' : type === 'background' ? '壁紙' : type === 'game' ? 'ゲーム' : 'BGM');
+    $('#lp-popup-reason').textContent = `${categoryName}を交換しました`;
+    nameLabel.textContent = item.name;
 
-                // モーダル表示 (共通アニメーション)
-                $('#lp-popup-modal').classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    $('#lp-popup-modal').style.opacity = '1';
-                    $('#lp-popup-content').classList.remove('scale-0');
-                    $('#lp-popup-content').classList.add('animate-pop-elastic');
-                });
-                
-                lucide.createIcons(); // アイコン再生成
+    // アイコン/画像の生成 (わくわく感を出すため少し大きめに)
+    iconContainer.innerHTML = ''; // クリア
+    
+    // コンテナ自体のスタイルリセット
+    iconContainer.className = "relative z-10 w-32 h-32 flex items-center justify-center animate-coin-float mx-auto";
 
-                // ★修正: 既存のタイマーがあればクリアし、新しいタイマーはセットしない
-                if (popupAutoCloseTimer) {
-                    clearTimeout(popupAutoCloseTimer);
-                    popupAutoCloseTimer = null;
-                }
-            };
+    if (type === 'theme') {
+        iconContainer.innerHTML = `
+            <div class="w-24 h-24 rounded-full shadow-2xl border-4 border-white dark:border-gray-700 ring-4 ring-yellow-400/50" 
+                 style="background-color: ${item.color}">
+            </div>`;
+            
+    } else if (type === 'background') {
+        const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
+        // 壁紙は縦長に見せる
+        iconContainer.className = "relative z-10 w-24 h-40 flex items-center justify-center animate-coin-float mx-auto";
+        iconContainer.innerHTML = `
+            <div class="w-full h-full rounded-2xl shadow-2xl border-2 border-white dark:border-gray-700 bg-cover bg-center ring-4 ring-yellow-400/50" 
+                 style="${style}">
+            </div>`;
+            
+    } else if (type === 'game') {
+        if (item.thumbnail) {
+            iconContainer.innerHTML = `
+                <div class="w-28 h-28 rounded-3xl shadow-2xl border-2 border-white dark:border-gray-700 overflow-hidden ring-4 ring-yellow-400/50">
+                    <img src="${item.thumbnail}" class="w-full h-full object-cover">
+                </div>`;
+        } else {
+            const iconName = item.icon || 'gamepad-2';
+            iconContainer.innerHTML = `
+                <div class="w-28 h-28 bg-white dark:bg-gray-700 rounded-3xl shadow-2xl flex items-center justify-center ring-4 ring-yellow-400/50">
+                    <i data-lucide="${iconName}" class="w-14 h-14 text-indigo-500"></i>
+                </div>`;
+        }
+        
+    } else {
+        // 音楽など
+        const iconName = item.icon || 'music';
+        iconContainer.innerHTML = `
+            <div class="w-28 h-28 bg-white dark:bg-gray-700 rounded-3xl shadow-2xl flex items-center justify-center ring-4 ring-yellow-400/50">
+                <i data-lucide="${iconName}" class="w-14 h-14 text-pink-500"></i>
+            </div>`;
+    }
+
+    // モーダル表示 (LP獲得時と同じ弾むアニメーションを使用)
+    const modal = $('#lp-popup-modal');
+    const content = $('#lp-popup-content');
+    
+    modal.classList.remove('hidden');
+    
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+        content.classList.remove('scale-0');
+        content.classList.add('animate-pop-elastic');
+    });
+    
+    lucide.createIcons(); // アイコン再生成
+
+    // 自動で閉じないようにタイマーをクリア
+    if (popupAutoCloseTimer) {
+        clearTimeout(popupAutoCloseTimer);
+        popupAutoCloseTimer = null;
+    }
+};
 
             // 数字アニメーション（変更なし）
             const animateValue = (obj, start, end, duration) => {
