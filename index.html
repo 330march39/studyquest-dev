@@ -3522,11 +3522,11 @@ const openPurchaseConfirm = (item, type, onConfirm) => {
     // 色分け（足りるかどうか）
     const okBtn = $('#purchase-confirm-ok-btn');
     if (afterLP >= 0) {
-        afterEl.className = "font-mono font-black text-xl primary-text";
+        afterEl.className = "font-black text-xl primary-text";
         okBtn.disabled = false;
         okBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     } else {
-        afterEl.className = "font-mono font-black text-xl text-red-500";
+        afterEl.className = "font-black text-xl text-red-500";
         okBtn.disabled = true;
         okBtn.classList.add('opacity-50', 'cursor-not-allowed');
     }
