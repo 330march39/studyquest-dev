@@ -1574,7 +1574,7 @@ html.dark .center-fab {
                                     <i data-lucide="pause" class="w-6 h-6 mr-2 fill-current"></i> 一時停止
                                 </button>
                                 <button id="stopwatch-end-btn" class="w-full bg-red-500/80 hover:bg-red-600/80 text-white font-bold py-4 rounded-full text-lg backdrop-blur-md transition-colors flex items-center justify-center">
-                                    <i data-lucide="flag" class="w-6 h-6 mr-2 fill-current"></i> 終了
+                                    <i data-lucide="square" class="w-6 h-6 mr-2 fill-current"></i> 終了
                                 </button>
                             </div>
                         </div>
@@ -4188,7 +4188,7 @@ const controlScreenOrientation = async (mode) => {
                         }
                     
                         // テーマカラー設定
-                        generalList.appendChild(createListItem('palette', 'テーマカラー', 'bg-blue-500', () => themeSettingsPage.open()));
+                        generalList.appendChild(createListItem('palette', 'テーマ設定', 'bg-blue-500', () => themeSettingsPage.open()));
                         
                         // 壁紙設定
                         generalList.appendChild(createListItem('image', '壁紙設定', 'bg-purple-500', () => backgroundSettingsPage.open()));
@@ -6424,7 +6424,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                 </div>
                                 <div class="flex flex-col justify-center">
                                     <span class="text-sm font-bold text-gray-800 dark:text-white">アイコンをシンプルにする</span>
-                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">図形アイコンで表示</span>
+                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">システムアイコンで表示</span>
                                 </div>
                             </div>
                             <div class="relative">
@@ -8493,7 +8493,7 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
         `;
         contentArea.appendChild(modeSection);
 
-        // --- 2. アクセントカラー設定ボックス ---
+        // --- 2. テーマカラー設定ボックス ---
         const colorSection = document.createElement('div');
         
         const buttonsHTML = state.profile.unlockedThemes.map(id => {
@@ -8518,7 +8518,7 @@ const themeSettingsPage = new SubPage('theme-settings-screen', {
         }).join('');
 
         colorSection.innerHTML = `
-            <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">アクセントカラー</h3>
+            <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">テーマカラー</h3>
             <div class="bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern grid grid-cols-4 gap-y-6 gap-x-4">
                 ${buttonsHTML}
             </div>
@@ -8706,7 +8706,7 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
 
                     <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 gap-2 border-t border-gray-100 dark:border-gray-700">
                         <button id="btn-add-section" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center active:scale-95">
-                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> 学習
+                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> セクション
                         </button>
                         <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
                         <button id="btn-add-break" class="flex-1 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-colors flex items-center justify-center active:scale-95">
@@ -8737,7 +8737,7 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                 
                 if (item.type === 'section') {
                     iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm"><i data-lucide="book-open" class="w-4 h-4"></i></div>`;
-                    titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション</span>`;
+                    titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">セクション</span>`;
                 } else {
                     iconHTML = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm"><i data-lucide="coffee" class="w-4 h-4"></i></div>`;
                     titleHTML = `<span class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</span>`;
@@ -8870,7 +8870,7 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                                 </div>
                                 <div class="flex flex-col justify-center">
                                     <span class="text-sm font-bold text-gray-800 dark:text-white">BGM機能</span>
-                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">クエスト中の自動再生</span>
+                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">ONにすると、クエスト中にプレイリストが自動再生</span>
                                 </div>
                             </div>
                             <div class="relative">
@@ -8883,7 +8883,7 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト (再生順)</h3>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト</h3>
                     <div id="playlist-container-sub"></div>
                 </div>
 
