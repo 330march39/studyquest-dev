@@ -8194,12 +8194,12 @@ const renderStatusPageContent = () => {
         
         sortContainer.innerHTML = `
             <div class="relative group">
-                <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 pl-4 pr-9 rounded-full border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
-                    <option value="default">デフォルト順</option>
-                    <option value="lp">LP (小さい順)</option>
-                    <option value="name">名前順</option>
+                <select id="store-sort-select" class="appearance-none cursor-pointer bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold py-2 pl-4 pr-9 rounded-full border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all focus:outline-none focus:ring-2 primary-ring">
+                    <option value="default">デフォルト</option>
+                    <option value="lp">LP（昇順）</option>
+                    <option value="name">名前</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 group-hover:text-indigo-500 transition-colors">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 group-hover:primary-text transition-colors">
                     <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
                 </div>
             </div>
