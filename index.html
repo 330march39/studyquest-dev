@@ -8131,46 +8131,69 @@ const checkQuestResume = () => {
                             showToast('「今日のタスク」に未完了のタスクがありません。');
                             return;
                         }
-            
-                        // テンプレートが空の場合はデフォルト（学習のみ）として扱う
-                        const template = (state.profile.routineTemplate && state.profile.routineTemplate.length > 0) 
-                            ? state.profile.routineTemplate 
-                            : [{ type: 'section', duration: 25 * 60 }];
-            
-                        quest.plan = [];
-                        let taskIndex = 0;
-                        let templateIndex = 0;
-            
-                        // タスクがなくなるまでテンプレートをループして配置
-                        while (taskIndex < activeTasks.length) {
-                            const templateItem = template[templateIndex % template.length];
-                            
-                            if (templateItem.type === 'section') {
-                                // 学習セクションの場合、タスクを割り当てる
-                                const task = activeTasks[taskIndex];
-                                quest.plan.push({
-                                    id: Date.now() + Math.random(),
-                                    type: 'section',
-                                    text: task.text,
-                                    duration: templateItem.duration,
-                                    originalTaskId: task.id
-                                });
-                                taskIndex++;
-                            } else {
-                                // 休憩の場合、そのまま追加
-                                quest.plan.push({
-                                    id: Date.now() + Math.random(),
-                                    type: 'break',
-                                    text: 'ブレイクタイム',
-                                    duration: templateItem.duration
-                                });
+
+                        // ▼▼▼ 修正: 読み込み処理を関数化 ▼▼▼
+                        const executeLoadTasks = () => {
+                            // テンプレートが空の場合はデフォルト（学習のみ）として扱う
+                            const template = (state.profile.routineTemplate && state.profile.routineTemplate.length > 0) 
+                                ? state.profile.routineTemplate 
+                                : [{ type: 'section', duration: 25 * 60 }];
+                
+                            quest.plan = []; // クエストをリセット
+                            let taskIndex = 0;
+                            let templateIndex = 0;
+                
+                            // タスクがなくなるまでテンプレートをループして配置
+                            while (taskIndex < activeTasks.length) {
+                                const templateItem = template[templateIndex % template.length];
+                                
+                                if (templateItem.type === 'section') {
+                                    // 学習セクションの場合、タスクを割り当てる
+                                    const task = activeTasks[taskIndex];
+                                    quest.plan.push({
+                                        id: Date.now() + Math.random(),
+                                        type: 'section',
+                                        text: task.text,
+                                        duration: templateItem.duration,
+                                        originalTaskId: task.id
+                                    });
+                                    taskIndex++;
+                                } else {
+                                    // 休憩の場合、そのまま追加
+                                    quest.plan.push({
+                                        id: Date.now() + Math.random(),
+                                        type: 'break',
+                                        text: 'ブレイクタイム',
+                                        duration: templateItem.duration
+                                    });
+                                }
+                                
+                                templateIndex++;
                             }
-                            
-                            templateIndex++;
+                
+                            showToast(`${activeTasks.length} 件のタスクをルーティンに適用しました。`);
+                            renderQuestPlan();
+                        };
+                        // ▲▲▲ 関数化ここまで ▲▲▲
+
+                        // ▼▼▼ 修正: 条件分岐を追加 ▼▼▼
+                        if (quest.plan.length > 0) {
+                            // すでにアイテムがある場合は確認ポップアップを表示
+                            openGeneralConfirm(
+                                'クエストを上書きしますか？',
+                                '現在のクエスト内容はすべて削除され、\n今日のタスクで上書きされます。',
+                                'alert-triangle',
+                                '上書きする',
+                                'bg-red-500 hover:bg-red-600',
+                                () => {
+                                    executeLoadTasks(); // OKなら実行
+                                }
+                            );
+                        } else {
+                            // 空の場合は確認なしで即実行
+                            executeLoadTasks();
                         }
-            
-                        showToast(`${activeTasks.length} 件のタスクをルーティンに適用しました。`);
-                        renderQuestPlan();
+                        // ▲▲▲ 修正ここまで ▲▲▲
                     });
                 }
                 updateAppearance();
