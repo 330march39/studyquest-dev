@@ -9608,17 +9608,16 @@ window.addEventListener('resize', () => {
             <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
                 <i data-lucide="lock" class="w-8 h-8"></i>
             </div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">開発用環境</h2>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">正しくダウンロードできませんでした</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 font-bold leading-relaxed">
-                こちらは一般のユーザーは使用できません。<br>
-                もしこれが表示された場合は、<br>開発者にお知らせください。
+                もしこれが表示された場合は、<br>開発者にお知らせください<br>お手数をおかけして、申し訳ございません
             </p>
             
-            <input type="password" id="dev-pass-input" placeholder="パスワードを入力" class="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 border border-transparent focus:border-indigo-500 outline-none text-center font-bold text-gray-900 dark:text-white mb-4 transition-colors">
-            <p id="dev-pass-error" class="text-xs text-red-500 font-bold mb-4 hidden">パスワードが違います</p>
+            <input type="password" id="dev-pass-input" placeholder="PASS" class="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 border border-transparent focus:border-indigo-500 outline-none text-center font-bold text-gray-900 dark:text-white mb-4 transition-colors">
+            <p id="dev-pass-error" class="text-xs text-red-500 font-bold mb-4 hidden">[開発者にお知らせください]PASSが違います</p>
 
             <button id="dev-unlock-btn" class="w-full primary-bg text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95">
-                解除する
+                リセット（タップしないで）
             </button>
         </div>
     </div>
