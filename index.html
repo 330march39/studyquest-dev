@@ -4815,21 +4815,17 @@ const showItemPopup = (item, type) => {
                 }
             };
 
-            // ▼▼▼ 修正: iOS対応版 (絶対パス生成機能付き) ▼▼▼
+            // ▼▼▼ 修正: iOS対応版 (シーク無効化・アクションハンドラ一括設定) ▼▼▼
             const updateMediaSession = (title) => {
                 if ('mediaSession' in navigator) {
                     // 相対パスを絶対パスに変換する
-                    // (SQ_logo.png がHTMLと同じ階層にある前提)
                     const artworkUrl = new URL('SQ_logo.png', window.location.href).href;
 
                     navigator.mediaSession.metadata = new MediaMetadata({
                         title: title,
                         artist: 'StudyQuest',
-                        album: 'BGM Collection', // アルバム名を入れると表示が安定しやすい
+                        album: 'BGM Collection',
                         artwork: [
-                            // iOSはサイズ違いを複数用意しても、一番大きいものや
-                            // 特定のサイズ(例えば96x96や512x512)を好む傾向があります。
-                            // ここでは絶対パス化したURLを全てのサイズに適用します。
                             { src: artworkUrl, sizes: '96x96', type: 'image/png' },
                             { src: artworkUrl, sizes: '128x128', type: 'image/png' },
                             { src: artworkUrl, sizes: '192x192', type: 'image/png' },
@@ -4839,17 +4835,25 @@ const showItemPopup = (item, type) => {
                         ]
                     });
 
-                    // ▼▼▼ 追加: 再生アクションのハンドラ（これがないとコントロールが効かないことがある） ▼▼▼
+                    // 再生・一時停止のアクション
                     navigator.mediaSession.setActionHandler('play', () => {
-                        // プレビュー再生中ならプレビューを、BGMならBGMを再生
-                        if (previewAudio.src) previewAudio.play();
-                        else if (bgmAudio.src) bgmAudio.play();
+                        if (previewAudio.src && !previewAudio.paused) return; // 再生中なら何もしない
+                        if (previewAudio.src && previewAudio.paused && previewAudio.currentTime > 0) {
+                            previewAudio.play(); // プレビュー再開
+                        } else {
+                            // クエスト中BGM再開
+                            bgmAudio.play();
+                        }
                     });
                     navigator.mediaSession.setActionHandler('pause', () => {
-                        if (previewAudio.src) previewAudio.pause();
-                        else if (bgmAudio.src) bgmAudio.pause();
+                        if (!previewAudio.paused) previewAudio.pause();
+                        if (!bgmAudio.paused) bgmAudio.pause();
                     });
-                    // 曲送りなどのボタンは必要に応じて追加
+
+                    // ★追加: シークやスキップを無効化（クエスト中と同じ挙動にするため）
+                    navigator.mediaSession.setActionHandler('seekto', null);
+                    navigator.mediaSession.setActionHandler('previoustrack', null);
+                    navigator.mediaSession.setActionHandler('nexttrack', null);
                 }
             };
 
@@ -8607,6 +8611,10 @@ const openItemDetailScreen = (id, type) => {
                                 stopMusicPreview();
                                 previewAudio.src = itemData.url;
                                 previewAudio.volume = 0.5;
+                                
+                                // ★修正: 正しいアイテム名をセット
+                                updateMediaSession(itemData.name);
+                                
                                 previewAudio.play();
                                 playIcon.setAttribute('data-lucide', 'square');
                                 playIcon.classList.remove('ml-0.5');
@@ -9285,8 +9293,9 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 // イベント設定: 試聴
                 playlistContainer.querySelectorAll('.preview-bgm-btn').forEach(btn => {
                     const id = btn.closest('.bgm-item').dataset.id;
-                    const url = initialData.music[id].url;
-                    btn.addEventListener('click', () => toggleMusicPreview(url, btn));
+                    const track = initialData.music[id];
+                    // ★修正: 第3引数にトラック名を渡す
+                    btn.addEventListener('click', () => toggleMusicPreview(track.url, btn, track.name));
                 });
 
                 // スワイプ設定
@@ -9382,7 +9391,8 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                         previewBtn.parentNode.replaceChild(newPreviewBtn, previewBtn);
                         
                         newPreviewBtn.addEventListener('click', () => {
-                            toggleMusicPreview(item.url, newPreviewBtn);
+                            // ★修正: 第3引数にアイテム名を渡す
+                            toggleMusicPreview(item.url, newPreviewBtn, item.name);
                         });
                         
                         const confirmBtn = $('#music-purchase-confirm');
@@ -9436,43 +9446,39 @@ const renderGamePreviews = (game) => {
 };
 // ↑↑↑ 修正ここまで ↑↑↑
         
-        // BGM試聴の再生・停止制御
-        const toggleMusicPreview = (url, btnElement) => {
-                // すでに再生中で、かつ同じURLなら「停止」とみなす
-                if (!previewAudio.paused && previewAudio.src === url) {
-                    stopMusicPreview();
-                    return;
-                }
-
-                // 別の曲を再生する場合、または新規再生の場合
+        // BGM試聴の再生・停止制御（修正版）
+        const toggleMusicPreview = (url, btnElement, titleName = '試聴') => {
+            // すでに再生中で、かつ同じURLなら「停止」とみなす
+            if (!previewAudio.paused && previewAudio.src === url) {
                 stopMusicPreview();
+                return;
+            }
 
-                // 新しく再生
-                previewAudio.src = url;
-                previewAudio.volume = 0.5;
-                
-                // ★追加: URLから曲データを検索して名前を取得し、ロック画面等に表示
-                const trackEntry = Object.values(initialData.music).find(t => t.url === url);
-                const title = trackEntry ? trackEntry.name : '試聴';
-                updateMediaSession(title);
-                
-                previewAudio.play().then(() => {
-                    // ボタンのアイコンを「停止(square)」に変更
-                    if (btnElement) {
-                        btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
-                        btnElement.classList.add('playing-icon'); // アニメーション用クラス付与
-                        
-                        // アイコン再生成
-                        lucide.createIcons({ root: btnElement });
-                    }
-                    
-                    // 30秒後に自動停止
-                    previewTimeout = setTimeout(() => {
-                        stopMusicPreview();
-                    }, 30000); 
+            // 別の曲を再生する場合、または新規再生の場合
+            stopMusicPreview();
 
-                }).catch(e => console.error("試聴エラー", e));
-            };
+            // 新しく再生
+            previewAudio.src = url;
+            previewAudio.volume = 0.5;
+            
+            // ★修正: 引数で受け取ったタイトルをセット
+            updateMediaSession(titleName);
+            
+            previewAudio.play().then(() => {
+                // ボタンのアイコンを「停止(square)」に変更
+                if (btnElement) {
+                    btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
+                    btnElement.classList.add('playing-icon');
+                    lucide.createIcons({ root: btnElement });
+                }
+                
+                // 30秒後に自動停止
+                previewTimeout = setTimeout(() => {
+                    stopMusicPreview();
+                }, 30000); 
+
+            }).catch(e => console.error("試聴エラー", e));
+        };
         
         // ▼▼▼ 修正: 試聴を停止し、ネイティブプレイヤーからも消去する ▼▼▼
             const stopMusicPreview = () => {
