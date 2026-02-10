@@ -9165,14 +9165,8 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
         if (!pageRoot) return;
 
         // 既存のSortableを破棄
-        if (bgmSortablePlaylist) {
-            bgmSortablePlaylist.destroy();
-            bgmSortablePlaylist = null;
-        }
-        if (bgmSortableLibrary) {
-            bgmSortableLibrary.destroy();
-            bgmSortableLibrary = null;
-        }
+        if (bgmSortablePlaylist) { bgmSortablePlaylist.destroy(); bgmSortablePlaylist = null; }
+        if (bgmSortableLibrary) { bgmSortableLibrary.destroy(); bgmSortableLibrary = null; }
 
         // HTML生成
         pageRoot.innerHTML = `
@@ -9200,13 +9194,17 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト (ドラッグで並び替え)</h3>
-                    <div id="bgm-playlist-container" class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden min-h-[60px] p-1 space-y-1"></div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト (並び替え・削除)</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                        <div id="bgm-playlist-container" class="divide-y divide-gray-100 dark:divide-gray-700 min-h-[60px]"></div>
+                    </div>
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリ (ドラッグで追加)</h3>
-                    <div id="bgm-library-container" class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden min-h-[60px] p-1 space-y-1"></div>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリ (追加)</h3>
+                    <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
+                        <div id="bgm-library-container" class="divide-y divide-gray-100 dark:divide-gray-700 min-h-[60px]"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -9226,52 +9224,73 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
 
         // --- リスト描画関数 ---
         const renderLists = () => {
-            // プレイリストにある曲のIDリスト
             const playlistIds = state.settings.playlist;
-            
-            // ライブラリ（所持しているがプレイリストにない曲）
             const libraryIds = state.profile.unlockedMusic.filter(id => !playlistIds.includes(id));
 
-            // HTML生成ヘルパー
+            // 現在再生中のURLを取得（再描画時のアイコン維持用）
+            const currentSrc = previewAudio.src;
+            const isPlaying = !previewAudio.paused;
+
             const createItemHTML = (id, index, type) => {
                 const track = initialData.music[id];
                 if (!track) return '';
 
-                // アイコンエリアの作成
+                // アイコンの判定 (再生中かどうか)
+                let playIcon = 'play-circle';
+                let btnClass = '';
+                
+                // 完全一致かつ再生中なら停止アイコンにする
+                if (isPlaying && currentSrc === track.url) {
+                    playIcon = 'square'; // 停止アイコン
+                    btnClass = 'playing-icon'; // アニメーションクラス
+                }
+
+                // 左側のアイコン
                 let leftIconHTML;
                 if (type === 'playlist') {
-                    // プレイリスト: 番号 (テーマカラー背景)
                     leftIconHTML = `
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-white shadow-sm" style="background-color: var(--primary-color);">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-white shadow-sm cursor-grab active:cursor-grabbing touch-none bgm-handle" style="background-color: var(--primary-color);">
                             <span class="text-xs font-bold">${index + 1}</span>
                         </div>`;
                 } else {
-                    // ライブラリ: プラスアイコン (グレー背景)
+                    // ライブラリ側はプラスボタンとして機能させる
                     leftIconHTML = `
-                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3 flex-shrink-0 text-gray-400">
+                        <button class="add-bgm-btn w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3 flex-shrink-0 text-gray-400 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors" data-id="${id}">
                             <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>`;
+                }
+
+                // 右側のボタン
+                let rightActionHTML;
+                if (type === 'playlist') {
+                    // プレイリスト: 削除ボタン
+                    rightActionHTML = `
+                        <button class="remove-bgm-btn p-2 text-gray-300 hover:text-red-500 transition flex-shrink-0 ml-1" data-id="${id}">
+                            <i data-lucide="minus-circle" class="w-5 h-5"></i>
+                        </button>`;
+                } else {
+                    // ライブラリ: 追加済みマーク等は不要（リストから消えるため）、またはドラッグ用ハンドル
+                    // ライブラリからドラッグで追加もできるようにハンドルを表示
+                    rightActionHTML = `
+                        <div class="bgm-handle p-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none flex-shrink-0 ml-1">
+                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                         </div>`;
                 }
 
-                // 右側のハンドルアイコン
-                const handleIcon = type === 'playlist' ? 'grip-vertical' : 'grip-vertical'; // 両方グリップにする
-
                 return `
-                    <div class="bgm-sortable-item group relative w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-700" data-id="${id}">
-                        <div class="flex items-center p-2 h-[60px]">
+                    <div class="bgm-sortable-item group relative w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" data-id="${id}">
+                        <div class="flex items-center p-3 h-[72px]">
                             ${leftIconHTML}
 
-                            <div class="flex-grow min-w-0 mr-2">
+                            <div class="flex-grow min-w-0 mr-2 flex flex-col justify-center">
                                 <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${track.name}</p>
                             </div>
 
-                            <button class="preview-bgm-btn p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0 mr-1 primary-text" data-url="${track.url}" data-name="${track.name}">
-                                <i data-lucide="play-circle" class="w-6 h-6"></i>
+                            <button class="preview-bgm-btn p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-500 transition flex-shrink-0 ${btnClass}" data-url="${track.url}" data-name="${track.name}">
+                                <i data-lucide="${playIcon}" class="w-6 h-6 fill-current"></i>
                             </button>
 
-                            <div class="bgm-handle p-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none flex-shrink-0">
-                                <i data-lucide="${handleIcon}" class="w-5 h-5"></i>
-                            </div>
+                            ${rightActionHTML}
                         </div>
                     </div>
                 `;
@@ -9279,14 +9298,14 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
 
             // プレイリスト描画
             if (playlistIds.length === 0) {
-                playlistContainer.innerHTML = `<div class="py-6 text-center text-xs text-gray-400 font-bold">ここへドラッグして追加</div>`;
+                playlistContainer.innerHTML = `<div class="py-8 text-center text-xs text-gray-400 font-bold">ここへドラッグして追加</div>`;
             } else {
                 playlistContainer.innerHTML = playlistIds.map((id, i) => createItemHTML(id, i, 'playlist')).join('');
             }
 
             // ライブラリ描画
             if (libraryIds.length === 0) {
-                libraryContainer.innerHTML = `<div class="py-6 text-center text-xs text-gray-400 font-bold">すべて追加済みです</div>`;
+                libraryContainer.innerHTML = `<div class="py-8 text-center text-xs text-gray-400 font-bold">すべて追加済みです</div>`;
             } else {
                 libraryContainer.innerHTML = libraryIds.map((id, i) => createItemHTML(id, i, 'library')).join('');
             }
@@ -9294,11 +9313,41 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
             // アイコン生成
             lucide.createIcons({ root: document.getElementById('bgm-settings-screen') });
 
-            // 試聴ボタンのイベント設定
+            // イベント設定: 試聴ボタン
             document.querySelectorAll('.preview-bgm-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // ドラッグ暴発防止
+                    e.stopPropagation();
                     toggleMusicPreview(btn.dataset.url, btn, btn.dataset.name);
+                });
+            });
+
+            // イベント設定: 追加ボタン（プラスアイコン）
+            document.querySelectorAll('.add-bgm-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    state.settings.playlist.push(id);
+                    saveState();
+                    renderLists(); // 再描画
+                });
+            });
+
+            // イベント設定: 削除ボタン
+            document.querySelectorAll('.remove-bgm-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    const idx = state.settings.playlist.indexOf(id);
+                    if (idx > -1) {
+                        state.settings.playlist.splice(idx, 1);
+                        saveState();
+                        // 再生中なら止める
+                        const track = initialData.music[id];
+                        if (track && previewAudio.src === track.url) {
+                            stopMusicPreview();
+                        }
+                        renderLists(); // 再描画
+                    }
                 });
             });
         };
@@ -9306,10 +9355,10 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
         // 初回描画
         renderLists();
 
-        // --- Drag & Drop設定 (Sortable.js) ---
+        // --- Drag & Drop設定 ---
         const commonSortableOptions = {
-            group: 'bgm-lists', // 同じグループ名にすることでリスト間移動が可能
-            handle: '.bgm-sortable-item', // アイテム全体で掴めるようにする（または .bgm-handle に限定）
+            group: 'bgm-lists',
+            handle: '.bgm-sortable-item', // アイテム全体で掴めるようにする
             animation: 200,
             delay: 100,
             delayOnTouchOnly: true,
@@ -9318,34 +9367,27 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
             onEnd: (evt) => {
                 // DOMの状態からプレイリスト配列を再構築
                 const newPlaylist = [];
-                // プレイリストコンテナ内のアイテムIDを順番に取得
                 playlistContainer.querySelectorAll('.bgm-sortable-item').forEach(el => {
                     newPlaylist.push(el.dataset.id);
                 });
 
                 state.settings.playlist = newPlaylist;
                 saveState();
-
-                // 番号やアイコンを正しい状態（プレイリスト用/ライブラリ用）にするため再描画
-                // 少し遅延させてドラッグ終了アニメーションを邪魔しないようにする
+                
+                // 少し遅延させて再描画（番号などを正しく振り直すため）
                 setTimeout(() => renderLists(), 50);
             }
         };
 
-        // プレイリスト側のSortable
         bgmSortablePlaylist = Sortable.create(playlistContainer, {
             ...commonSortableOptions,
-            // 空の時のメッセージがある場合、それをドラッグ対象外にするなどの調整が必要だが、
-            // Sortableはデフォルトでdivなどを無視して挿入してくれることが多い。
-            // 念のため filter を設定
-            filter: '.text-center', 
+            filter: '.text-center' // 空メッセージを除外
         });
 
-        // ライブラリ側のSortable
         bgmSortableLibrary = Sortable.create(libraryContainer, {
             ...commonSortableOptions,
-            sort: false, // ライブラリ内での並び替えは禁止（追加/削除のみ）したい場合は false。今回は自由度重視でtrue(デフォルト)のまま。
-            filter: '.text-center',
+            sort: false, // ライブラリ内の並び替えは不要（追加のみ）
+            filter: '.text-center'
         });
     },
     
@@ -9453,26 +9495,25 @@ const renderGamePreviews = (game) => {
         
         // BGM試聴の再生・停止制御（修正版）
         const toggleMusicPreview = (url, btnElement, titleName = '試聴') => {
-            // すでに再生中で、かつ同じURLなら「停止」とみなす
-            if (!previewAudio.paused && previewAudio.src === url) {
+            // 現在再生中のURLと一致し、かつ再生中であれば「停止」する
+            if (previewAudio.src === url && !previewAudio.paused) {
                 stopMusicPreview();
                 return;
             }
 
-            // 別の曲を再生する場合、または新規再生の場合
-            stopMusicPreview();
+            // 別の曲、または停止中の場合は再生を開始する
+            stopMusicPreview(); // 一旦リセット
 
-            // 新しく再生
             previewAudio.src = url;
             previewAudio.volume = 0.5;
             
-            // ★修正: 引数で受け取ったタイトルをセット
             updateMediaSession(titleName);
             
             previewAudio.play().then(() => {
                 // ボタンのアイコンを「停止(square)」に変更
                 if (btnElement) {
-                    btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
+                    // ★修正: アイコンのサイズクラスを明示的に指定してサイズ崩れを防ぐ
+                    btnElement.innerHTML = '<i data-lucide="square" class="w-6 h-6 fill-current"></i>';
                     btnElement.classList.add('playing-icon');
                     lucide.createIcons({ root: btnElement });
                 }
