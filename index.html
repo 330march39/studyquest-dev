@@ -2685,7 +2685,7 @@ html.dark .center-fab {
                     suisai1: { name: '水彩（ブルー）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_enogu7.png', cost: 9000, tone: 'light' },
                     suisai2: { name: '水彩（オレンジ）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_enogu2.png', cost: 9000, tone: 'light' },
                     suisai3: { name: '水彩（グレー）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_enogu1.png', cost: 9000, tone: 'light' },
-                    summer: { name: '夏空', url: 'https://sozaino.site/wp-content/uploads/2024/08/okumono-haikei2-.png', cost: 7000, tone: 'light' },
+                    //summer: { name: '夏空', url: 'https://sozaino.site/wp-content/uploads/2024/08/okumono-haikei2-.png', cost: 7000, tone: 'light' },
                 },
                 
                 games: {
@@ -5322,6 +5322,14 @@ const showItemPopup = (item, type) => {
             
             const stopwatchTick = () => {
                 stopwatch.elapsedTime = (Date.now() - stopwatch.startTime) / 1000;
+                if (stopwatch.elapsedTime >= 43200) {
+                    stopwatch.elapsedTime = 43200; // 時間を固定
+                    $('#stopwatch-display').textContent = formatStopwatchTime(43200);
+                    updateMiniTimer();
+                    endStopwatch(); // 強制終了
+                    showToast('12時間を経過したため終了しました');
+                    return; // ここで処理を抜ける
+                }
                 $('#stopwatch-display').textContent = formatStopwatchTime(stopwatch.elapsedTime);
                 updateMiniTimer();
             };
@@ -5951,8 +5959,15 @@ const showItemPopup = (item, type) => {
                     const durationInput = itemEl.querySelector('.quest-item-duration');
                     durationInput.addEventListener('change', (e) => {
                         let val = parseInt(e.target.value);
+                        
+                        // ▼▼▼ 修正: 上限・下限チェック ▼▼▼
+                        if (isNaN(val) || val < 1) val = 1;
+                        if (val > 720) val = 720; // 720分(12時間)でカンスト
+                        
+                        e.target.value = val; // 入力欄の数字も書き換える
+                        // ▲▲▲ 修正ここまで ▲▲▲
+                    
                         const defaultVal = (item.type === 'section') ? 25 : 5;
-                        if (isNaN(val) || val <= 0) val = defaultVal;
                         item.duration = val * 60;
                     });
                 });
@@ -6183,7 +6198,11 @@ const showItemPopup = (item, type) => {
                             const elapsed = currentStep.duration;
                             if (elapsed > 0) {
                                 recordSession(currentStep.text, elapsed);
-                                addLP(Math.floor(elapsed / 60), 'クエストセクション');
+                                const earned = Math.floor(elapsed / 60);
+                                // 第3引数を false にしてポップアップを抑制
+                                addLP(earned, 'クエストセクション', false); 
+                                // 累積変数に加算
+                                quest.accumulatedLp = (quest.accumulatedLp || 0) + earned;
                                 state.focus.totalTime += elapsed;
                                 
                                 if (currentStep.originalTaskId) {
@@ -6262,6 +6281,7 @@ const showItemPopup = (item, type) => {
             // 1. 背景や変数の準備
             quest.active = true;
             quest.currentIndex = -1;
+            quest.accumulatedLp = 0; // ★これを行を追加（獲得LPの累積用）
             updateBackgrounds();
 
             // 2. クエスト実行画面を表示（まだ透明・縮小状態）
@@ -6322,6 +6342,10 @@ const showItemPopup = (item, type) => {
             controlScreenOrientation('default');
             document.body.classList.remove('is-quest-mode');
             if (completed) {
+                // 累積LPがあればまとめてポップアップ表示
+                if ((quest.accumulatedLp || 0) > 0) {
+                    showLpPopup(quest.accumulatedLp, 'クエスト完了');
+                }
                 showToast('クエスト完了！お疲れ様でした！');
             }
         };
@@ -8955,7 +8979,14 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
                 const input = itemEl.querySelector('.routine-duration-input');
                 input.addEventListener('change', (e) => {
                     let val = parseInt(e.target.value);
-                    if(val < 1) val = 1;
+                    
+                    // ▼▼▼ 修正: 上限・下限チェック ▼▼▼
+                    if (val < 1) val = 1;
+                    if (val > 720) val = 720; // 720分でカンスト
+                    
+                    e.target.value = val; // 入力欄を書き換え
+                    // ▲▲▲ 修正ここまで ▲▲▲
+                
                     item.duration = val * 60;
                     saveState();
                 });
