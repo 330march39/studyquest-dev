@@ -9156,7 +9156,7 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
 document.getElementById('close-routine-settings-btn').addEventListener('click', () => routineSettingsPage.close());
 // ▲▲▲ 修正ここまで ▲▲▲
             // --- 5. BGM設定サブページ ---
-let bgmSortablePlaylist = null;
+            let bgmSortablePlaylist = null;
             let bgmSortableLibrary = null;
             let currentPreviewId = null; // 再生中のトラックIDを管理
 
@@ -9198,14 +9198,14 @@ let bgmSortablePlaylist = null;
                                 <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト (並び替え・削除)</h3>
                                 <p class="text-[10px] text-gray-400 mb-2 ml-2">ライブラリとの行き来も可能です</p>
                                 <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
-                                    <div id="bgm-playlist-container" class="divide-y divide-gray-100 dark:divide-gray-700 min-h-[60px] pb-6"></div>
+                                    <div id="bgm-playlist-container" class="divide-y divide-gray-100 dark:divide-gray-700 min-h-[60px]"></div>
                                 </div>
                             </div>
 
                             <div>
                                 <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリ (追加)</h3>
                                 <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
-                                    <div id="bgm-library-container" class="divide-y divide-gray-100 dark:divide-gray-700 min-h-[60px] pb-6"></div>
+                                    <div id="bgm-library-container" class="divide-y divide-gray-100 dark:divide-gray-700 min-h-[60px]"></div>
                                 </div>
                             </div>
                         </div>
@@ -9256,8 +9256,9 @@ let bgmSortablePlaylist = null;
                                         <span class="text-xs font-bold">${index + 1}</span>
                                     </div>`;
                             } else {
+                                // プラスボタン: グレー系のホバー色に変更
                                 leftIconHTML = `
-                                    <button class="add-bgm-btn w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3 flex-shrink-0 text-gray-400 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors" data-id="${id}">
+                                    <button class="add-bgm-btn w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3 flex-shrink-0 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-300 transition-colors" data-id="${id}">
                                         <i data-lucide="plus" class="w-4 h-4"></i>
                                     </button>`;
                             }
@@ -9268,7 +9269,7 @@ let bgmSortablePlaylist = null;
                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                                 </div>`;
 
-                            // スワイプ削除ボタン（プレイリストのみ有効だが、構造は統一しても良い。今回はplaylistのみ）
+                            // スワイプ削除ボタン（プレイリストのみ有効）
                             let swipeActionsHTML = '';
                             let containerClass = 'bgm-sortable-item group relative w-full bg-white dark:bg-gray-800 transition-colors';
                             
@@ -9286,19 +9287,22 @@ let bgmSortablePlaylist = null;
                                 containerClass += ' h-[72px]'; // ライブラリも高さを揃える
                             }
 
+                            // 背景色設定: ダークモード時に透明度を使わず不透明色を指定して透け防止
+                            const contentBgClass = "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-700";
+
                             return `
                                 <div class="${containerClass}" data-id="${id}">
                                     ${swipeActionsHTML}
-                                    <div class="swipe-content flex items-center p-3 h-full relative z-10 w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                    <div class="swipe-content flex items-center p-3 h-full relative z-10 w-full transition-colors ${contentBgClass}">
                                         ${leftIconHTML}
 
                                         <div class="flex-grow min-w-0 mr-2 flex flex-col justify-center">
                                             <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${track.name}</p>
                                         </div>
 
-                                        <button class="preview-bgm-btn w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center justify-center flex-shrink-0 ${isTrackPlaying ? 'playing-icon' : ''}" 
+                                        <button class="preview-bgm-btn w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center justify-center flex-shrink-0" 
                                                 data-id="${id}" data-url="${track.url}" data-name="${track.name}">
-                                            <i data-lucide="${playIcon}" class="w-5 h-5 primary-text ${iconClass} fill-current"></i>
+                                            <i data-lucide="${playIcon}" class="w-5 h-5 primary-text ${iconClass} ${isTrackPlaying ? 'fill-current' : 'fill-current'}"></i>
                                         </button>
 
                                         ${handleHTML}
@@ -9358,6 +9362,7 @@ let bgmSortablePlaylist = null;
                                         if (idx > -1) {
                                             state.settings.playlist.splice(idx, 1);
                                             saveState();
+                                            // 削除した曲が再生中なら止める
                                             if (currentPreviewId === id) stopMusicPreview();
                                             setTimeout(renderLists, 300);
                                         }
@@ -9383,9 +9388,7 @@ let bgmSortablePlaylist = null;
                         
                         // ドロップ時のイベント
                         onEnd: (evt) => {
-                            // 移動先のコンテナに関わらず、DOM上の並び順を元に state.settings.playlist を再構築する
-                            // ※ライブラリコンテナにあるものは「プレイリスト外」となるため、プレイリストコンテナ内のIDだけ集めれば良い
-
+                            // DOM上の並び順を元に state.settings.playlist を再構築
                             const newPlaylist = [];
                             playlistContainer.querySelectorAll('.bgm-sortable-item').forEach(el => {
                                 newPlaylist.push(el.dataset.id);
@@ -9426,11 +9429,10 @@ let bgmSortablePlaylist = null;
                 updateMediaSession(titleName);
                 
                 previewAudio.play().then(() => {
-                    // ボタンのアイコンを「停止(square)」に変更し、色を整える
+                    // ボタンのアイコンを「停止(square)」に変更
                     if (btnElement) {
-                        // primary-textクラスがついた状態でsquareアイコンを表示
+                        // 点滅(playing-icon)は削除。fill-currentでテーマカラー塗りつぶし
                         btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 primary-text fill-current"></i>';
-                        btnElement.classList.add('playing-icon'); // アニメーション用
                         lucide.createIcons({ root: btnElement });
                     }
                     
@@ -9448,8 +9450,7 @@ let bgmSortablePlaylist = null;
                 previewAudio.pause();
                 previewAudio.currentTime = 0;
                 previewAudio.src = "";
-                // previewAudio.load(); // iOS等での完全リセットが必要なら
-
+                
                 currentPreviewId = null; // IDリセット
 
                 if (previewTimeout) clearTimeout(previewTimeout);
@@ -9457,6 +9458,7 @@ let bgmSortablePlaylist = null;
                 // 全ての再生ボタンを「再生(play)」に戻す
                 document.querySelectorAll('.preview-bgm-btn').forEach(btn => {
                      btn.innerHTML = '<i data-lucide="play" class="w-5 h-5 primary-text ml-0.5 fill-current"></i>';
+                     // アニメーションクラスがあれば削除（念のため）
                      btn.classList.remove('playing-icon');
                 });
                 
