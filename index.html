@@ -451,10 +451,13 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             /* 背景色が消えないようにする */
             background-color: inherit; 
         }
-        
-        /* 3. 画像やSVGアイコンの長押しメニュー（保存など）を禁止 (主にiOS) */
+        /* 3. 画像やSVGアイコンの完全保護（保存・ドラッグ・右クリック禁止） */
         img, svg {
-            -webkit-touch-callout: none;
+            -webkit-touch-callout: none; /* iOS長押しメニュー無効 */
+            -webkit-user-drag: none;     /* ドラッグ無効 (Chrome/Safari) */
+            -moz-user-drag: none;        /* ドラッグ無効 (Firefox) */
+            user-select: none;           /* 選択無効 */
+            pointer-events: none;        /* ★重要: クリック判定自体を無効化（親のボタン等は反応します） */
         }
         /* --- スワイプ機能用CSS --- */
         .swipe-container {
