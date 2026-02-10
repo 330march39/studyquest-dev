@@ -4254,7 +4254,7 @@ const controlScreenOrientation = async (mode) => {
                             const item = document.createElement('div');
                             item.className = 'flex items-center p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition active:bg-gray-100 dark:active:bg-gray-700';
                             item.innerHTML = `
-                                <div class="flex-shrink-0 w-8 h-8 rounded-full ${colorClass} flex items-center justify-center mr-4 shadow-sm">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4 shadow-sm text-white" style="background-color: var(--primary-color);">
                                     <i data-lucide="${icon}" class="w-4 h-4 text-white"></i>
                                 </div>
                                 <span class="flex-grow font-bold text-sm text-gray-700 dark:text-gray-200">${title}</span>
