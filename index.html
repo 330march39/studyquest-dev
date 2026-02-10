@@ -4835,6 +4835,8 @@ const showItemPopup = (item, type) => {
                             { src: artworkUrl, sizes: '256x256', type: 'image/png' },
                             { src: artworkUrl, sizes: '384x384', type: 'image/png' },
                             { src: artworkUrl, sizes: '512x512', type: 'image/png' },
+                            { src: artworkUrl, sizes: '1024x1024', type: 'image/png' },
+                            { src: artworkUrl, sizes: '2048x2048', type: 'image/png' },
                         ]
                     });
 
@@ -9171,7 +9173,7 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                                 </div>
                                 <div class="flex flex-col justify-center">
                                     <span class="text-sm font-bold text-gray-800 dark:text-white">BGM機能</span>
-                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">ONにすると、クエスト中にプレイリストが自動再生</span>
+                                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500">クエスト中にプレイリストがループ再生</span>
                                 </div>
                             </div>
                             <div class="relative">
@@ -9189,7 +9191,7 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリから追加</h3>
+                    <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">ライブラリ</h3>
                     <div id="unlocked-music-list-sub" class="flex flex-wrap gap-2"></div>
                 </div>
             </div>
@@ -9254,7 +9256,7 @@ const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 playlistContainer.innerHTML = `
                     <div class="p-8 text-center text-gray-400 dark:text-gray-500">
                         <i data-lucide="music-2" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
-                        <p class="text-xs font-bold">リストが空です</p>
+                        <p class="text-xs font-bold">プレイリストが空です</p>
                     </div>`;
             } else {
                 playlistContainer.innerHTML = state.settings.playlist.map((id, index) => {
