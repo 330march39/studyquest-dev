@@ -1427,6 +1427,13 @@ html.dark .center-fab {
 #bottom-nav {
     box-shadow: none !important;
 }
+        /* ▼▼▼ 追加：壁紙全体適用＆ライトモード時のセクションタイトル文字色変更 ▼▼▼ */
+html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
+    color: #1A1A1D !important; /* アプリ内で使われている text-gray-800 の黒色 */
+    
+    /* 【おすすめ】文字の周りにうっすら白いフチ(影)をつけると、柄のある壁紙でも圧倒的に読みやすくなります */
+    text-shadow: 0px 1px 3px rgba(255, 255, 255, 0.9), 0px 0px 2px rgba(255, 255, 255, 1);
+}
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -2752,7 +2759,7 @@ html.dark .center-fab {
                     //summer_sky: { name: '夏空', url: 'https://sozaino.site/wp-content/uploads/2024/08/okumono-haikei2-.png', cost: 7000, tone: 'light' },
                     //summer_umi: { name: '夏の海', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_natsu_umi_.png', cost: 7000, tone: 'light' },
                     //summer_inaka: { name: '夏の田舎', url: 'https://sozaino.site/wp-content/uploads/2025/07/okumono_natsuinaka_.png', cost: 7000, tone: 'light' },
-                    dotdurade1: { name: 'ドットグラデ（赤青）', url: 'https://sozaino.site/wp-content/uploads/2026/01/okumono_kouka22.png', cost: 5000, tone: 'light' },
+                    dotdurade1: { name: 'ドットグラデ（赤青）', url: 'https://sozaino.site/wp-content/uploads/2026/01/okumono_kouka22.png', cost: 5000, tone: 'dark' },
                     //dotdurade2: { name: 'ドットグラデ（黄青）', url: 'https://sozaino.site/wp-content/uploads/2026/01/okumono_kouka29.png', cost: 7000, tone: 'light' },
                     //wahamon1: { name: '和風波紋（赤色）', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_suimen1.png', cost: 7000, tone: 'light' },
                     //wahamon2: { name: '和風波紋（紫色）', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_suimen7.png', cost: 7000, tone: 'light' },
@@ -3469,9 +3476,17 @@ html.dark .center-fab {
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                     document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.remove('global-bg-light'); // ←追加
                 } else {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.setAttribute('data-theme', 'light');
+                    
+                    // ▼▼▼ 追加：壁紙全体適用 ＆ 画像あり ＆ ライトモード の時だけ目印のクラスをつける ▼▼▼
+                    if (isGlobal && hasImage) {
+                        document.documentElement.classList.add('global-bg-light');
+                    } else {
+                        document.documentElement.classList.remove('global-bg-light');
+                    }
                 }
             
                 // --- 3. 背景画像の適用ロジック ---
