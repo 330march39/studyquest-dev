@@ -3465,10 +3465,34 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                             // 学年が変わった場合のみ更新して通知を出す
                             if (oldGrade !== newGrade) {
                                 state.user.grade = newGrade;
-                                // トースト通知でユーザーにお知らせ
+                                
+                                // ▼▼▼ 修正：トースト通知ではなく汎用ポップアップを表示 ▼▼▼
                                 setTimeout(() => {
-                                    showToast(`🌸「${newGrade}」に進級しました！`, 'success');
-                                }, 3000); // 起動直後だと見逃すかもしれないので少し遅らせて表示
+                                    openGeneralConfirm(
+                                        '🌸 新年度になりました 🌸', // タイトル
+                                        // 送付されたバナー画像とテキストをメッセージエリアに流し込む
+                                        `<img src="banner_4.png" class="w-full h-auto rounded-xl mb-4 shadow-sm" alt="進級・進学おめでとうございます">
+                                         <span class="block text-base text-gray-800 dark:text-gray-200 leading-normal">新しい学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>正しく反映されているか確認してください。</span>`,
+                                        'graduation-cap', // アイコン
+                                        '確認した (閉じる)', // 完了ボタン
+                                        'primary-bg', // 完了ボタンの色
+                                        () => {
+                                            // OK時は閉じるだけなので何もしない
+                                        },
+                                        '学年を修正する', // 修正ボタン
+                                        () => {
+                                            // 1. 裏側で設定タブを開く
+                                            const settingsTab = document.querySelector('.tab-btn[data-page="settings-page"]');
+                                            if (settingsTab) settingsTab.click();
+                                            
+                                            // 2. 画面遷移アニメーションを少し待ってからプロフィール設定を開く
+                                            setTimeout(() => {
+                                                if (typeof profilePage !== 'undefined') profilePage.open();
+                                            }, 300);
+                                        }
+                                    );
+                                }, 1500); // 起動直後だと画面がごちゃつくので少し遅らせる
+                                // ▲▲▲ 修正ここまで ▲▲▲
                             }
                             
                             // 処理済みとして今年の年数を記録
@@ -3477,6 +3501,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         }
                     }
                 }
+                // ▲▲▲ 追加ここまで ▲▲▲
             };
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
