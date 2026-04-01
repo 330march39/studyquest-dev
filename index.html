@@ -3467,19 +3467,18 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                             
                             // ▼▼▼ 修正：変化があったかどうかに応じてメッセージを出し分ける ▼▼▼
                             const isChanged = (oldGrade !== newGrade);
-                            const titleText = isChanged ? '🌸 新年度になりました 🌸' : '🌸 新年度のご確認 🌸';
                             const bodyText = isChanged 
-                                ? `新しい学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>正しく反映されているか確認してください。`
-                                : `現在の登録学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>変更がある場合は修正してください。`;
+                                ? `新しい学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です<br>変更がある場合は修正してください`
+                                : `現在の登録学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です<br>変更がある場合は修正してください`;
 
                             // 汎用ポップアップを全員に表示
                             setTimeout(() => {
                                 openGeneralConfirm(
-                                    titleText, 
+                                    '', // 👈 修正：タイトルを空文字にして非表示にする
                                     `<img src="banner_4.png" class="w-full h-auto rounded-xl mb-4 shadow-sm" alt="進級・進学おめでとうございます">
                                      <span class="block text-base text-gray-800 dark:text-gray-200 leading-normal">${bodyText}</span>`,
-                                    'graduation-cap', // アイコン
-                                    '確認した (閉じる)', // 完了ボタン
+                                    '', // 👈 修正：アイコン名を空文字にして非表示にする
+                                    '確認した', // 完了ボタン
                                     'primary-bg', // 完了ボタンの色
                                     () => {
                                         // OK時は閉じるだけ
@@ -3496,7 +3495,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                                         }, 300);
                                     }
                                 );
-                            }, 1500); 
+                            }, 1500);
                             // ▲▲▲ 修正ここまで ▲▲▲
                             
                             // 処理済みとして今年の年数を記録
@@ -3654,10 +3653,26 @@ const openGeneralConfirm = (title, message, iconName, confirmText, colorClass, o
     const modal = document.getElementById('general-confirm-modal');
     const content = document.getElementById('general-confirm-content');
     
-    // 内容セット
-    document.getElementById('general-confirm-title').textContent = title;
+    // ▼▼▼ 修正：タイトルとアイコンが空の時はスペースごと非表示にする ▼▼▼
+    const titleEl = document.getElementById('general-confirm-title');
+    if (title) {
+        titleEl.textContent = title;
+        titleEl.style.display = 'block';
+    } else {
+        titleEl.style.display = 'none'; // タイトルが空なら隠す
+    }
+
+    const iconEl = document.getElementById('general-confirm-icon');
+    const iconWrapper = iconEl.parentElement;
+    if (iconName) {
+        iconEl.setAttribute('data-lucide', iconName);
+        iconWrapper.style.display = 'flex';
+    } else {
+        iconWrapper.style.display = 'none'; // アイコンが空なら隠す
+    }
+    
     document.getElementById('general-confirm-msg').innerHTML = message.replace(/\n/g, '<br>');
-    document.getElementById('general-confirm-icon').setAttribute('data-lucide', iconName || 'alert-circle');
+    // ▲▲▲ 修正ここまで ▲▲▲
     
     // 実行ボタン設定
     const okBtn = document.getElementById('general-confirm-ok-btn');
