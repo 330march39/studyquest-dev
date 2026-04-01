@@ -3337,7 +3337,8 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         icon: '🙂',
                         grade: '',
                         id: Math.random().toString(36).substring(2, 9), // 簡易ID
-                        feedbackRewardClaimed: false
+                        feedbackRewardClaimed: false,
+                        lastPromotedYear: null // ★これを追加: 最後に自動進級処理を行った年
                     },
                     profile: { 
                         lp: 0, 
@@ -3429,6 +3430,51 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     state.tasks = []; // タスクを空にする
                     state.profile.tasksLastUpdated = today; // 更新日を今日に設定
                 }
+                // ▼▼▼ 5. ここから追加：4月1日の自動進級処理 ▼▼▼
+                if (state.user.isRegistered && state.user.grade) {
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentMonth = now.getMonth() + 1; // 月は0から始まるので+1
+
+                    // 4月以降であるかチェック
+                    if (currentMonth >= 4) {
+                        // 今年の進級処理がまだ終わっていない場合のみ実行
+                        if (state.user.lastPromotedYear !== currentYear) {
+                            const oldGrade = state.user.grade;
+                            let newGrade = oldGrade;
+
+                            // 学年の文字から「学校種別」と「学年(数字)」を抜き出す
+                            const match = oldGrade.match(/^(小学|中学|高校)(\d)年生$/);
+                            if (match) {
+                                const school = match[1];
+                                const year = parseInt(match[2], 10);
+                                
+                                // 最高学年未満なら +1 年生にする
+                                if (year < (school === '小学' ? 6 : 3)) {
+                                    newGrade = `${school}${year + 1}年生`;
+                                } else {
+                                    // 卒業・進学時の処理
+                                    if (school === '小学') newGrade = '中学1年生';
+                                    else if (school === '中学') newGrade = '高校1年生';
+                                    else if (school === '高校') newGrade = '大学・専門学生';
+                                }
+                            }
+
+                            // 学年が変わった場合のみ更新して通知を出す
+                            if (oldGrade !== newGrade) {
+                                state.user.grade = newGrade;
+                                // トースト通知でユーザーにお知らせ
+                                setTimeout(() => {
+                                    showToast(`🌸4月になりました！「${newGrade}」に進級しました！`, 'success');
+                                }, 3000); // 起動直後だと見逃すかもしれないので少し遅らせて表示
+                            }
+                            
+                            // 処理済みとして今年の年数を記録
+                            state.user.lastPromotedYear = currentYear;
+                            saveState();
+                        }
+                    }
+                }
             };
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
@@ -7356,6 +7402,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 state.user.icon = wizardData.tempProfile.icon;
                 state.user.grade = wizardData.tempProfile.grade;
                 state.user.isRegistered = true;
+
+                // ▼▼▼ これを追加: 登録時の年を記録（1〜3月なら「去年の4月に進級した」扱いにする） ▼▼▼
+                const now = new Date();
+                state.user.lastPromotedYear = (now.getMonth() + 1 >= 4) ? now.getFullYear() : now.getFullYear() - 1;
                 
                 addLP(1000, 'はじめまして！', false);
                 state.lastLogin = new Date().toDateString();
