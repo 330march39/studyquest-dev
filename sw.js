@@ -116,44 +116,42 @@ self.addEventListener('message', event => {
 
 
 // =========================================================
-// ★追加: キャッシュ管理機能 (古いUIが表示されるバグの修正)
+// ★変更: キャッシュ管理機能 (超高速起動 ＆ 裏で自動更新)
 // =========================================================
 self.addEventListener('fetch', event => {
-  // ① HTMLファイル（画面の構造）は「常に最新を通信で取得する」
+  // ① HTMLファイル（UI画面）は「Stale-While-Revalidate」
+  // ＝ キャッシュがあれば一瞬で画面を立ち上げ、裏で最新版をダウンロードして次回に備える
   if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // 通信成功：最新のHTMLをキャッシュに保存して画面に返す
-          const responseClone = response.clone();
+      caches.match(event.request).then(cachedResponse => {
+        // 裏でネットワークから最新版を取得してキャッシュを更新する
+        const fetchPromise = fetch(event.request).then(networkResponse => {
           caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
+            cache.put(event.request, networkResponse.clone());
           });
-          return response;
-        })
-        .catch(() => {
-          // 通信失敗（オフラインやクラッシュ復帰時）：仕方ないので保存されているキャッシュを返す
-          return caches.match(event.request);
-        })
+          return networkResponse;
+        }).catch(() => {
+          // 通信エラー時（オフライン時）は何もしない
+        });
+
+        // キャッシュがあれば待たずにすぐ画面を出す。無ければネットワークの完了を待つ。
+        return cachedResponse || fetchPromise;
+      })
     );
     return;
   }
 
-  // ② 画像などのファイルは「一度保存したらキャッシュを優先する（通信量節約）」
+  // ② 画像やその他のファイルは「キャッシュ優先 (Cache First)」で通信量を節約
   event.respondWith(
     caches.match(event.request).then(response => {
-      // キャッシュがあればそれを返す、無ければ通信して取得する
       return response || fetch(event.request).then(fetchRes => {
         return caches.open(CACHE_NAME).then(cache => {
-          // http/httpsリクエストの場合のみキャッシュに保存する（拡張機能由来のエラー防止）
           if (event.request.url.startsWith('http')) {
             cache.put(event.request, fetchRes.clone());
           }
           return fetchRes;
         });
       });
-    }).catch(() => {
-      // オフラインで画像もない場合は何もしない
-    })
+    }).catch(() => {})
   );
 });
