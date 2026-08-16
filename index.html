@@ -8202,7 +8202,29 @@ const checkQuestResume = () => {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
                         .then(registration => console.log('Service Worker登録成功:', registration))
+                        // ▼▼▼ 追加: 更新を検知してキャッシュをリセットする処理 ▼▼▼
+                            registration.onupdatefound = () => {
+                                const installingWorker = registration.installing;
+                                if (installingWorker) {
+                                    installingWorker.onstatechange = () => {
+                                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                            console.log('新しいバージョンが見つかりました。最新情報に更新します...');
+                                            // Service Workerに「今すぐ新しいキャッシュに切り替えて」と命令する
+                                            installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        }
+                                    };
+                                }
+                            };
+                        })
                         .catch(error => console.log('Service Worker登録失敗:', error));
+                        // ▼▼▼ 追加: 新しいキャッシュに切り替わったら自動で画面をリロードする ▼▼▼
+                        let refreshing = false;
+                        navigator.serviceWorker.addEventListener('controllerchange', () => {
+                            if (!refreshing) {
+                                refreshing = true;
+                                window.location.reload(); // 最新の状態で再読み込み
+                            }
+                        });
                 }
                 // ★追加: 画面の他の場所をタップしたら開いているスワイプメニューを閉じる処理
                 document.addEventListener('touchstart', (e) => {
