@@ -9752,7 +9752,7 @@ const renderGamePreviews = (game) => {
         const isVideo = url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.webm');
         
         if (isVideo) {
-            item.innerHTML = `<video src="${url}" controls playsinline muted preload="none" class="w-full h-full object-cover pointer-events-auto bg-gray-900"></video>`;
+            item.innerHTML = `<video src="${url}" autoplay controls playsinline muted class="w-full h-full object-cover pointer-events-auto bg-gray-900"></video>`;
         } else {
             // object-coverではなく object-contain にすると全体が見えますが、
             // 「同様のサイズ」とのご要望なのでデザインの一貫性を保つため object-cover にしています。
