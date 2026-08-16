@@ -8215,7 +8215,7 @@ const checkQuestResume = () => {
                                     };
                                 }
                             };
-                        })
+                        }
                         .catch(error => console.log('Service Worker登録失敗:', error));
                         // ▼▼▼ 追加: 新しいキャッシュに切り替わったら自動で画面をリロードする ▼▼▼
                         let refreshing = false;
