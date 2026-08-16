@@ -8236,6 +8236,26 @@ const checkQuestResume = () => {
                         }
                     });
                 }, { passive: true });
+                // ▼▼▼ 追加: オフライン検知とポップアップ表示 ▼▼▼
+                const showOfflinePopup = () => {
+                    openGeneralConfirm(
+                        'オフラインです',
+                        '現在インターネットに接続されていません。\n新規アイテムの交換や背景やBGMなど、一部の機能が使用できない場合があります。',
+                        'wifi-off',
+                        '確認しました',
+                        'bg-gray-500 hover:bg-gray-600 text-white', // ボタンの色（グレー）
+                        () => {}, // OKを押したら閉じるだけ
+                        null // キャンセルボタンは隠す
+                    );
+                };
+
+                // 起動時にオフラインだった場合（他のポップアップと被らないよう少し遅延させる）
+                if (!navigator.onLine) {
+                    setTimeout(showOfflinePopup, 1500);
+                }
+
+                // プレイ中に通信が切れた瞬間にも表示する
+                window.addEventListener('offline', showOfflinePopup);
 
                 // システムのテーマ変更をリアルタイムで監視する
                 if (window.matchMedia) {
