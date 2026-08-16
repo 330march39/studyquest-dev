@@ -9756,7 +9756,7 @@ const renderGamePreviews = (game) => {
         // ★修正: indexによる分岐を削除し、全て aspect-[9/16] で統一
         item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
         
-        const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
+        const isVideo = url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.webm');
         
         if (isVideo) {
             item.innerHTML = `<video src="${url}" controls playsinline muted preload="none" class="w-full h-full object-cover pointer-events-auto bg-gray-900"></video>`;
