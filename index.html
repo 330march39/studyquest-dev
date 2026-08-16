@@ -8201,7 +8201,7 @@ const checkQuestResume = () => {
                 }
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
-                        .then(registration => console.log('Service Worker登録成功:', registration))
+                        .then(registration => {console.log('Service Worker登録成功:', registration);
                         // ▼▼▼ 追加: 更新を検知してキャッシュをリセットする処理 ▼▼▼
                             registration.onupdatefound = () => {
                                 const installingWorker = registration.installing;
@@ -8215,7 +8215,7 @@ const checkQuestResume = () => {
                                     };
                                 }
                             };
-                        }
+                        })
                         .catch(error => console.log('Service Worker登録失敗:', error));
                         // ▼▼▼ 追加: 新しいキャッシュに切り替わったら自動で画面をリロードする ▼▼▼
                         let refreshing = false;
