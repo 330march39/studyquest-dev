@@ -3460,7 +3460,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                               },
                     lastLogin: null,
                     breakIcons: [
-                        { id: 'x', name: 'X', icon: 'twitter', url: 'https://x.com', openMode: 'external', visible: true, thumbnail: 'x.png' },
+                        { id: 'x', name: 'X', icon: 'message-circle', url: 'https://x.com', openMode: 'external', visible: true, thumbnail: 'x.png' },
                         { id: 'instagram', name: 'Instagram', icon: 'camera', url: 'https://www.instagram.com/', openMode: 'external', visible: true, thumbnail: 'Instagram.png' },
                         { id: 'youtube', name: 'YouTube', icon: 'monitor-play', url: 'https://www.youtube.com/', openMode: 'external', visible: true, thumbnail: 'youtube.png' },
                     ],
@@ -5136,6 +5136,7 @@ const showItemPopup = (item, type) => {
                             { src: artworkUrl, sizes: '512x512', type: 'image/png' },
                             { src: artworkUrl, sizes: '1024x1024', type: 'image/png' },
                             { src: artworkUrl, sizes: '2048x2048', type: 'image/png' },
+                            { src: artworkUrl, sizes: '4096x4096', type: 'image/png' },
                         ]
                     });
 
@@ -6873,7 +6874,7 @@ function syncGamesToBreakIcons() {
     // 2. SNSアイコン（X, Instagram, YouTube）の画像情報も強制更新
     // これにより、localStorageに古いデータが残っていても画像が反映されます
     const staticIcons = [
-        { id: 'x', icon: 'twitter', thumbnail: 'x.png' },
+        { id: 'x', icon: 'message-circle', thumbnail: 'x.png' },
         { id: 'instagram', icon: 'camera', thumbnail: 'Instagram.png' },
         { id: 'youtube', icon: 'monitor-play', thumbnail: 'youtube.png' }
     ];
