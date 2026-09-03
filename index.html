@@ -4573,11 +4573,16 @@ const controlScreenOrientation = async (mode) => {
                     
                         settingsPage.appendChild(questList);
                     
-                        // --- 4. 「サポート」グループ ---
-                        settingsPage.appendChild(createSectionTitle('サポート'));
+                        // --- 4. 「その他」グループ ---
+                        settingsPage.appendChild(createSectionTitle('その他'));
                         const otherList = createListContainer();
                         
                         otherList.appendChild(createListItem('mail', '意見を送る（アイデア・バグ）', 'bg-gray-500', () => {
+                            // ▼▼▼ 追加: オフライン時は開かせない ▼▼▼
+                            if (!navigator.onLine) {
+                                showToast('オフラインのため使用できません', 'error');
+                                return;
+                            }
                             isFeedbackExternalOpen = true; 
                             window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                         }));
@@ -5400,6 +5405,11 @@ const showItemPopup = (item, type) => {
             document.body.addEventListener('click', e => {
                 const quizCard = e.target.closest('.quiz-card');
                 if (quizCard && !e.target.closest('.pin-btn')) {
+                    // ▼▼▼ 追加: オフライン時は開かせない ▼▼▼
+                    if (!navigator.onLine) {
+                        showToast('オフラインのため使用できません', 'error');
+                        return;
+                    }
                     const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
                     
                     if (quiz && quiz.url) {
@@ -5933,6 +5943,11 @@ const showItemPopup = (item, type) => {
                 breakIconGrid.addEventListener('click', (e) => {
                     const btn = e.target.closest('.break-content-btn');
                     if (btn && btn.dataset.url) {
+                        // ▼▼▼ 追加: オフライン時は開かせない ▼▼▼
+                        if (!navigator.onLine) {
+                            showToast('オフラインのため使用できません', 'error');
+                            return;
+                        }
                         // ★ここから変更★
                         if (btn.dataset.openMode === 'external') {
                             // 外部タブで開く (強制クローズ不可)
