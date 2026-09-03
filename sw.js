@@ -6,17 +6,39 @@ let questTimerTimeout = null; // クエスト専用のタイマー
 // 全通知共通のタグ名
 const NOTIFICATION_TAG = 'study-quest-notification';
 
-// ★追加: キャッシュの名前（バージョン管理用）
-const CACHE_NAME = 'study-quest-cache-v2';
+// ★修正: キャッシュの名前（バージョンを上げて新しい仕組みを適用させます）
+const CACHE_NAME = 'study-quest-cache-v3';
+
+// ★追加: アプリがオフラインで動くために「絶対に保存しておくべきファイル」のリスト
+// ※「index.html」の部分は、実際のあなたのHTMLファイル名に合わせてください。
+const urlsToCache = [
+  './',
+  './index.html', 
+  './manifest.json',
+  './SQ_logo.png',
+  './SQ_logo2.png',
+  './SQ_logo3.png',
+  './SQ_logo4.png',
+  './SQ_logo5.png',
+  './coin.png'
+];
 
 self.addEventListener('install', event => {
   console.log('SW: インストール');
+  // ★追加: インストールされた瞬間に、必要なファイルを強制的にダウンロードして保存する
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('必要なファイルを事前にキャッシュします');
+        return cache.addAll(urlsToCache);
+      })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
   console.log('SW: 有効化');
-  // ★追加: 古いキャッシュが残っていたら削除して常にクリーンにする
+  // 古いキャッシュが残っていたら削除して常にクリーンにする
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -29,21 +51,17 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('message', event => {
   if (!event.data) return;
-  
-  // ★変更: 'command' または 'type' のどちらかで命令を受け取れるようにする
   const command = event.data.command || event.data.type;
 
-  // --- ★追加: キャッシュを最新に切り替える命令を受け取った時の処理 ---
   if (command === 'SKIP_WAITING') {
     self.skipWaiting();
     return;
   }
 
-  // --- 1. 集中モードのタイマー開始 ---
+  // --- 通知タイマー処理 ---
   if (command === 'focusTimer_start') {
     const { timeLeft, title, body } = event.data;
     if (focusTimerTimeout) clearTimeout(focusTimerTimeout);
-    
     event.waitUntil(
       new Promise(resolve => {
         focusTimerTimeout = setTimeout(() => {
@@ -59,21 +77,14 @@ self.addEventListener('message', event => {
         }, timeLeft * 1000);
       })
     );
-  } 
-
-  // --- 2. 集中モードのタイマー停止 ---
-  else if (command === 'focusTimer_stop') {
+  } else if (command === 'focusTimer_stop') {
     if (focusTimerTimeout) {
       clearTimeout(focusTimerTimeout);
       focusTimerTimeout = null;
     }
-  } 
-
-  // --- 3. クエストのタイマー開始 ---
-  else if (command === 'questTimer_start') {
+  } else if (command === 'questTimer_start') {
     const { timeLeft, title, body } = event.data;
     if (questTimerTimeout) clearTimeout(questTimerTimeout);
-
     event.waitUntil(
       new Promise(resolve => {
         questTimerTimeout = setTimeout(() => {
@@ -89,20 +100,13 @@ self.addEventListener('message', event => {
         }, timeLeft * 1000);
       })
     );
-  }
-
-  // --- 4. クエストのタイマー停止 ---
-  else if (command === 'questTimer_stop') {
+  } else if (command === 'questTimer_stop') {
     if (questTimerTimeout) {
       clearTimeout(questTimerTimeout);
       questTimerTimeout = null;
     }
-  }
-
-  // --- 5. クエストの「即時」通知 ---
-  else if (command === 'showQuestNotification') {
+  } else if (command === 'showQuestNotification') {
     const { title, body } = event.data;
-    
     event.waitUntil(
       self.registration.showNotification(title, { 
         body: body,
@@ -114,24 +118,25 @@ self.addEventListener('message', event => {
   }
 });
 
-
 // =========================================================
-// ★変更: キャッシュ管理機能 (超高速起動 ＆ 裏で自動更新)
+// オフライン・キャッシュ管理機能
 // =========================================================
 self.addEventListener('fetch', event => {
-  // ① HTMLファイル（UI画面）は「Stale-While-Revalidate」
-  // ＝ キャッシュがあれば一瞬で画面を立ち上げ、裏で最新版をダウンロードして次回に備える
+  // ① HTMLファイル（UI画面）へのアクセスの場合
   if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
       caches.match(event.request).then(cachedResponse => {
-        // 裏でネットワークから最新版を取得してキャッシュを更新する
         const fetchPromise = fetch(event.request).then(networkResponse => {
+          // オンラインなら最新版を取得して保存
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, networkResponse.clone());
           });
           return networkResponse;
         }).catch(() => {
-          // 通信エラー時（オフライン時）は何もしない
+          // ★修正: オフライン時のエラー対応
+          // インターネット接続がない場合は、保存してあるキャッシュを返す。
+          // リクエストされたURLのキャッシュがない場合はルート('./')のHTMLを強制的に表示する。
+          return cachedResponse || caches.match('./index.html') || caches.match('./');
         });
 
         // キャッシュがあれば待たずにすぐ画面を出す。無ければネットワークの完了を待つ。
@@ -141,7 +146,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ② 画像やその他のファイルは「キャッシュ優先 (Cache First)」で通信量を節約
+  // ② 画像やその他のファイルは「キャッシュ優先 (Cache First)」
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request).then(fetchRes => {
@@ -151,7 +156,10 @@ self.addEventListener('fetch', event => {
           }
           return fetchRes;
         });
+      }).catch(() => {
+         // 通信エラー時（オフライン時で未キャッシュの画像を読み込もうとした場合など）は何もしない
+         console.log('オフラインのため取得スキップ:', event.request.url);
       });
-    }).catch(() => {})
+    })
   );
 });
