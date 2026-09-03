@@ -4541,6 +4541,38 @@ const controlScreenOrientation = async (mode) => {
                             isFeedbackExternalOpen = true; 
                             window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                         }));
+
+                        // ▼▼▼ 追加: キャッシュ削除ボタン ▼▼▼
+                        otherList.appendChild(createListItem('trash-2', 'キャッシュを削除', 'bg-red-500', () => {
+                            openGeneralConfirm(
+                                'キャッシュを削除しますか？',
+                                '画像や音声などの一時データを削除し、次回通信時に最新のものを再取得します。\n※LPやタスクなどのセーブデータは消えません。',
+                                'trash-2',
+                                '削除して再起動',
+                                'bg-red-500 hover:bg-red-600',
+                                async () => {
+                                    if ('caches' in window) {
+                                        try {
+                                            const cacheNames = await caches.keys();
+                                            await Promise.all(
+                                                cacheNames.map(name => caches.delete(name))
+                                            );
+                                            showToast('キャッシュを削除しました', 'success');
+                                            // 確実にキャッシュを消して再読み込みするためリロード
+                                            setTimeout(() => {
+                                                location.reload();
+                                            }, 1500);
+                                        } catch (e) {
+                                            console.error('キャッシュ削除エラー:', e);
+                                            showToast('削除中にエラーが発生しました', 'error');
+                                        }
+                                    } else {
+                                        showToast('お使いの環境では対応していません', 'error');
+                                    }
+                                }
+                            );
+                        }));
+                        // ▲▲▲ 追加ここまで ▲▲▲
                         
                         settingsPage.appendChild(otherList);
                     
@@ -9865,10 +9897,13 @@ const renderGamePreviews = (game) => {
         if (isVideo) {
             item.innerHTML = `<video src="${url}" autoplay controls playsinline muted class="w-full h-full object-cover pointer-events-auto bg-gray-900"></video>`;
         } else {
-            // object-coverではなく object-contain にすると全体が見えますが、
-            // 「同様のサイズ」とのご要望なのでデザインの一貫性を保つため object-cover にしています。
-            // 全体を表示したい場合はここを object-contain に変更してください。
-            item.innerHTML = `<img src="${url}" alt="preview" class="w-full h-full object-cover">`;
+            // ▼ 修正: プレビュー画像をローディング・エラー対応に変更
+            item.innerHTML = `
+                <div class="w-full h-full img-loading relative">
+                    <img src="${url}" alt="preview" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                         onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                         onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
+                </div>`;
         }
         container.appendChild(item);
     });
