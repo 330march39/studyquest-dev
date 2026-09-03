@@ -4595,44 +4595,53 @@ const controlScreenOrientation = async (mode) => {
                                         try {
                                             const cacheNames = await caches.keys();
                                             
-                                            if (navigator.onLine) {
-                                                // 【オンライン時】すべてのキャッシュを完全に削除してリロード
-                                                await Promise.all(
-                                                    cacheNames.map(name => caches.delete(name))
-                                                );
-                                                showToast('キャッシュを削除しました', 'success');
-                                                setTimeout(() => {
-                                                    location.reload();
-                                                }, 1500);
-                                            } else {
-                                                // 【オフライン時】スプラッシュでフリーズしないように、
-                                                // JS・HTML・フォントなどのシステムファイルは絶対に残し、
-                                                // 壁紙やBGMなどの「メディアファイル(画像/音声/動画)」だけを狙って削除する
-                                                for (const name of cacheNames) {
-                                                    const cache = await caches.open(name);
-                                                    const requests = await cache.keys();
-                                                    
-                                                    for (const req of requests) {
-                                                        const url = new URL(req.url);
-                                                        const pathname = url.pathname.toLowerCase();
-                                                        
-                                                        // 拡張子で画像・音声・動画ファイルかを判定
-                                                        const isMedia = pathname.match(/\.(png|jpe?g|gif|webp|mp4|webm|mp3|wav|m4a|aac)$/);
-                                                        
-                                                        // ただし、アプリの起動や見た目に最低限必須な画像は除外する
-                                                        const isEssentialMedia = [
-                                                            'sq_logo', 'coin', 'tutorial', 'yokogamen', 'banner'
-                                                        ].some(keyword => pathname.includes(keyword));
-                                                        
-                                                        // 必須でないメディアファイル(ユーザーが追加でDLした壁紙や音楽など)だけを削除
-                                                        if (isMedia && !isEssentialMedia) {
-                                                            await cache.delete(req);
-                                                        }
-                                                    }
-                                                }
-                                                // オフライン時はブラウザエラー画面を回避するためリロードしない
-                                                showToast('オフライン用のキャッシュ削除が完了しました', 'success');
-                                            }
+                                            // ▼▼▼ 修正: オフライン時のキャッシュ削除ロジック（ホワイトリスト方式） ▼▼▼
+if (navigator.onLine) {
+    // 【オンライン時】すべてのキャッシュを完全に削除してリロード
+    await Promise.all(
+        cacheNames.map(name => caches.delete(name))
+    );
+    showToast('キャッシュを削除しました', 'success');
+    setTimeout(() => {
+        location.reload();
+    }, 1500);
+} else {
+    // 【オフライン時】アプリの起動や基礎的な動作に必須なファイル（ホワイトリスト）を定義し、
+    // 「それ以外」をすべて削除する仕組みに変更
+    const essentialKeywords = [
+        'index.html', 'manifest.json', 'sw.js',
+        'sq_logo', 'coin', 'tutorial', 'yokogamen', 'banner', 
+        '.woff2', // フォントファイル
+        'tailwindcss', 'lucide', 'chart.js', 'sortable', 'peerjs', // 外部ライブラリ
+        'fonts.googleapis.com', 'fonts.gstatic.com' // Google Fonts
+    ];
+
+    for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const requests = await cache.keys();
+        
+        for (const req of requests) {
+            const urlObj = new URL(req.url);
+            const urlStr = req.url.toLowerCase();
+            
+            // ルートURL ( ドメイン直下 ) はアプリ本体なので残す
+            if (urlObj.pathname === '/' || urlObj.pathname === '/index.html') {
+                continue;
+            }
+            
+            // 必須キーワードのいずれかがURLに含まれているか判定
+            const isEssential = essentialKeywords.some(keyword => urlStr.includes(keyword));
+            
+            // 基礎（必須ファイル）以外は、画像・BGM・ゲーム関係なくすべて削除する
+            if (!isEssential) {
+                await cache.delete(req);
+            }
+        }
+    }
+    // オフライン時はブラウザエラー画面を回避するためリロードしない
+    showToast('オフライン用のキャッシュ削除が完了しました', 'success');
+}
+// ▲▲▲ 修正ここまで ▲▲▲
                                         } catch (e) {
                                             console.error('キャッシュ削除エラー:', e);
                                             showToast('削除中にエラーが発生しました', 'error');
