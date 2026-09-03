@@ -169,6 +169,8 @@ self.addEventListener('fetch', event => {
       }).catch(() => {
          // 通信エラー時（オフライン時で未キャッシュのメディアを読み込もうとした場合など）
          console.log('オフラインのため取得スキップ:', event.request.url);
+        // ★ 追加: 空のレスポンス（503エラー）を返すことで TypeError を防ぐ
+         return new Response(null, { status: 503, statusText: 'Offline' });
       });
     })
   );
