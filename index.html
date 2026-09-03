@@ -8635,6 +8635,7 @@ const renderStatusPageContent = () => {
         } else if (type === 'background') {
             containerClass = 'w-full aspect-[9/16] rounded-3xl';
             if (item.url) {
+                // ▼ 背景画像をローディング・エラー対応のimgタグに変更
                 iconHTML = `
                 <div class="w-full h-full img-loading relative rounded-3xl overflow-hidden">
                     <img src="${item.url}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
@@ -8649,6 +8650,7 @@ const renderStatusPageContent = () => {
         } else if (type === 'game') {
             let imgUrl = item.thumbnail || (item.previews && item.previews.length > 0 ? item.previews[0] : null);
             if (imgUrl) {
+                // ▼ ゲーム画像をローディング・エラー対応のimgタグに変更
                 iconHTML = `
                 <div class="w-full h-full img-loading relative rounded-3xl overflow-hidden">
                     <img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
@@ -8866,16 +8868,30 @@ const openItemDetailScreen = (id, type) => {
         iconContainer.className = "w-32 h-32 rounded-full shadow-lg border-4 border-white dark:border-gray-700 mx-auto";
     } else if (type === 'background') {
         iconContainer.className = "w-32 h-56 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mx-auto";
-        const bgStyle = itemData.url ? `background-image: url(${itemData.url}); background-size: cover; background-position: center;` : 'background-color: #6b7280;';
-        iconContainer.innerHTML = `<div class="w-full h-full" style="${bgStyle}"></div>`;
+        if (itemData.url) {
+            // ▼ 背景詳細をローディング・エラー対応に変更
+            iconContainer.innerHTML = `
+                <div class="w-full h-full img-loading relative">
+                    <img src="${itemData.url}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                         onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                         onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
+                </div>`;
+        } else {
+            iconContainer.innerHTML = `<div class="w-full h-full bg-gray-500"></div>`;
+        }
     } else {
         // ゲーム または 音楽
         iconContainer.style.backgroundColor = ''; 
         iconContainer.className = "w-32 h-32 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 relative mx-auto";
         
-        // ★修正: ゲームかつサムネイルがある場合は画像を表示
+        // ▼ ゲーム詳細をローディング・エラー対応に変更
         if (type === 'game' && itemData.thumbnail) {
-            iconContainer.innerHTML = `<img src="${itemData.thumbnail}" alt="${itemData.name}" class="w-full h-full object-cover">`;
+            iconContainer.innerHTML = `
+                <div class="w-full h-full img-loading relative">
+                    <img src="${itemData.thumbnail}" alt="${itemData.name}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                         onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                         onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
+                </div>`;
         } else {
             // 従来通りのアイコン表示
             const iconName = itemData.icon || (type === 'music' ? 'music' : 'gamepad-2');
@@ -8907,14 +8923,23 @@ const openItemDetailScreen = (id, type) => {
                                 previewAudio.src = itemData.url;
                                 previewAudio.volume = 0.5;
                                 
-                                // ★修正: 正しいアイテム名をセット
                                 updateMediaSession(itemData.name);
                                 
-                                previewAudio.play();
-                                playIcon.setAttribute('data-lucide', 'square');
-                                playIcon.classList.remove('ml-0.5');
-                                lucide.createIcons();
-                                previewTimeout = setTimeout(stopMusicPreview, 30000);
+                                // ▼ BGM試聴時のエラー対応（オフライン時にアイコンをWi-Fiオフに変更）
+                                previewAudio.play().then(() => {
+                                    playIcon.setAttribute('data-lucide', 'square');
+                                    playIcon.className = "w-6 h-6 text-pink-500 fill-current";
+                                    lucide.createIcons();
+                                    previewTimeout = setTimeout(stopMusicPreview, 30000);
+                                }).catch(e => {
+                                    console.error("試聴エラー", e);
+                                    if (!navigator.onLine) {
+                                        showToast('オフラインのため試聴できません', 'error');
+                                        playIcon.setAttribute('data-lucide', 'wifi-off');
+                                        playIcon.className = "w-6 h-6 text-gray-400";
+                                        lucide.createIcons();
+                                    }
+                                });
                             }
                         };
                     }
