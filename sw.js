@@ -122,20 +122,26 @@ self.addEventListener('message', event => {
 // オフライン・キャッシュ管理機能
 // =========================================================
 self.addEventListener('fetch', event => {
+  // ブラウザの拡張機能など、http/https以外のリクエストは処理しない
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
   // ① HTMLファイル（UI画面）へのアクセスの場合
   if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
       caches.match(event.request).then(cachedResponse => {
         const fetchPromise = fetch(event.request).then(networkResponse => {
-          // オンラインなら最新版を取得して保存
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, networkResponse.clone());
-          });
+          // ★修正: 正常な通信(ステータス200)の時のみキャッシュを更新し、先にクローンを作る
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+          }
           return networkResponse;
         }).catch(() => {
-          // ★修正: オフライン時のエラー対応
-          // インターネット接続がない場合は、保存してあるキャッシュを返す。
-          // リクエストされたURLのキャッシュがない場合はルート('./')のHTMLを強制的に表示する。
+          // オフライン時のエラー対応
           return cachedResponse || caches.match('./index.html') || caches.match('./');
         });
 
@@ -149,15 +155,19 @@ self.addEventListener('fetch', event => {
   // ② 画像やその他のファイルは「キャッシュ優先 (Cache First)」
   event.respondWith(
     caches.match(event.request).then(response => {
+      // キャッシュがあればそれを返し、無ければネットワークへ取りにいく
       return response || fetch(event.request).then(fetchRes => {
-        return caches.open(CACHE_NAME).then(cache => {
-          if (event.request.url.startsWith('http')) {
-            cache.put(event.request, fetchRes.clone());
-          }
-          return fetchRes;
-        });
+        // ★修正: 正常な通信(ステータス200)の時のみキャッシュに保存する。
+        // 動画や音声の分割ダウンロード(206)などはエラーになるためキャッシュしない。
+        if (fetchRes && fetchRes.status === 200) {
+          const responseToCache = fetchRes.clone(); // ★使用される前にクローンを作る
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return fetchRes;
       }).catch(() => {
-         // 通信エラー時（オフライン時で未キャッシュの画像を読み込もうとした場合など）は何もしない
+         // 通信エラー時（オフライン時で未キャッシュのメディアを読み込もうとした場合など）
          console.log('オフラインのため取得スキップ:', event.request.url);
       });
     })
