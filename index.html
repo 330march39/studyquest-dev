@@ -3461,8 +3461,8 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     lastLogin: null,
                     breakIcons: [
                         { id: 'x', name: 'X', icon: 'twitter', url: 'https://x.com', openMode: 'external', visible: true, thumbnail: 'x.png' },
-                        { id: 'instagram', name: 'Instagram', icon: 'instagram', url: 'https://www.instagram.com/', openMode: 'external', visible: true, thumbnail: 'Instagram.png' },
-                        { id: 'youtube', name: 'YouTube', icon: 'youtube', url: 'https://www.youtube.com/', openMode: 'external', visible: true, thumbnail: 'youtube.png' },
+                        { id: 'instagram', name: 'Instagram', icon: 'camera', url: 'https://www.instagram.com/', openMode: 'external', visible: true, thumbnail: 'Instagram.png' },
+                        { id: 'youtube', name: 'YouTube', icon: 'monitor-play', url: 'https://www.youtube.com/', openMode: 'external', visible: true, thumbnail: 'youtube.png' },
                     ],
                     
                 };
@@ -6873,16 +6873,17 @@ function syncGamesToBreakIcons() {
     // 2. SNSアイコン（X, Instagram, YouTube）の画像情報も強制更新
     // これにより、localStorageに古いデータが残っていても画像が反映されます
     const staticIcons = [
-        { id: 'x', thumbnail: 'x.png' },
-        { id: 'instagram', thumbnail: 'Instagram.png' },
-        { id: 'youtube', thumbnail: 'youtube.png' }
+        { id: 'x', icon: 'twitter', thumbnail: 'x.png' },
+        { id: 'instagram', icon: 'camera', thumbnail: 'Instagram.png' },
+        { id: 'youtube', icon: 'monitor-play', thumbnail: 'youtube.png' }
     ];
 
     staticIcons.forEach(staticItem => {
         const target = state.breakIcons.find(i => i.id === staticItem.id);
         if (target) {
-            // 強制的に画像パスを設定
+            // 強制的に画像パスとアイコン名を最新のものに更新
             target.thumbnail = staticItem.thumbnail;
+            target.icon = staticItem.icon;
         }
     });
 
@@ -8888,6 +8889,11 @@ const renderStatusPageContent = () => {
 
             // 1. クラスのインスタンス化 (必ず関数の前に書く)
             const itemDetailPage = new SubPage('item-detail-screen', {
+                // ▼▼▼ 追加: 画面を開いた時にスクロール位置を一番上にリセット ▼▼▼
+                onOpen: () => {
+                    const scrollArea = document.querySelector('#item-detail-screen .overflow-y-auto');
+                    if (scrollArea) scrollArea.scrollTop = 0;
+                },
                 onClose: () => {
                     stopMusicPreview(); // 閉じるときに音楽を止める
                     localStorage.setItem('SQ_IsVideoPreviewing', 'false');
