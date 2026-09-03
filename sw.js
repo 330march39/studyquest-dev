@@ -140,9 +140,10 @@ self.addEventListener('fetch', event => {
             });
           }
           return networkResponse;
-        }).catch(() => {
-          // オフライン時のエラー対応
-          return cachedResponse || caches.match('./index.html') || caches.match('./');
+        }).catch(async () => {
+          // オフライン時のエラー対応：キャッシュがあれば返し、無ければ空のエラーデータを返す
+          const fallback = await caches.match('./index.html') || await caches.match('./');
+          return cachedResponse || fallback || new Response('Offline', { status: 503, statusText: 'Offline' });
         });
 
         // キャッシュがあれば待たずにすぐ画面を出す。無ければネットワークの完了を待つ。
