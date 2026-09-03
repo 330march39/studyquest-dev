@@ -8892,8 +8892,10 @@ const renderStatusPageContent = () => {
             const itemDetailPage = new SubPage('item-detail-screen', {
                 // ▼▼▼ 追加: 画面を開いた時にスクロール位置を一番上にリセット ▼▼▼
                 onOpen: () => {
-                    const scrollArea = document.querySelector('#item-detail-screen .overflow-y-auto');
-                    if (scrollArea) scrollArea.scrollTop = 0;
+                    setTimeout(() => {
+                        const scrollArea = document.querySelector('#item-detail-screen .overflow-y-auto');
+                        if (scrollArea) scrollArea.scrollTop = 0;
+                    }, 50);
                 },
                 onClose: () => {
                     stopMusicPreview(); // 閉じるときに音楽を止める
