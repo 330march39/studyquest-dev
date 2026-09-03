@@ -4542,8 +4542,8 @@ const controlScreenOrientation = async (mode) => {
                             window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                         }));
 
-                        // ▼▼▼ 追加: キャッシュ削除ボタン ▼▼▼
-                        otherList.appendChild(createListItem('trash-2', 'キャッシュを削除', 'bg-red-500', () => {
+                        // ▼▼▼ 修正: キャッシュ削除ボタン（オフライン・オンラインで挙動を分岐） ▼▼▼
+                        otherList.appendChild(createListItem('trash-2', 'キャッシュを削除（画像の再読み込み等）', 'bg-red-500', () => {
                             openGeneralConfirm(
                                 'キャッシュを削除しますか？',
                                 '画像や音声などの一時データを削除し、次回通信時に最新のものを再取得します。\n※LPやタスクなどのセーブデータは消えません。',
@@ -4554,9 +4554,42 @@ const controlScreenOrientation = async (mode) => {
                                     if ('caches' in window) {
                                         try {
                                             const cacheNames = await caches.keys();
-                                            await Promise.all(
-                                                cacheNames.map(name => caches.delete(name))
-                                            );
+                                            
+                                            if (navigator.onLine) {
+                                                // 【オンライン時】すべてのキャッシュを完全に削除
+                                                await Promise.all(
+                                                    cacheNames.map(name => caches.delete(name))
+                                                );
+                                            } else {
+                                                // 【オフライン時】アプリが起動できなくならないように、基本の枠組みファイルは残す
+                                                const essentialFiles = [
+                                                    '/', 'index.html', 'manifest.json',
+                                                    'SQ_logo.png', 'SQ_logo2.png', 'SQ_logo3.png', 
+                                                    'SQ_logo4.png', 'SQ_logo5.png', 'coin.png'
+                                                ];
+                                                
+                                                for (const name of cacheNames) {
+                                                    const cache = await caches.open(name);
+                                                    const requests = await cache.keys();
+                                                    
+                                                    for (const req of requests) {
+                                                        const url = new URL(req.url);
+                                                        // そのキャッシュが「絶対に残すべき基本ファイル」かどうかを判定
+                                                        const isEssential = essentialFiles.some(file => {
+                                                            if (file === '/' || file === 'index.html') {
+                                                                return url.pathname === '/' || url.pathname.endsWith('/index.html');
+                                                            }
+                                                            return url.pathname.endsWith(file);
+                                                        });
+                                                        
+                                                        // 基本ファイル"以外"の画像や音楽データだけを削除する
+                                                        if (!isEssential) {
+                                                            await cache.delete(req);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            
                                             showToast('キャッシュを削除しました', 'success');
                                             // 確実にキャッシュを消して再読み込みするためリロード
                                             setTimeout(() => {
@@ -4572,7 +4605,7 @@ const controlScreenOrientation = async (mode) => {
                                 }
                             );
                         }));
-                        // ▲▲▲ 追加ここまで ▲▲▲
+                        // ▲▲▲ 修正ここまで ▲▲▲
                         
                         settingsPage.appendChild(otherList);
                     
