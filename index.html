@@ -1434,6 +1434,30 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
     /* 【おすすめ】文字の周りにうっすら白いフチ(影)をつけると、柄のある壁紙でも圧倒的に読みやすくなります */
     text-shadow: 0px 1px 3px rgba(255, 255, 255, 0.9), 0px 0px 2px rgba(255, 255, 255, 1);
 }
+        /* ▼▼▼ 追加: 画像のローディング・エラー時のスタイル ▼▼▼ */
+        .img-loading {
+            background-color: #e5e7eb !important;
+            background-image: none !important;
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        html.dark .img-loading {
+            background-color: #374151 !important;
+        }
+        
+        /* 画像読み込み失敗時（オフライン時など）のプレースホルダー */
+        .img-error {
+            background-color: #f3f4f6 !important;
+            /* 画像アイコン風のSVGを表示 */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%239ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline><line x1="3" y1="3" x2="21" y2="21"></line></svg>') !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            animation: none !important; /* 点滅をストップ */
+        }
+        html.dark .img-error {
+            background-color: #1f2937 !important;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%234b5563" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline><line x1="3" y1="3" x2="21" y2="21"></line></svg>') !important;
+        }
+        /* ▲▲▲ 追加ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -3604,7 +3628,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             
                 // --- 3. 背景画像の適用ロジック ---
                 if (isGlobal && hasImage) {
-                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                    setBackgroundImageSafe(appContainer, activeBg.url);
                 } else {
                     appContainer.style.backgroundImage = 'none';
                 }
@@ -3630,6 +3654,23 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     statusLp.textContent = state.profile.lp;
                 }
             };
+            
+            // ▼▼▼ 追加: 背景画像を安全に読み込む（エラー時に透明にする）関数 ▼▼▼
+            const setBackgroundImageSafe = (el, url) => {
+                if (!url) {
+                    el.style.backgroundImage = 'none';
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => {
+                    el.style.backgroundImage = `url(${url})`;
+                };
+                img.onerror = () => {
+                    el.style.backgroundImage = 'none'; // 読み込み失敗時は背景を表示しない
+                };
+                img.src = url;
+            };
+            // ▲▲▲ 追加ここまで ▲▲▲
 
             // カレンダー表示用の現在年月
             let currentCalendarDate = new Date();
@@ -3876,10 +3917,12 @@ const controlScreenOrientation = async (mode) => {
                             const count = originalBanners.length;
 
                             // 1. 画像生成 (5セット作成)
-                            // ▼▼▼ 修正: data-link属性を追加し、カーソルを指マークにする ▼▼▼
+                            // ▼▼▼ 修正: ローディング・エラー処理付きバナー ▼▼▼
                             const createItemsHTML = (items) => items.map(b => `
-                                <div class="banner-item cursor-pointer" data-link="${b.link || ''}">
-                                    <img src="${b.url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
+                                <div class="banner-item cursor-pointer img-loading" data-link="${b.link || ''}">
+                                    <img src="${b.url}" alt="banner" class="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                                        onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');" 
+                                        onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
                                 </div>
                             `).join('');
                             // ▲▲▲ 修正ここまで ▲▲▲
@@ -4968,7 +5011,6 @@ const showItemPopup = (item, type) => {
                 return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
             };
 
-            // ▼▼▼ 【追加】BGM制御関数群 ▼▼▼
             const playBGM = () => {
                 if (!state.settings.bgmEnabled || state.settings.playlist.length === 0) return;
                 
@@ -4979,11 +5021,14 @@ const showItemPopup = (item, type) => {
                         if (!bgmAudio.src || !bgmAudio.src.includes(track.url)) {
                             bgmAudio.src = track.url;
                         }
-                        
-                        // ★追加: ロック画面等の表示を更新
                         updateMediaSession(track.name);
-
-                        bgmAudio.play().catch(e => console.log('再生エラー(ユーザー操作が必要かも):', e));
+                        // ▼ 修正: オフライン時のエラー処理
+                        bgmAudio.play().catch(e => {
+                            console.log('再生エラー:', e);
+                            if (!navigator.onLine) {
+                                showToast('オフラインのためBGMを再生できません', 'error');
+                            }
+                        });
                     }
                 }
             };
@@ -5675,7 +5720,7 @@ const showItemPopup = (item, type) => {
                     const isQuestScreen = el.id === 'quest-active-screen';
             
                     if ((!isGlobal && hasImage) || (isQuestScreen && hasImage)) {
-                        el.style.backgroundImage = `url(${activeBg.url})`;
+                        setBackgroundImageSafe(el, activeBg.url);
                     } else {
                         // 全体適用がONの場合は親(body)の背景が見えるので透明にする、または画像なし
                         el.style.backgroundImage = 'none';
@@ -6667,8 +6712,12 @@ function renderBreakIcons() {
         } else {
             // ★通常モード: 画像
             if (icon.thumbnail) {
-                // 背景色クラスを bg-transparent にしてボックスを消す
-                visualHTML = `<img src="${icon.thumbnail}" alt="${icon.name}" class="break-app-icon bg-transparent object-cover">`;
+                visualHTML = `
+                    <div class="break-app-icon img-loading overflow-hidden relative bg-transparent">
+                        <img src="${icon.thumbnail}" alt="${icon.name}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                            onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                            onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
+                    </div>`;
             } else {
                 // 画像がない場合
                 visualHTML = `
@@ -6848,8 +6897,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 // 通常モード（画像）
                 if (icon.thumbnail) {
                     visualHTML = `
-                        <div class="w-[72px] h-[72px] rounded-2xl shadow-md overflow-hidden bg-transparent transition-transform active:scale-95 relative flex items-center justify-center">
-                            <img src="${icon.thumbnail}" alt="${icon.name}" class="w-full h-full object-cover">
+                        <div class="w-[72px] h-[72px] rounded-2xl shadow-md overflow-hidden bg-transparent transition-transform active:scale-95 relative flex items-center justify-center img-loading">
+                            <img src="${icon.thumbnail}" alt="${icon.name}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                                onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                                onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
                         </div>
                     `;
                 } else {
@@ -8583,16 +8634,27 @@ const renderStatusPageContent = () => {
 
         } else if (type === 'background') {
             containerClass = 'w-full aspect-[9/16] rounded-3xl';
-            const style = item.url ? `background-image: url(${item.url})` : 'background-color: #6b7280;';
-            iconHTML = `<div class="w-full h-full bg-cover bg-center" style="${style}"></div>`;
+            if (item.url) {
+                iconHTML = `
+                <div class="w-full h-full img-loading relative rounded-3xl overflow-hidden">
+                    <img src="${item.url}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                         onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                         onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
+                </div>`;
+            } else {
+                iconHTML = `<div class="w-full h-full bg-gray-500 rounded-3xl"></div>`;
+            }
             if (isUnlocked) statusBadge = checkMarkBadge;
 
         } else if (type === 'game') {
-            if (item.thumbnail) {
-                iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${item.thumbnail}')"></div>`;
-            } else if (item.previews && item.previews.length > 0) {
-                const previewUrl = item.previews[0];
-                iconHTML = `<div class="w-full h-full bg-cover bg-center" style="background-image: url('${previewUrl}')"></div>`;
+            let imgUrl = item.thumbnail || (item.previews && item.previews.length > 0 ? item.previews[0] : null);
+            if (imgUrl) {
+                iconHTML = `
+                <div class="w-full h-full img-loading relative rounded-3xl overflow-hidden">
+                    <img src="${imgUrl}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                         onload="this.classList.remove('opacity-0'); this.parentElement.classList.remove('img-loading');"
+                         onerror="this.onerror=null; this.parentElement.classList.remove('img-loading'); this.parentElement.classList.add('img-error'); this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.classList.remove('opacity-0');">
+                </div>`;
             } else {
                 iconHTML = `<i data-lucide="${item.icon || 'gamepad-2'}" class="w-10 h-10 text-indigo-500"></i>`;
             }
@@ -9653,20 +9715,24 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
                 updateMediaSession(titleName);
                 
                 previewAudio.play().then(() => {
-                    // ボタンのアイコンを「停止(square)」に変更
                     if (btnElement) {
-                        // 点滅(playing-icon)は削除。fill-currentでテーマカラー塗りつぶし
                         btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 primary-text fill-current"></i>';
                         lucide.createIcons({ root: btnElement });
                     }
-                    
-                    // 30秒後に自動停止
                     if (previewTimeout) clearTimeout(previewTimeout);
                     previewTimeout = setTimeout(stopMusicPreview, 30000); 
 
                 }).catch(e => {
                     console.error("試聴エラー", e);
                     currentPreviewId = null;
+                    // ▼ 修正: オフライン時にアイコンをWi-Fiオフに変え、通知を出す
+                    if (!navigator.onLine) {
+                        showToast('オフラインのため試聴できません', 'error');
+                        if (btnElement) {
+                            btnElement.innerHTML = '<i data-lucide="wifi-off" class="w-5 h-5 text-gray-400"></i>';
+                            lucide.createIcons({ root: btnElement });
+                        }
+                    }
                 });
             };
             
