@@ -7642,6 +7642,11 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             const transferStartBtn = document.getElementById('btn-transfer-start');
             if (transferStartBtn) {
                 transferStartBtn.addEventListener('click', () => {
+                    // ▼ 追加: オフライン時は開かせない
+                    if (!navigator.onLine) {
+                        showToast('オフラインのため使用できません', 'error');
+                        return;
+                    }
                     openMigrationModal(true);
                 });
             }
@@ -7771,7 +7776,11 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             // ▼▼▼ 修正: プロフィール画面を開いたままモーダルを重ねる ▼▼▼
             if (openMigrationBtn) {
                 openMigrationBtn.addEventListener('click', () => {
-                    // profilePage.close(); // 削除またはコメントアウト
+                    // ▼ 追加: オフライン時は開かせない
+                    if (!navigator.onLine) {
+                        showToast('オフラインのため使用できません', 'error');
+                        return;
+                    }
                     openMigrationModal();   // 即座に開く
                 });
             }
@@ -8895,6 +8904,9 @@ const renderStatusPageContent = () => {
                     setTimeout(() => {
                         const scrollArea = document.querySelector('#item-detail-screen .overflow-y-auto');
                         if (scrollArea) scrollArea.scrollTop = 0;
+                        // ▼▼▼ 追加: プレビュー画像の横スクロール位置もリセットする ▼▼▼
+                        const carousel = document.getElementById('detail-carousel');
+                        if (carousel) carousel.scrollLeft = 0;
                     }, 10);
                 },
                 onClose: () => {
