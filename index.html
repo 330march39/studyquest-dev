@@ -8229,6 +8229,42 @@ const checkQuestResume = () => {
             document.addEventListener('visibilitychange', () => {
                 // アプリが表示状態になった時
                 if (document.visibilityState === 'visible') {
+
+                    // ▼▼▼ 追加: 休憩時間の「サボり超過」チェックとペナルティ ▼▼▼
+                    // クエスト実行中で、状態が保存されているか確認
+                    if (quest.active && quest.currentIndex >= 0 && state.savedQuest) {
+                        const currentStep = quest.plan[quest.currentIndex];
+                        
+                        // 休憩ステップ中だった場合のみ判定
+                        if (currentStep && currentStep.type === 'break') {
+                            const now = Date.now();
+                            // 休憩開始からの経過時間
+                            const elapsed = Math.floor((now - state.savedQuest.startTime) / 1000);
+                            // 予定時間をどれくらい過ぎたか（超過秒数）
+                            const overtime = elapsed - currentStep.duration;
+                            
+                            // 1分(60秒)以上オーバーして戻ってきた場合、ペナルティ
+                            if (overtime > 60) {
+                                const overMinutes = Math.floor(overtime / 60);
+                                const penaltyLp = overMinutes * 100; // 1分オーバーにつき100LP没収（厳しめにする）
+                                
+                                state.profile.lp = Math.max(0, state.profile.lp - penaltyLp); // 0未満にはしない
+                                updateLpDisplay();
+                                saveState();
+                                
+                                // ペナルティ警告モーダルを表示
+                                openGeneralConfirm(
+                                    '休憩時間をオーバーしました',
+                                    `予定時間を ${overMinutes} 分過ぎています。\nペナルティとして ${penaltyLp} LP が没収されました。`,
+                                    'alert-triangle',
+                                    '確認',
+                                    'bg-red-500 hover:bg-red-600 text-white',
+                                    () => {}, // 閉じるだけ
+                                    null // キャンセルボタンなし
+                                );
+                            }
+                        }
+                    }
                     
                     // --- 既存のクイズ復帰処理 ---
                     if (isQuizExternalOpen && currentQuizId) {
