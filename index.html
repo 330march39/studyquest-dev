@@ -8191,42 +8191,43 @@ const checkQuestResume = () => {
                 const remaining = currentStep.duration - elapsedSinceStart;
 
                 if (remaining <= 0) {
-                    // 裏で終わっていた場合
-                    // ▼▼▼ 追加: 休憩中に強制終了して時間が過ぎていた場合のペナルティ ▼▼▼
+                    // ▼▼▼ 追加: アプリが落ちている間に時間が過ぎていた場合のペナルティ ▼▼▼
+                    let isPenalty = false;
                     if (currentStep.type === 'break') {
                         const overtimeSeconds = Math.abs(remaining);
-                        if (overtimeSeconds > 60) {
+                        // 1分以上放置されていたら
+                        if (overtimeSeconds >= 60) {
                             const overMinutes = Math.floor(overtimeSeconds / 60);
                             const penaltyLp = overMinutes * 100;
-                            
                             state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
                             updateLpDisplay();
                             saveState();
-                            
+                            isPenalty = true;
+
                             openGeneralConfirm(
                                 '休憩時間をオーバーしました',
-                                `アプリを閉じている間に予定時間を ${overMinutes} 分過ぎました。\nペナルティとして ${penaltyLp} LP が没収されました。`,
+                                `アプリを閉じている間に、休憩予定時間を ${overMinutes} 分過ぎました。\nペナルティとして ${penaltyLp} LP が没収されました。`,
                                 'alert-triangle',
                                 '確認して次へ',
                                 'bg-red-500 hover:bg-red-600 text-white',
-                                () => { runNextQuestStep(); }, // ダイアログを閉じて次へ
+                                () => { runNextQuestStep(); },
                                 null
                             );
-                            return; // ★ここで処理を止める（コールバックで次へ行くため）
                         }
                     }
-                    showToast('閉じている間にこのステップは終了しました。');
-                    // ログ記録などは省略して、強制的に次へ進めるか、完了扱いにする
-                    // ここではシンプルに「完了」として次へ
-                    if (currentStep.type === 'section') {
-                        // ログだけ記録しておく
-                        recordSession(currentStep.text + '(中断)', currentStep.duration);
-                        state.focus.totalTime += currentStep.duration;
-                        addLP(Math.floor(currentStep.duration / 60), 'クエストセクション');
-                        saveState();
+
+                    // ペナルティが発生しなかった場合のみ、通常のスキップ処理を行う
+                    if (!isPenalty) {
+                        showToast('閉じている間にこのステップは終了しました。');
+                        if (currentStep.type === 'section') {
+                            recordSession(currentStep.text + '(中断)', currentStep.duration);
+                            state.focus.totalTime += currentStep.duration;
+                            addLP(Math.floor(currentStep.duration / 60), 'クエストセクション');
+                            saveState();
+                        }
+                        runNextQuestStep();
                     }
-                    // 次へ
-                    runNextQuestStep();
+                    // ▲▲▲ 追加ここまで ▲▲▲
                 } else {
                     // まだ続いている場合 -> そのステップを途中から再開
                     // executeQuestStepを呼ぶとタイマーがリセットされるので、
