@@ -2278,6 +2278,28 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
     </div>
 
     <!-- ===== モーダル ===== -->
+
+    <div id="lp-history-screen" class="screen-layer flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-lp-history-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">LPの履歴</h2>
+            <div class="flex-1"></div>
+        </header>
+
+        <div class="flex-grow overflow-y-auto pb-safe">
+            <div id="lp-history-list" class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700 border-b border-gray-100 dark:border-gray-700 shadow-sm">
+                <!-- 履歴がここに入る -->
+            </div>
+        </div>
+    </div>
+    
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
     <div id="assessment-modal" class="hidden fixed inset-0 bg-black/70 z-[210] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
     <div id="assessment-content" class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center transform scale-0 transition-transform duration-300 border border-gray-100 dark:border-gray-700">
@@ -2396,18 +2418,22 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             <div class="flex-1"></div>
         </header>
 
-        <div class="relative p-6 text-center flex-shrink-0 overflow-hidden">
+        <div id="status-lp-banner" class="relative p-6 text-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-95 transition-opacity active:scale-[0.98]">
             <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 animate-gradient-xy"></div>
             <div class="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
             
-            <div class="relative z-10 text-white">
+            <div class="relative z-10 text-white flex flex-col items-center justify-center">
                 <p class="text-xs font-bold text-yellow-100 uppercase tracking-widest opacity-90 mb-2">Learning Points</p>
                 
                 <div class="flex items-center justify-center space-x-3 mb-1">
-                        <img src="coin.png" alt="Coin" class="w-12 h-12 object-contain drop-shadow-md">
+                    <img src="coin.png" alt="Coin" class="w-12 h-12 object-contain drop-shadow-md">
                     <p class="text-5xl font-black tracking-tighter drop-shadow-sm text-white" id="status-lp-display">0</p>
                 </div>
-                <p class="text-xs font-bold opacity-80 mt-2 text-white">学習してLPを貯め、アイテムと交換しよう</p>
+                
+                <div class="flex items-center justify-center mt-2 opacity-90 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20">
+                    <span class="text-xs font-bold text-white mr-1">履歴を確認</span>
+                    <i data-lucide="chevron-right" class="w-3 h-3 text-white"></i>
+                </div>
             </div>
         </div>
 
@@ -3427,6 +3453,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     },
                     profile: { 
                         lp: 0, 
+                        lpHistory: [],
                         unlockedThemes: ['default'], 
                         activeTheme: 'default',
                         unlockedBackgrounds: ['default'],
@@ -4904,12 +4931,41 @@ const showToast = (message, type = 'normal') => {
         toast.classList.add('translate-y-[-150%]', 'opacity-0', 'scale-x-50');
     }, 3000);
 };
+            // ▼▼▼ 追加: 履歴を記録するヘルパー関数 ▼▼▼
+            const addLpHistory = (type, amount, reason) => {
+                if (!state.profile.lpHistory) state.profile.lpHistory = [];
+                const now = new Date();
+                
+                // 日付を「YYYY/MM/DD HH:MM」形式にする
+                const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                
+                state.profile.lpHistory.unshift({ // 配列の先頭（一番上）に追加
+                    id: 'lph_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                    type: type, // 'earn'(獲得), 'spend'(使用), 'penalty'(没収)
+                    amount: amount,
+                    reason: reason,
+                    dateStr: dateStr
+                });
+                
+                // データが重くならないよう最新100件だけ保存する
+                if (state.profile.lpHistory.length > 100) {
+                    state.profile.lpHistory = state.profile.lpHistory.slice(0, 100);
+                }
+            };
+            // ▲▲▲ 追加ここまで ▲▲▲
+
+            // 既存の addLP 関数の中に履歴記録を組み込む
             const addLP = (amount, reason, show = true) => {
+                if (amount <= 0) return; // ★追加: 0以下の場合は何もしない
+                
                 state.profile.lp += amount;
+                
+                // ★追加: 獲得の履歴を残す
+                addLpHistory('earn', amount, reason);
+
                 updateLpDisplay();
                 saveState();
 
-                // 修正点: amount が 1以上 かつ show が true の時だけポップアップを出す
                 if(show && amount > 0) {
                     showLpPopup(amount, reason);
                 }
@@ -6525,6 +6581,9 @@ const showItemPopup = (item, type) => {
                     if (step.type === 'section' && overMinutes >= 1) {
                         const penaltyLp = overMinutes * 100;
                         state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
+                        // ▼▼▼ 追加: 没収の履歴を残す ▼▼▼
+                        addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ');
+                        
                         updateLpDisplay();
                         saveState();
 
@@ -7818,6 +7877,90 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             }
 
             // 2. ステータス画面
+
+            // ▼▼▼ 新規追加: LP履歴画面のサブページと描画ロジック ▼▼▼
+            const renderLpHistory = () => {
+                const container = $('#lp-history-list');
+                if (!container) return;
+
+                const history = state.profile.lpHistory || [];
+
+                // 履歴が空の場合
+                if (history.length === 0) {
+                    container.innerHTML = `
+                        <div class="py-20 flex flex-col items-center justify-center text-gray-400">
+                            <i data-lucide="file-clock" class="w-12 h-12 mb-4 opacity-50"></i>
+                            <p class="font-bold text-sm">履歴がありません</p>
+                        </div>
+                    `;
+                    lucide.createIcons({ root: container });
+                    return;
+                }
+
+                // 履歴リストを生成（PayPay風）
+                container.innerHTML = history.map(item => {
+                    let icon, iconBg, iconColor, amountText, amountColor, sign;
+
+                    if (item.type === 'earn') {
+                        icon = 'coins'; // 獲得
+                        iconBg = 'bg-yellow-100 dark:bg-yellow-900/30';
+                        iconColor = 'text-yellow-600 dark:text-yellow-400';
+                        sign = '+';
+                        amountColor = 'text-red-500 font-bold'; // 獲得は目立つ赤
+                    } else if (item.type === 'spend') {
+                        icon = 'shopping-cart'; // 使用
+                        iconBg = 'bg-blue-100 dark:bg-blue-900/30';
+                        iconColor = 'text-blue-600 dark:text-blue-400';
+                        sign = '-';
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 使用は黒
+                    } else if (item.type === 'penalty') {
+                        icon = 'alert-triangle'; // 没収（ペナルティ）
+                        iconBg = 'bg-red-100 dark:bg-red-900/30';
+                        iconColor = 'text-red-600 dark:text-red-400';
+                        sign = '-';
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 没収は黒
+                    }
+
+                    return `
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center flex-grow min-w-0 mr-4">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-3 ${iconBg}">
+                                    <i data-lucide="${icon}" class="w-5 h-5 ${iconColor}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-sm text-gray-900 dark:text-gray-100 truncate mb-0.5">${item.reason}</p>
+                                    <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">${item.dateStr}</p>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0 flex items-baseline">
+                                <p class="text-lg ${amountColor} tabular-nums leading-none tracking-tight">${sign}${item.amount.toLocaleString()}</p>
+                                <p class="text-[10px] text-gray-400 font-bold ml-0.5">LP</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                lucide.createIcons({ root: container });
+            };
+
+            const lpHistoryPage = new SubPage('lp-history-screen', {
+                onOpen: () => {
+                    renderLpHistory();
+                }
+            });
+
+            // 閉じるボタン
+            $('#close-lp-history-btn').addEventListener('click', () => lpHistoryPage.close());
+
+            // ストアのLPバナーを押した時に履歴画面を開く
+            const statusLpBanner = $('#status-lp-banner');
+            if (statusLpBanner) {
+                statusLpBanner.addEventListener('click', () => {
+                    lpHistoryPage.open();
+                });
+            }
+            // ▲▲▲ 追加ここまで ▲▲▲
+            
             const statusPage = new SubPage('status-screen', {
                 onOpen: () => {
                     renderStatusPageContent(); // ステータス画面の描画
@@ -8200,6 +8343,9 @@ const checkQuestResume = () => {
                             const overMinutes = Math.floor(overtimeSeconds / 60);
                             const penaltyLp = overMinutes * 100;
                             state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
+                            // ▼▼▼ 追加: 没収の履歴を残す ▼▼▼
+                            addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ');
+                            
                             updateLpDisplay();
                             saveState();
                             isPenalty = true;
@@ -8722,6 +8868,10 @@ const checkQuestResume = () => {
                     return;
                 }
                 state.profile.lp -= cost;
+
+                // ▼▼▼ 追加: 使用の履歴を残す ▼▼▼
+                const itemName = initialData[type === 'background' ? 'backgrounds' : type + 's']?.[id]?.name || 'アイテム';
+                addLpHistory('spend', cost, `${itemName}と交換`);
                 
                 let itemData = null;
 
