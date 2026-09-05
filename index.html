@@ -6370,45 +6370,29 @@ const showItemPopup = (item, type) => {
             }
             // ▲▲▲ 変更ここまで ▲▲▲
             
-        // クエスト用のタイマーを開始する関数 (バックグラウンド耐性強化版)
+        // クエスト用のタイマーを開始する関数
         function startQuestTimer(duration, onTick, onEnd) {
-            // 1. 既存のインターバルをクリア
-            if (quest.timerInterval) {
-                clearInterval(quest.timerInterval);
-            }
-            
-            // 2. このステップの「絶対的な終了時刻」を計算
+            if (quest.timerInterval) clearInterval(quest.timerInterval);
             const endTime = Date.now() + duration * 1000;
-
-            // 2.5. 呼び出し直後に、まずUIを現在の時間で更新する
             const initialTimeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
             onTick(initialTimeLeft);
             quest.timeLeft = initialTimeLeft;
 
-            // 3. 1秒ごとにチェックするインターバルを開始
             quest.timerInterval = setInterval(() => {
                 const now = Date.now();
-                // 4. 終了時刻と現在時刻から、本当の残り時間を計算 (0秒未満にはしない)
                 const timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
-
-                // 5. ログ記録用に、グローバルの残り時間を更新
                 quest.timeLeft = timeLeft; 
-                
-                // 6. UIを更新 (onTick)
                 onTick(timeLeft);
 
-                // 7. 終了時刻を過ぎていたら、タイマーを停止して onEnd を呼ぶ
+                // ▼ 修正: 時間が来たら純粋に終わらせるだけに戻す
                 if (now >= endTime) {
                     clearInterval(quest.timerInterval);
                     quest.timerInterval = null;
-
-                    // ▼▼▼ 変更: 本来の終了時刻から何秒遅れて実行されたか(超過秒数)を計算して渡す ▼▼▼
-                    const overtimeSeconds = Math.floor((now - endTime) / 1000);
-                    onEnd(overtimeSeconds);
+                    onEnd(); 
                 }
             }, 1000);
         };
-
+            
         function cancelQuestAlarm() {
             if (navigator.serviceWorker.controller) {
                 // 'stopTimer' コマンドを (集中モードと) 共有して使用
@@ -6469,39 +6453,101 @@ const showItemPopup = (item, type) => {
                 }
             }
 
+            // ▼▼▼ 新規追加: 放置監視用の変数 ▼▼▼
+            let transitionTimerId = null;
+            let transitionStartTime = null;
+            let lastNotifiedMinutes = 0;
+
             // トランジション（待機）画面を表示
             function showTransitionScreen(step) {
-                // 前の画面を隠す
                 questSectionView.style.display = 'none';
                 questBreakView.style.display = 'none';
-
-                // トランジション画面を表示
                 questTransitionView.style.display = 'flex';
                 
-                // 内容のセット
+                // 放置監視のリセット
+                if (transitionTimerId) clearInterval(transitionTimerId);
+                transitionStartTime = Date.now();
+                lastNotifiedMinutes = 0;
+
                 if (step.type === 'section') {
                     transitionTitle.textContent = "学習を始めますか？";
                     transitionMessage.textContent = "準備ができたらスタートボタンを押してください。";
                     transitionIcon.setAttribute('data-lucide', 'book-open');
                     transitionNextText.textContent = step.text;
                     transitionNextDuration.textContent = `${step.duration / 60} 分`;
-                    transitionStartBtn.className = "primary-bg primary-bg-hover text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center";
+                    transitionStartBtn.className = "primary-bg primary-bg-hover text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center w-full landscape:w-auto justify-center";
+
+                    // ▼▼▼ 追加: 休憩後の「学習開始待機」の場合、放置を監視して通知を送る ▼▼▼
+                    transitionTimerId = setInterval(() => {
+                        const elapsed = Math.floor((Date.now() - transitionStartTime) / 1000);
+                        const overMinutes = Math.floor(elapsed / 60);
+
+                        // 1分経過するごとに催促の通知を送る
+                        if (overMinutes > lastNotifiedMinutes && overMinutes >= 1) {
+                            lastNotifiedMinutes = overMinutes;
+                            const penalty = overMinutes * 100;
+                            
+                            // SW経由で通知を送信（バックグラウンドにいるユーザーを呼び戻す）
+                            if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
+                                navigator.serviceWorker.controller.postMessage({
+                                    command: 'showQuestNotification',
+                                    title: '⚠️休憩時間を超過しています！',
+                                    body: `${overMinutes}分超過！このままだと ${penalty} LP 没収されます。早くアプリに戻ってください！`
+                                });
+                            }
+                        }
+                    }, 10000); // 10秒ごとにチェック
+                    // ▲▲▲ 追加ここまで ▲▲▲
+
                 } else {
                     transitionTitle.textContent = "休憩タイム";
                     transitionMessage.textContent = "お疲れ様でした！少し頭を休めましょう。";
                     transitionIcon.setAttribute('data-lucide', 'coffee');
                     transitionNextText.textContent = "ブレイクタイム";
                     transitionNextDuration.textContent = `${step.duration / 60} 分`;
-                    transitionStartBtn.className = "bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center";
+                    transitionStartBtn.className = "bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center w-full landscape:w-auto justify-center";
                 }
 
                 lucide.createIcons();
 
-                // スタートボタンのイベント（一度だけ発火するように設定）
+                // ▼▼▼ 修正: スタートボタンを押した瞬間にペナルティを計算してポップアップ ▼▼▼
                 transitionStartBtn.onclick = () => {
-                    questTransitionView.style.display = 'none';
-                    executeQuestStep(step);
+                    if (transitionTimerId) {
+                        clearInterval(transitionTimerId);
+                        transitionTimerId = null;
+                    }
+
+                    // 経過時間を計算
+                    const elapsed = Math.floor((Date.now() - transitionStartTime) / 1000);
+                    const overMinutes = Math.floor(elapsed / 60);
+
+                    // 学習開始が1分以上遅れていた場合、ポップアップを出して没収する
+                    if (step.type === 'section' && overMinutes >= 1) {
+                        const penaltyLp = overMinutes * 100;
+                        state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
+                        updateLpDisplay();
+                        saveState();
+
+                        // はっきりと画面上に没収の警告を出す
+                        openGeneralConfirm(
+                            '休憩時間をオーバーしました',
+                            `学習の開始が予定より ${overMinutes} 分遅れました。\nペナルティとして ${penaltyLp} LP を没収しました。`,
+                            'alert-triangle',
+                            '学習を始める',
+                            'bg-red-500 hover:bg-red-600 text-white',
+                            () => {
+                                questTransitionView.style.display = 'none';
+                                executeQuestStep(step);
+                            },
+                            null // キャンセルなし
+                        );
+                    } else {
+                        // 遅刻なし、または休憩に入る前ならそのまま次へ
+                        questTransitionView.style.display = 'none';
+                        executeQuestStep(step);
+                    }
                 };
+                // ▲▲▲ 修正ここまで ▲▲▲
             }
 
             // タイトルをパースして表示するヘルパー関数（修正版）
@@ -6634,35 +6680,10 @@ const showItemPopup = (item, type) => {
                                 showQuestNotification('⏱まもなく休憩終了', '30秒後に終了します。');
                             }
                         },
-                        // ▼▼▼ 変更: overtimeSeconds を受け取ってペナルティ処理 ▼▼▼
-                        (overtimeSeconds) => {
+                        () => {
                             closeIframe();
-
-                            // 1分（60秒）以上の超過があればペナルティ
-                            if (overtimeSeconds > 60) {
-                                const overMinutes = Math.floor(overtimeSeconds / 60);
-                                const penaltyLp = overMinutes * 100;
-                                
-                                state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
-                                updateLpDisplay();
-                                saveState();
-                                
-                                openGeneralConfirm(
-                                    '休憩時間をオーバーしました',
-                                    `予定時間を ${overMinutes} 分過ぎています。\nペナルティとして ${penaltyLp} LP が没収されました。`,
-                                    'alert-triangle',
-                                    '確認して次へ',
-                                    'bg-red-500 hover:bg-red-600 text-white',
-                                    () => {
-                                        runNextQuestStep(); // 確認したら次へ
-                                    },
-                                    null
-                                );
-                            } else {
-                                // 通常通り終了
-                                showToast('休憩が終わりました。');
-                                runNextQuestStep();
-                            }
+                            showToast('休憩が終わりました。');
+                            runNextQuestStep();
                         }
                     );
                 }
