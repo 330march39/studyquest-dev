@@ -2992,6 +2992,9 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             bgmAudio.loop = false; // プレイリスト再生のためループは手動制御
             let currentTrackIndex = 0;
 
+            // ▼▼▼ 追加: 外部ウィンドウを管理する変数 ▼▼▼
+            let externalWindow = null;
+
             const $ = (s) => document.querySelector(s);
             const $$ = (s) => document.querySelectorAll(s);
             
@@ -5940,27 +5943,27 @@ const showItemPopup = (item, type) => {
             });
 
            // 休憩中のコンテンツ (アイコンホーム画面)
-            if(breakIconGrid) {
-                breakIconGrid.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.break-content-btn');
-                    if (btn && btn.dataset.url) {
+            if(breakIconGrid) {
+                breakIconGrid.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.break-content-btn');
+                    if (btn && btn.dataset.url) {
                         // ▼▼▼ 追加: オフライン時は開かせない ▼▼▼
                         if (!navigator.onLine) {
                             showToast('オフラインのため使用できません', 'error');
                             return;
                         }
-                        // ★ここから変更★
-                        if (btn.dataset.openMode === 'external') {
-                            // 外部タブで開く (強制クローズ不可)
-                            window.open(btn.dataset.url, '_blank');
-                        } else {
-                            // 従来通りアプリ内 (iframe) で開く (強制クローズ可能)
-                            openIframe(btn.dataset.url);
-                        }
-                        // ★ここまで変更★
-                    }
-                });
-            }
+                        
+                        if (btn.dataset.openMode === 'external') {
+                            // ▼▼▼ 修正: 開いたウィンドウの参照を保存する ▼▼▼
+                            externalWindow = window.open(btn.dataset.url, '_blank');
+                        } else {
+                            // 従来通りアプリ内 (iframe) で開く (強制クローズ可能)
+                            openIframe(btn.dataset.url);
+                        }
+                        
+                    }
+                });
+            }
             closeIframeBtn.addEventListener('click', closeIframe);
 
             /* ▲▲▲ 追加: クエスト機能のイベントリスナー ▲▲▲ */
@@ -6783,6 +6786,11 @@ const showItemPopup = (item, type) => {
                 }
                 
                 overlay.style.display = 'none';
+                // ▼▼▼ 追加: 外部タブが開かれていれば閉じる ▼▼▼
+                if (externalWindow && !externalWindow.closed) {
+                    externalWindow.close();
+                    externalWindow = null;
+                }
             };
             
         // ★修正後★ 休憩アイコンをレンダリングする関数
