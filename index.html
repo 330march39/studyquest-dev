@@ -7953,10 +7953,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             // 閉じるボタン
             $('#close-lp-history-btn').addEventListener('click', () => lpHistoryPage.close());
 
-            // ストアのLPバナーを押した時に履歴画面を開く
-            const statusLpBanner = $('#status-lp-banner');
-            if (statusLpBanner) {
-                statusLpBanner.addEventListener('click', () => {
+            // ▼ 修正: ストアの「履歴を確認」ボタンを押した時に開くように変更
+            const openLpHistoryBtn = $('#open-lp-history-btn');
+            if (openLpHistoryBtn) {
+                openLpHistoryBtn.addEventListener('click', () => {
                     lpHistoryPage.open();
                 });
             }
