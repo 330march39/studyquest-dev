@@ -5556,7 +5556,7 @@ const showItemPopup = (item, type) => {
                         $('#assessment-modal').style.display = 'flex';
                         if(quizTimer.startTime) {
                             const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
-                            const title = $('#quiz-modal-title').textContent || 'クイズ';
+                            const title = $('#quiz-modal-title').textContent || '教材';
                             recordSession(title, elapsed);
                             quizTimer.startTime = null;
                             saveState();
@@ -5572,7 +5572,7 @@ const showItemPopup = (item, type) => {
                     // 1. 進捗データを保存
                     state.progress[quizId] = { level, date: new Date().toISOString() };
                     
-                    // クイズの情報を取得してタイトルを決める
+                    // 教材の情報を取得してタイトルを決める
                     const quizObj = initialData.quizzes.find(q => q.id === quizId);
                     const title = quizObj ? quizObj.title : '教材';
 
@@ -5592,7 +5592,7 @@ const showItemPopup = (item, type) => {
                     const earnedLP = Math.floor(currentQuizElapsed / 60);
                     
                     if (earnedLP > 0) {
-                        addLP(earnedLP, 'クイズ', true, { title: title, duration: currentQuizElapsed });
+                        addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed });
                     }
                     
                     currentQuizElapsed = 0; // 使い終わったらリセット
@@ -6739,7 +6739,7 @@ const showItemPopup = (item, type) => {
                             if (elapsed > 0) {
                                 const sId = recordSession(currentStep.text, elapsed);
                                 const earned = Math.floor(elapsed / 60);
-                                addLP(earned, 'クエストセクション', false, { title: currentStep.text, duration: elapsed, sessionId: sId }); 
+                                addLP(earned, 'クエスト', false, { title: currentStep.text, duration: elapsed, sessionId: sId }); 
                                 quest.accumulatedLp = (quest.accumulatedLp || 0) + earned;
                                 state.focus.totalTime += elapsed;
                                 
@@ -7931,9 +7931,9 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 if (t.includes('タイマー')) return { icon: 'timer', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
                 if (t.includes('ストップウォッチ')) return { icon: 'watch', bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' };
                 
-                // ▼ クイズは本が開いたアイコン(book-open)で、シアン系(cyan)に
-                if (t.includes('クイズ')) return { icon: 'book-open', bg: 'bg-cyan-100 dark:bg-cyan-900/30', color: 'text-cyan-600 dark:text-cyan-400' };
-                // ▼ クエストセッションはマップアイコン(map)で、紫系(purple)に
+                // ▼ 教材は本が開いたアイコン(book-open)で、シアン系(cyan)に
+                if (t.includes('教材')) return { icon: 'book-open', bg: 'bg-cyan-100 dark:bg-cyan-900/30', color: 'text-cyan-600 dark:text-cyan-400' };
+                // ▼ クエストはマップアイコン(map)で、紫系(purple)に
                 if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' };
                 if (t.includes('休憩') || t.includes('ブレイク')) return { icon: 'coffee', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' };
                 
@@ -8570,7 +8570,7 @@ const checkQuestResume = () => {
                         if (currentStep.type === 'section') {
                             recordSession(currentStep.text + '(中断)', currentStep.duration);
                             state.focus.totalTime += currentStep.duration;
-                            addLP(Math.floor(currentStep.duration / 60), 'クエストセクション');
+                            addLP(Math.floor(currentStep.duration / 60), 'クエスト');
                             saveState();
                         }
                         runNextQuestStep();
@@ -8606,7 +8606,7 @@ const checkQuestResume = () => {
                             // 簡略化のため共通部分を関数化するか、ここにコピー
                             const elapsed = step.duration; // 満了扱い
                             recordSession(step.text, elapsed);
-                            addLP(Math.floor(elapsed / 60), 'クエストセクション');
+                            addLP(Math.floor(elapsed / 60), 'クエスト');
                             state.focus.totalTime += elapsed;
                             if (step.originalTaskId) {
                                 const tIndex = state.tasks.findIndex(t => t.id === parseInt(step.originalTaskId));
@@ -8659,7 +8659,7 @@ const checkQuestResume = () => {
             };
 
             // ▼▼▼ 追加: 外部ブラウザからの復帰検知用 ▼▼▼
-            let isQuizExternalOpen = false; // クイズで外部に行っているかどうかのフラグ
+            let isQuizExternalOpen = false; // 教材で外部に行っているかどうかのフラグ
             let currentQuizElapsed = 0;
 
             // アプリに戻ってきた（タブがアクティブになった）時の処理
@@ -8667,7 +8667,7 @@ const checkQuestResume = () => {
                 // アプリが表示状態になった時
                 if (document.visibilityState === 'visible') {
                     
-                    // --- 既存のクイズ復帰処理 ---
+                    // --- 既存の教材復帰処理 ---
                     if (isQuizExternalOpen && currentQuizId) {
                         // 1. 時間を計算
                         if (quizTimer.startTime) {
@@ -9314,7 +9314,7 @@ const renderStatusPageContent = () => {
                 if(!container) return;
                 container.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
                 
-                // 全てのピン留めクイズを取得
+                // 全てのピン留め教材を取得
                 const allPinned = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
                 
                 if (allPinned.length === 0) {
@@ -9364,10 +9364,10 @@ const renderStatusPageContent = () => {
                 }
             });
 
-            // ▼▼▼ 追加: クイズ画面の制御 ▼▼▼
+            // ▼▼▼ 追加: 教材画面の制御 ▼▼▼
             let currentQuizId = null;
 
-            // ▼▼▼ 修正: クイズ画面もiframeを動的生成・削除する ▼▼▼
+            // ▼▼▼ 修正: 教材画面もiframeを動的生成・削除する ▼▼▼
             const quizPage = new SubPage('quiz-screen', {
                 onClose: () => {
                     // 1. iframeを削除
@@ -9387,7 +9387,7 @@ const renderStatusPageContent = () => {
                          
                          if(quizTimer.startTime) {
                             const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
-                            const title = $('#quiz-screen-title').textContent || 'クイズ';
+                            const title = $('#quiz-screen-title').textContent || '教材';
                             recordSession(title, elapsed);
                             quizTimer.startTime = null;
                             saveState();
