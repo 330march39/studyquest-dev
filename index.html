@@ -5566,6 +5566,9 @@ const showItemPopup = (item, type) => {
                 
                 const assessmentBtn = e.target.closest('.assessment-btn');
                 if(assessmentBtn) {
+                    // ▼▼▼ 追加: 既に処理済み(0秒)なら何もしない(連打・二重付与防止) ▼▼▼
+                    if (currentQuizElapsed <= 0) return;
+                    
                     const level = parseInt(assessmentBtn.dataset.level);
                     const quizId = $('#assessment-modal').dataset.quizId;
                     
@@ -5576,37 +5579,21 @@ const showItemPopup = (item, type) => {
                     const quizObj = initialData.quizzes.find(q => q.id === quizId);
                     const title = quizObj ? quizObj.title : '教材';
 
-                    // 学習ログ（リスト）に追加
-                    if (currentQuizElapsed > 0) {
-                        const sId = recordSession(title, currentQuizElapsed);
-                        logStudyTime('quiz', currentQuizElapsed);
-                        state.focus.totalTime += currentQuizElapsed;
-                        
-                        const earnedLP = Math.floor(currentQuizElapsed / 60);
-                        if (earnedLP > 0) {
-                            addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
-                        }
-                    }
+                    // ▼▼▼ 修正: LP付与とセッション記録のロジック ▼▼▼
+                    const sId = recordSession(title, currentQuizElapsed);
+                    logStudyTime('quiz', currentQuizElapsed);
+                    state.focus.totalTime += currentQuizElapsed;
                     
-                    // クエストと同様に「1分 = 1LP」で計算
                     const earnedLP = Math.floor(currentQuizElapsed / 60);
-                    
                     if (earnedLP > 0) {
-                        addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed });
+                        addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
                     }
                     
-                    currentQuizElapsed = 0; // 使い終わったらリセット
+                    currentQuizElapsed = 0; // 使い終わったら確実にリセット
                     saveState();
                     
-                    // 2. ★重要★ 現在のアクティブなページを強制的に再描画する
-                    // renderEngine.renderAll() は 'active' クラスがついているページだけを描画するため、これでOKです
                     renderEngine.renderAll();
-                    
-                    // 3. アイコン（Lucide）を再生成する
-                    // HTMLが書き換わった直後はアイコンが <i> タグのままなので、これを <svg> に変換します
                     lucide.createIcons();
-
-                    // 4. モーダルを閉じる
                     closeModalWithAnim('assessment-modal', 'assessment-content');
                 }
 
@@ -5779,19 +5766,23 @@ const showItemPopup = (item, type) => {
                 focusTimer.timeLeft--;
                 $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
                 updateMiniTimer();
+                
                 if (focusTimer.timeLeft <= 0) {
                     clearInterval(focusTimer.interval);
-                    // showToast と new Notification は Service Worker が担当するためコメントアウトまたは削除
-                    // showToast('集中モード完了！お疲れ様でした！');
-                    // if (Notification.permission === 'granted') { ... }
             
                     const elapsed = focusTimer.defaultTime;
-                    logStudyTime('focus', elapsed);
-                    addLP(Math.floor(elapsed/60), 'タイマー');
+                    
+                    // ▼▼▼ 修正: セッション記録と詳細データの引き渡し ▼▼▼
+                    const sId = recordSession('タイマー', elapsed);
+                    addLP(Math.floor(elapsed/60), 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
                     state.focus.totalTime += elapsed;
+                    
+                    // ▼▼▼ 重要: 実行中フラグをオフにして二重付与を防ぐ ▼▼▼
+                    state.focus.isRunning = false;
+                    state.focus.startTime = null;
+                    
                     saveState();
                     resetTimerUI();
-            
                 }
             };
             
@@ -7930,15 +7921,16 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 const t = title || '';
                 if (t.includes('タイマー')) return { icon: 'timer', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
                 if (t.includes('ストップウォッチ')) return { icon: 'watch', bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' };
-                
-                // ▼ 教材は本が開いたアイコン(book-open)で、シアン系(cyan)に
-                if (t.includes('教材')) return { icon: 'book-open', bg: 'bg-cyan-100 dark:bg-cyan-900/30', color: 'text-cyan-600 dark:text-cyan-400' };
-                // ▼ クエストはマップアイコン(map)で、紫系(purple)に
                 if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' };
                 if (t.includes('休憩') || t.includes('ブレイク')) return { icon: 'coffee', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' };
                 
-                // その他（ボーナスなど）
-                return { icon: 'coins', bg: 'bg-yellow-100 dark:bg-yellow-900/30', color: 'text-yellow-600 dark:text-yellow-400' };
+                // ログインボーナスやお礼などの「純粋なコイン獲得」
+                if (t.includes('ログイン') || t.includes('お礼') || t.includes('開発者') || t.includes('はじめまして')) {
+                    return { icon: 'coins', bg: 'bg-yellow-100 dark:bg-yellow-900/30', color: 'text-yellow-600 dark:text-yellow-400' };
+                }
+                
+                // ▼ 修正: 上記のどれにも当てはまらない場合（＝各種教材）はシアン色の本アイコン
+                return { icon: 'book-open', bg: 'bg-cyan-100 dark:bg-cyan-900/30', color: 'text-cyan-600 dark:text-cyan-400' };
             };
 
             const renderLpHistory = () => {
@@ -8120,8 +8112,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 // 画面全体の組み立て (PayPay風 UI)
                 content.innerHTML = `
                     <div class="flex flex-col items-center justify-center pt-8 pb-6">
-                        <!-- ▼ ラベルをカプセル型(rounded-full)に -->
-                        <div class="${badgeBg} text-white text-[11px] font-bold px-3 py-1 rounded-full mb-4 tracking-wider">${mainTitle}</div>
+                        <!-- ▼ 修正: 文字サイズをtext-smに、パディングを広げてカプセルを大きくした -->
+                        <div class="${badgeBg} text-white text-sm font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest shadow-sm">${mainTitle}</div>
                         
                         <!-- 金額表示 (黒文字) -->
                         <div class="flex items-baseline justify-center mb-2">
@@ -8129,7 +8121,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             <span class="text-lg font-bold ml-1 ${amountColor}">LP</span>
                         </div>
                         
-                        <!-- ▼ 取引名とアイコンの枠を他のアプリ同様の角丸(rounded-2xl)に -->
+                        <!-- 取引名とアイコン -->
                         <div class="flex items-center mt-3 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-2xl max-w-[90%]">
                             <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 ${iconBg}">
                                 <i data-lucide="${icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
