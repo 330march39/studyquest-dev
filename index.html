@@ -899,7 +899,7 @@ html.dark .center-fab {
             top: calc(env(safe-area-inset-top, 20px) + 1rem) !important;
         }
 
-        /* 2. クイズモーダルのヘッダー修正 */
+        /* 2. 教材モーダルのヘッダー修正 */
         #quiz-modal header {
             /* 上部にセーフエリア分の余白を追加 + 元のp-3(0.75rem) */
             padding-top: calc(env(safe-area-inset-top, 20px) + 0.75rem);
@@ -1579,7 +1579,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     <div id="pinned-quizzes" class="grid grid-cols-1 gap-3"></div>
                 </div>
                 <div>
-                    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">すべてのクイズ</h2>
+                    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">すべての教材</h2>
                     <div id="filter-container" class="flex space-x-2 mb-4 overflow-x-auto pb-2"></div>
                     <div id="all-quizzes" class="grid grid-cols-1 gap-3"></div>
                 </div>
@@ -2665,7 +2665,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                 </button>
             </div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">ピン留めしたクイズ</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">ピン留めした教材</h2>
             <div class="flex-1"></div>
         </header>
         <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
@@ -4280,7 +4280,7 @@ const controlScreenOrientation = async (mode) => {
         pinnedSectionContainer.style.display = 'none';
     }
 
-    // --- 2. フィルタと全クイズリスト ---
+    // --- 2. フィルタと全教材リスト ---
     const allContainer = $('#all-quizzes');
     // リストコンテナのスタイル適用
     allContainer.className = 'bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden divide-y divide-gray-100 dark:divide-gray-700';
@@ -4304,7 +4304,7 @@ const controlScreenOrientation = async (mode) => {
         allContainer.innerHTML = `
             <div class="flex flex-col items-center justify-center py-10 text-gray-400">
                 <i data-lucide="book-x" class="w-10 h-10 mb-2 opacity-50"></i>
-                <p class="text-sm">クイズがありません</p>
+                <p class="text-sm">教材がありません</p>
             </div>`;
     } else {
         allContainer.innerHTML = quizzes.map(q => createQuizCard(q, state.pinnedQuizzes.includes(q.id))).join('');
@@ -4780,7 +4780,7 @@ const controlScreenOrientation = async (mode) => {
             };
     
             // 指定した日の詳細リストを表示する関数
-// ▼▼▼ 修正: 詳細ログをInset List形式で描画 ▼▼▼
+// ▼▼▼ 修正: 学習ログのアイコンと色を統一し、タップでLP履歴詳細を開くようにする ▼▼▼
 const renderDailyDetails = (targetDate) => {
     const y = targetDate.getFullYear();
     const m = String(targetDate.getMonth() + 1).padStart(2, '0');
@@ -4794,7 +4794,7 @@ const renderDailyDetails = (targetDate) => {
     
     const sessions = state.sessionLog.filter(l => l.date === dateStr);
     const listContainer = $('#study-session-list');
-    if(!listContainer) return; // エラーガード
+    if(!listContainer) return;
 
     if (sessions.length === 0) {
         listContainer.innerHTML = `
@@ -4803,31 +4803,18 @@ const renderDailyDetails = (targetDate) => {
                 <p class="text-xs font-bold">記録がありません</p>
             </div>`;
     } else {
-        // 終了時刻の降順で表示
         listContainer.innerHTML = sessions.slice().reverse().map(s => {
             const min = Math.floor(s.duration / 60);
             const sec = s.duration % 60;
             const durationText = min > 0 ? `${min}<span class="text-[10px] ml-0.5">分</span>` : `${sec}<span class="text-[10px] ml-0.5">秒</span>`;
             
-            // タイトルによるアイコンの出し分け (簡易的)
-            let iconName = 'book-open';
-            let bgClass = 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
+            // ★共通のヘルパー関数を使ってアイコンと色を決定する
+            const { icon: iconName, bg: bgClass1, color: colorClass1 } = getHistoryIconProps('earn', s.title);
+            const bgClass = `${bgClass1} ${colorClass1}`;
             
-            if (s.title.includes('タイマー')) {
-                iconName = 'timer';
-            } else if (s.title.includes('ストップウォッチ')) {
-                iconName = 'watch';
-                bgClass = 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400';
-            } else if (s.title.includes('クイズ')) {
-                iconName = 'help-circle';
-                bgClass = 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
-            } else if (s.title.includes('休憩') || s.title.includes('ブレイク')) {
-                iconName = 'coffee';
-                bgClass = 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400';
-            }
-
+            // クラスに cursor-pointer と study-log-item を追加
             return `
-                <div class="flex items-center p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <div class="study-log-item flex items-center p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-700" data-session-id="${s.id}" data-title="${s.title}" data-duration="${s.duration}">
                     <div class="flex-shrink-0 w-8 h-8 rounded-full ${bgClass} flex items-center justify-center mr-3 shadow-sm">
                         <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
@@ -4841,11 +4828,35 @@ const renderDailyDetails = (targetDate) => {
                 </div>
             `;
         }).join('');
+
+        // ▼ 追加: 学習ログアイテムをクリックした時のイベント ▼
+        listContainer.querySelectorAll('.study-log-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const sid = parseInt(el.dataset.sessionId);
+                const title = el.dataset.title;
+                const duration = parseInt(el.dataset.duration);
+
+                // sessionIdで紐づくLP履歴を探す
+                let targetLpHistory = state.profile.lpHistory?.find(h => h.metadata?.sessionId === sid);
+                
+                // 今回のアップデートより前のデータ（sessionIdがない場合）はタイトルと時間で推測する
+                if (!targetLpHistory) {
+                    targetLpHistory = state.profile.lpHistory?.find(h => h.type === 'earn' && h.metadata?.title === title && h.metadata?.duration === duration);
+                }
+
+                if (targetLpHistory) {
+                    renderLpHistoryDetail(targetLpHistory.id); // 詳細画面を開く
+                } else {
+                    showToast('このログのLP履歴は見つかりませんでした');
+                }
+            });
+        });
     }
-    lucide.createIcons({ root: listContainer.parentElement }); // 親要素を指定してアイコン生成
+    lucide.createIcons({ root: listContainer.parentElement });
 };
+// ▲▲▲ 修正ここまで ▲▲▲
             
-           // ▼▼▼ 修正: クイズアイテムを「リスト行」デザインに変更 ▼▼▼
+           // ▼▼▼ 修正: 教材アイテムを「リスト行」デザインに変更 ▼▼▼
             const createQuizCard = (quiz, isPinned) => {
                 if(!quiz) return '';
                 const progress = state.progress[quiz.id];
@@ -5341,6 +5352,8 @@ const showItemPopup = (item, type) => {
             // 既存の集計用ログも更新（互換性のため）
             logStudyTime('focus', durationSeconds); 
             saveState();
+            
+            return newSession.id; // ★ここを追加してIDを返すようにする
         };
             
             // ▼▼▼ renderHomeTasks 関数全体を書き換え ▼▼▼
@@ -5561,16 +5574,18 @@ const showItemPopup = (item, type) => {
                     
                     // クイズの情報を取得してタイトルを決める
                     const quizObj = initialData.quizzes.find(q => q.id === quizId);
-                    const title = quizObj ? quizObj.title : 'クイズ';
+                    const title = quizObj ? quizObj.title : '教材';
 
                     // 学習ログ（リスト）に追加
                     if (currentQuizElapsed > 0) {
-                        recordSession(title, currentQuizElapsed);
-                        // グラフ用集計データに追加 ('quiz' タイプとして記録)
+                        const sId = recordSession(title, currentQuizElapsed);
                         logStudyTime('quiz', currentQuizElapsed);
-                        
-                        // 総合計時間も更新（もしstate.focus.totalTimeで管理しているなら）
                         state.focus.totalTime += currentQuizElapsed;
+                        
+                        const earnedLP = Math.floor(currentQuizElapsed / 60);
+                        if (earnedLP > 0) {
+                            addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
+                        }
                     }
                     
                     // クエストと同様に「1分 = 1LP」で計算
@@ -5923,8 +5938,8 @@ const showItemPopup = (item, type) => {
                 if (!focusTimer.isRunning) return;
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
                 if (elapsed > 0) { 
-                    recordSession('タイマー', elapsed); 
-                    addLP(Math.floor(elapsed / 60), 'タイマー', true, { title: 'タイマー', duration: elapsed }); 
+                    const sId = recordSession('タイマー', elapsed); 
+                    addLP(Math.floor(elapsed / 60), 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId }); 
                     state.focus.totalTime += elapsed; saveState(); 
                 }
                 resetTimerUI();
@@ -5944,8 +5959,8 @@ const showItemPopup = (item, type) => {
                 if (!stopwatch.isRunning) return;
                 const elapsed = Math.round(stopwatch.elapsedTime);
                 if (elapsed > 0) { 
-                    recordSession('ストップウォッチ', elapsed); 
-                    addLP(Math.floor(elapsed / 60), 'ストップウォッチ', true, { title: 'ストップウォッチ', duration: elapsed }); 
+                    const sId = recordSession('ストップウォッチ', elapsed); 
+                    addLP(Math.floor(elapsed / 60), 'ストップウォッチ', true, { title: 'ストップウォッチ', duration: elapsed, sessionId: sId }); 
                     state.focus.totalTime += elapsed; saveState(); 
                 }
                 resetStopwatchUI();
@@ -6722,10 +6737,9 @@ const showItemPopup = (item, type) => {
                             // 代わりに showToast だけ呼んで、画面内のメッセージだけ表示します。
                             const elapsed = currentStep.duration;
                             if (elapsed > 0) {
-                                recordSession(currentStep.text, elapsed);
+                                const sId = recordSession(currentStep.text, elapsed);
                                 const earned = Math.floor(elapsed / 60);
-                                addLP(earned, 'クエストセクション', false, { title: currentStep.text, duration: elapsed });
-                                // 累積変数に加算
+                                addLP(earned, 'クエストセクション', false, { title: currentStep.text, duration: elapsed, sessionId: sId }); 
                                 quest.accumulatedLp = (quest.accumulatedLp || 0) + earned;
                                 state.focus.totalTime += elapsed;
                                 
@@ -7913,12 +7927,15 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 if (type === 'spend') return { icon: 'shopping-cart', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' };
                 if (type === 'penalty') return { icon: 'alert-triangle', bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' };
                 
-                // earn（獲得）の場合、タイトル等から判別
                 const t = title || '';
                 if (t.includes('タイマー')) return { icon: 'timer', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
                 if (t.includes('ストップウォッチ')) return { icon: 'watch', bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' };
-                if (t.includes('クイズ')) return { icon: 'help-circle', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' };
-                if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
+                
+                // ▼ クイズは本が開いたアイコン(book-open)で、シアン系(cyan)に
+                if (t.includes('クイズ')) return { icon: 'book-open', bg: 'bg-cyan-100 dark:bg-cyan-900/30', color: 'text-cyan-600 dark:text-cyan-400' };
+                // ▼ クエストセッションはマップアイコン(map)で、紫系(purple)に
+                if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' };
+                if (t.includes('休憩') || t.includes('ブレイク')) return { icon: 'coffee', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' };
                 
                 // その他（ボーナスなど）
                 return { icon: 'coins', bg: 'bg-yellow-100 dark:bg-yellow-900/30', color: 'text-yellow-600 dark:text-yellow-400' };
@@ -8103,8 +8120,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 // 画面全体の組み立て (PayPay風 UI)
                 content.innerHTML = `
                     <div class="flex flex-col items-center justify-center pt-8 pb-6">
-                        <!-- 角丸長方形のラベル -->
-                        <div class="${badgeBg} text-white text-[11px] font-bold px-3 py-1 rounded-md mb-4 tracking-wider">${mainTitle}</div>
+                        <!-- ▼ ラベルをカプセル型(rounded-full)に -->
+                        <div class="${badgeBg} text-white text-[11px] font-bold px-3 py-1 rounded-full mb-4 tracking-wider">${mainTitle}</div>
                         
                         <!-- 金額表示 (黒文字) -->
                         <div class="flex items-baseline justify-center mb-2">
@@ -8112,8 +8129,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             <span class="text-lg font-bold ml-1 ${amountColor}">LP</span>
                         </div>
                         
-                        <!-- 取引名とアイコン -->
-                        <div class="flex items-center mt-3 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-full max-w-[90%]">
+                        <!-- ▼ 取引名とアイコンの枠を他のアプリ同様の角丸(rounded-2xl)に -->
+                        <div class="flex items-center mt-3 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-2xl max-w-[90%]">
                             <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 ${iconBg}">
                                 <i data-lucide="${icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
                             </div>
