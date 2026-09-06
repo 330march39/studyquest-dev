@@ -1550,7 +1550,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden">
                         
                         <div id="home-task-list" class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <p class="text-center text-sm text-gray-400 py-6">今日のタスクはありません。</p>
+                            <p class="text-center text-sm text-gray-400 py-6">今日のタスクはありません</p>
                         </div>
                 
                         <div class="flex items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
@@ -6561,7 +6561,7 @@ const showItemPopup = (item, type) => {
 
                 if (step.type === 'section') {
                     transitionTitle.textContent = "学習を始めますか？";
-                    transitionMessage.textContent = "準備ができたらスタートボタンを押してください。";
+                    transitionMessage.textContent = "準備ができたらスタートボタンを押してください";
                     transitionIcon.setAttribute('data-lucide', 'book-open');
                     transitionNextText.textContent = step.text;
                     transitionNextDuration.textContent = `${step.duration / 60} 分`;
@@ -6776,7 +6776,7 @@ const showItemPopup = (item, type) => {
                         },
                         () => {
                             closeIframe();
-                            showToast('休憩が終わりました。');
+                            showToast('休憩が終わりました');
                             runNextQuestStep();
                         }
                     );
@@ -6789,7 +6789,7 @@ const showItemPopup = (item, type) => {
         // クエストを開始する関数（編集画面維持版）
         function startQuest() {
             if (quest.plan.length === 0) {
-                showToast('クエストの予定がありません。');
+                showToast('クエストの予定がありません');
                 return;
             }
             // ▼▼▼ 追加: クエスト開始時に横画面固定（フルスクリーン）にする ▼▼▼
@@ -6852,7 +6852,7 @@ const showItemPopup = (item, type) => {
                         
                         state.focus.totalTime += elapsed;
                         saveState();
-                        showToast(`セクションの ${formatTime(elapsed)} を記録しました。`);
+                        showToast(`セクションの ${formatTime(elapsed)} を記録しました`);
                     }
                 }
             }
@@ -8569,7 +8569,7 @@ const checkQuestResume = () => {
 
                     // ペナルティが発生しなかった場合のみ、通常のスキップ処理を行う
                     if (!isPenalty) {
-                        showToast('閉じている間にこのステップは終了しました。');
+                        showToast('閉じている間にこのステップは終了しました');
                         if (currentStep.type === 'section') {
                             const sTitle = 'クエスト: ' + currentStep.text + ' (中断)';
                             const sId = recordSession(sTitle, currentStep.duration);
@@ -8654,7 +8654,7 @@ const checkQuestResume = () => {
                                     null
                                 );
                             } else {
-                                showToast('休憩が終わりました。');
+                                showToast('休憩が終わりました');
                                 runNextQuestStep();
                             }
                         }
@@ -8975,7 +8975,7 @@ const checkQuestResume = () => {
                         const activeTasks = state.tasks.filter(t => !t.completed);
             
                         if (activeTasks.length === 0) {
-                            showToast('「今日のタスク」に未完了のタスクがありません。');
+                            showToast('未完了のタスクがありません');
                             return;
                         }
 
@@ -9018,7 +9018,7 @@ const checkQuestResume = () => {
                                 templateIndex++;
                             }
                 
-                            showToast(`${activeTasks.length} 件のタスクをルーティンに適用しました。`);
+                            showToast(`${activeTasks.length} 件のタスクをルーティンに適用しました`);
                             renderQuestPlan();
                         };
                         // ▲▲▲ 関数化ここまで ▲▲▲
