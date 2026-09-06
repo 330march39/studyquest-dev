@@ -8121,21 +8121,30 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     `;
                 }
 
+                // 画面全体の組み立て
                 content.innerHTML = `
                     <div class="flex flex-col items-center justify-center pt-8 pb-6">
-                        <div class="${badgeBg} text-white text-[11px] font-bold px-3 py-1 rounded-full mb-4 tracking-wider">${mainTitle}</div>
+                        <!-- ▼ 修正: 文字サイズをtext-smに、パディングを広げてカプセルを大きくした -->
+                        <div class="${badgeBg} text-white text-sm font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest shadow-sm">${mainTitle}</div>
+                        
+                        <!-- 金額表示 (黒文字) -->
                         <div class="flex items-baseline justify-center mb-2">
                             <span class="text-5xl font-black tabular-nums tracking-tighter ${amountColor}">${sign}${item.amount.toLocaleString()}</span>
                             <span class="text-lg font-bold ml-1 ${amountColor}">LP</span>
                         </div>
+                        
+                        <!-- 取引名とアイコン -->
                         <div class="flex items-center mt-3 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-2xl max-w-[90%]">
                             <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 ${iconBg}">
                                 <i data-lucide="${icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
                             </div>
                             <p class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">${item.reason}</p>
                         </div>
+                        
                         <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-4">${item.dateStr}</p>
                     </div>
+
+                    <!-- 丸みを帯びた詳細枠 -->
                     <div class="mt-2 bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden px-5 py-2 border border-gray-100 dark:border-gray-700">
                         ${detailsHTML}
                     </div>
