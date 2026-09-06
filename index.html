@@ -4780,7 +4780,7 @@ const controlScreenOrientation = async (mode) => {
             };
     
             // 指定した日の詳細リストを表示する関数
-// ▼▼▼ 修正: 学習ログのアイコンと色を統一し、タップでLP履歴詳細を開くようにする ▼▼▼
+// ▼▼▼ 修正: 学習ログのリスト画面 ▼▼▼
 const renderDailyDetails = (targetDate) => {
     const y = targetDate.getFullYear();
     const m = String(targetDate.getMonth() + 1).padStart(2, '0');
@@ -4808,18 +4808,21 @@ const renderDailyDetails = (targetDate) => {
             const sec = s.duration % 60;
             const durationText = min > 0 ? `${min}<span class="text-[10px] ml-0.5">分</span>` : `${sec}<span class="text-[10px] ml-0.5">秒</span>`;
             
-            // ★共通のヘルパー関数を使ってアイコンと色を決定する
+            // ★内部データ s.title からアイコンの色・形を取得
             const { icon: iconName, bg: bgClass1, color: colorClass1 } = getHistoryIconProps('earn', s.title);
             const bgClass = `${bgClass1} ${colorClass1}`;
             
-            // クラスに cursor-pointer と study-log-item を追加
+            // ★追加: 画面に表示する前に「クエスト:」や「(中断)」の文字を削る
+            const displayTitle = (s.title || '').replace(/^クエスト[:：]\s*/, '').replace(/\s*\(中断\)$/, '');
+
             return `
                 <div class="study-log-item flex items-center p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-700" data-session-id="${s.id}" data-title="${s.title}" data-duration="${s.duration}">
                     <div class="flex-shrink-0 w-8 h-8 rounded-full ${bgClass} flex items-center justify-center mr-3 shadow-sm">
                         <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
                     <div class="flex-grow min-w-0 mr-2">
-                        <h4 class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${s.title}</h4>
+                        <!-- ★修正: きれいになった displayTitle を表示する -->
+                        <h4 class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${displayTitle}</h4>
                         <p class="text-[10px] text-gray-400 dark:text-gray-500">${s.endTime || '--:--'} 終了</p>
                     </div>
                     <div class="flex-shrink-0 text-right">
@@ -4829,32 +4832,28 @@ const renderDailyDetails = (targetDate) => {
             `;
         }).join('');
 
-        // ▼ 追加: 学習ログアイテムをクリックした時のイベント ▼
         listContainer.querySelectorAll('.study-log-item').forEach(el => {
             el.addEventListener('click', () => {
                 const sid = parseInt(el.dataset.sessionId);
                 const title = el.dataset.title;
                 const duration = parseInt(el.dataset.duration);
 
-                // sessionIdで紐づくLP履歴を探す
                 let targetLpHistory = state.profile.lpHistory?.find(h => h.metadata?.sessionId === sid);
                 
-                // 今回のアップデートより前のデータ（sessionIdがない場合）はタイトルと時間で推測する
                 if (!targetLpHistory) {
                     targetLpHistory = state.profile.lpHistory?.find(h => h.type === 'earn' && h.metadata?.title === title && h.metadata?.duration === duration);
                 }
 
                 if (targetLpHistory) {
-                    renderLpHistoryDetail(targetLpHistory.id); // 詳細画面を開く
+                    renderLpHistoryDetail(targetLpHistory.id);
                 } else {
-                    showToast('このデータの詳細はありません');
+                    showToast('このログの詳細はありません');
                 }
             });
         });
     }
     lucide.createIcons({ root: listContainer.parentElement });
 };
-// ▲▲▲ 修正ここまで ▲▲▲
             
            // ▼▼▼ 修正: 教材アイテムを「リスト行」デザインに変更 ▼▼▼
             const createQuizCard = (quiz, isPinned) => {
@@ -8024,6 +8023,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             const lpHistoryDetailPage = new SubPage('lp-history-detail-screen');
             $('#close-lp-history-detail-btn').addEventListener('click', () => lpHistoryDetailPage.close());
 
+            // ▼▼▼ 修正: 取引詳細画面 ▼▼▼
             const renderLpHistoryDetail = (historyId) => {
                 const item = state.profile.lpHistory.find(h => h.id === historyId);
                 if (!item) return;
@@ -8032,40 +8032,41 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 
                 let sign, mainTitle, badgeBg;
                 
-                // バッジラベルの色とテキストの設定
                 if (item.type === 'earn') {
                     sign = '+';
                     mainTitle = 'LP獲得';
-                    badgeBg = 'bg-[#1CBE78]'; // 緑色
+                    badgeBg = 'bg-[#1CBE78]'; 
                 } else if (item.type === 'spend') {
                     sign = '-';
                     mainTitle = 'LP交換';
-                    badgeBg = 'bg-[#FFB915]'; // 黄色・オレンジ色
+                    badgeBg = 'bg-[#FFB915]'; 
                 } else {
                     sign = '-';
                     mainTitle = 'LP没収';
-                    badgeBg = 'bg-[#FFB915]'; // 黄色・オレンジ色
+                    badgeBg = 'bg-[#FFB915]'; 
                 }
 
-                // 金額の文字色は全て黒(ダークモード時は白)
                 const amountColor = 'text-gray-900 dark:text-white';
-                
-                // アイコン情報の取得
                 const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, item.metadata?.title, item.reason);
 
-                // メタデータから明細行を生成
                 let detailsHTML = '';
                 const m = item.metadata || {};
+
+                // ★追加: 画面に表示する前に「クエスト:」や「(中断)」の文字を削る処理
+                const rawTitle = m.title || item.reason || '';
+                const displayTitle = rawTitle.replace(/^クエスト[:：]\s*/, '').replace(/\s*\(中断\)$/, '');
 
                 if (item.type === 'earn') {
                     if (m.duration) {
                         const minutes = Math.floor(m.duration / 60);
                         const seconds = m.duration % 60;
                         const timeStr = minutes > 0 ? `${minutes}分${seconds > 0 ? seconds+'秒' : ''}` : `${seconds}秒`;
+                        
                         detailsHTML += `
                             <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">学習内容</span>
-                                <span class="text-sm font-bold text-gray-900 dark:text-white text-right break-words max-w-[60%]">${m.title || item.reason}</span>
+                                <!-- ★修正: きれいになった displayTitle を表示する -->
+                                <span class="text-sm font-bold text-gray-900 dark:text-white text-right break-words max-w-[60%]">${displayTitle}</span>
                             </div>
                             <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">学習時間</span>
@@ -8076,7 +8077,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                          detailsHTML += `
                             <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">獲得内容</span>
-                                <span class="text-sm font-bold text-gray-900 dark:text-white text-right">${m.title || item.reason}</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white text-right">${displayTitle}</span>
                             </div>
                         `;
                     }
@@ -8120,30 +8121,21 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     `;
                 }
 
-                // 画面全体の組み立て (PayPay風 UI)
                 content.innerHTML = `
                     <div class="flex flex-col items-center justify-center pt-8 pb-6">
-                        <!-- ▼ 修正: 文字サイズをtext-smに、パディングを広げてカプセルを大きくした -->
-                        <div class="${badgeBg} text-white text-sm font-bold px-4 py-1.5 rounded-full mb-4 tracking-widest shadow-sm">${mainTitle}</div>
-                        
-                        <!-- 金額表示 (黒文字) -->
+                        <div class="${badgeBg} text-white text-[11px] font-bold px-3 py-1 rounded-full mb-4 tracking-wider">${mainTitle}</div>
                         <div class="flex items-baseline justify-center mb-2">
                             <span class="text-5xl font-black tabular-nums tracking-tighter ${amountColor}">${sign}${item.amount.toLocaleString()}</span>
                             <span class="text-lg font-bold ml-1 ${amountColor}">LP</span>
                         </div>
-                        
-                        <!-- 取引名とアイコン -->
                         <div class="flex items-center mt-3 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-2xl max-w-[90%]">
                             <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 ${iconBg}">
                                 <i data-lucide="${icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
                             </div>
                             <p class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">${item.reason}</p>
                         </div>
-                        
                         <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-4">${item.dateStr}</p>
                     </div>
-
-                    <!-- 丸みを帯びた詳細枠 -->
                     <div class="mt-2 bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden px-5 py-2 border border-gray-100 dark:border-gray-700">
                         ${detailsHTML}
                     </div>
@@ -8152,7 +8144,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 lucide.createIcons({ root: content });
                 lpHistoryDetailPage.open();
             };
-            // ▲▲▲ 差し替えここまで ▲▲▲
 
             // 閉じるボタン
             $('#close-lp-history-btn').addEventListener('click', () => lpHistoryPage.close());
