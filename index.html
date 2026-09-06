@@ -7906,7 +7906,24 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             // 2. ステータス画面
 
-            // ▼▼▼ renderLpHistory の中身を修正 ▼▼▼
+            // ▼▼▼ 新規追加: LP履歴画面のサブページと描画ロジック ▼▼▼
+
+            // 履歴と学習ログのアイコン・色を共通化して取得するヘルパー関数
+            const getHistoryIconProps = (type, title) => {
+                if (type === 'spend') return { icon: 'shopping-cart', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' };
+                if (type === 'penalty') return { icon: 'alert-triangle', bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' };
+                
+                // earn（獲得）の場合、タイトル等から判別
+                const t = title || '';
+                if (t.includes('タイマー')) return { icon: 'timer', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
+                if (t.includes('ストップウォッチ')) return { icon: 'watch', bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' };
+                if (t.includes('クイズ')) return { icon: 'help-circle', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' };
+                if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
+                
+                // その他（ボーナスなど）
+                return { icon: 'coins', bg: 'bg-yellow-100 dark:bg-yellow-900/30', color: 'text-yellow-600 dark:text-yellow-400' };
+            };
+
             const renderLpHistory = () => {
                 const container = $('#lp-history-list');
                 if (!container) return;
@@ -7925,30 +7942,22 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }
 
                 container.innerHTML = history.map(item => {
-                    let icon, iconBg, iconColor, amountText, amountColor, sign;
-
+                    // ヘルパー関数からアイコンの情報を取得
+                    const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, (item.metadata?.title || item.reason));
+                    
+                    let amountColor, sign;
                     if (item.type === 'earn') {
-                        icon = 'coins'; 
-                        iconBg = 'bg-yellow-100 dark:bg-yellow-900/30';
-                        iconColor = 'text-yellow-600 dark:text-yellow-400';
                         sign = '+';
-                        amountColor = 'text-red-500 font-bold'; 
+                        amountColor = 'text-[#1CBE78] font-bold'; // 獲得は緑色
                     } else if (item.type === 'spend') {
-                        icon = 'shopping-cart'; 
-                        iconBg = 'bg-blue-100 dark:bg-blue-900/30';
-                        iconColor = 'text-blue-600 dark:text-blue-400';
                         sign = '-';
-                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; 
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 使用は黒(白)色
                     } else if (item.type === 'penalty') {
-                        icon = 'alert-triangle'; 
-                        iconBg = 'bg-red-100 dark:bg-red-900/30';
-                        iconColor = 'text-red-600 dark:text-red-400';
                         sign = '-';
-                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; 
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 没収は黒(白)色
                     }
 
                     return `
-                        <!-- ▼ クラスに cursor-pointer と lp-history-item を追加 -->
                         <div class="lp-history-item flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-700" data-id="${item.id}">
                             <div class="flex items-center flex-grow min-w-0 mr-4">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-3 ${iconBg}">
@@ -7969,7 +7978,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
                 lucide.createIcons({ root: container });
 
-                // ▼▼▼ 追加: 履歴アイテムのクリックイベント ▼▼▼
                 container.querySelectorAll('.lp-history-item').forEach(el => {
                     el.addEventListener('click', () => {
                         renderLpHistoryDetail(el.dataset.id);
@@ -7983,7 +7991,16 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }
             });
 
-            // ▼▼▼ 新規追加: 取引詳細画面の描画と表示 ▼▼▼
+            $('#close-lp-history-btn').addEventListener('click', () => lpHistoryPage.close());
+
+            const statusLpBanner = $('#open-lp-history-btn');
+            if (statusLpBanner) {
+                statusLpBanner.addEventListener('click', () => {
+                    lpHistoryPage.open();
+                });
+            }
+
+            // ▼▼▼ 追加: 取引詳細画面の描画と表示 ▼▼▼
             const lpHistoryDetailPage = new SubPage('lp-history-detail-screen');
             $('#close-lp-history-detail-btn').addEventListener('click', () => lpHistoryDetailPage.close());
 
@@ -7993,86 +8010,90 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
                 const content = $('#lp-history-detail-content');
                 
-                let amountColor, sign, mainTitle;
+                let sign, mainTitle, badgeBg;
+                
+                // バッジラベルの色とテキストの設定
                 if (item.type === 'earn') {
-                    amountColor = 'text-red-500';
                     sign = '+';
                     mainTitle = 'LP獲得';
+                    badgeBg = 'bg-[#1CBE78]'; // 緑色
                 } else if (item.type === 'spend') {
-                    amountColor = 'text-gray-900 dark:text-white';
                     sign = '-';
-                    mainTitle = 'LP支払い';
+                    mainTitle = 'LP交換';
+                    badgeBg = 'bg-[#FFB915]'; // 黄色・オレンジ色
                 } else {
-                    amountColor = 'text-gray-900 dark:text-white';
                     sign = '-';
                     mainTitle = 'LP没収';
+                    badgeBg = 'bg-[#FFB915]'; // 黄色・オレンジ色
                 }
+
+                // 金額の文字色は全て黒(ダークモード時は白)
+                const amountColor = 'text-gray-900 dark:text-white';
+                
+                // アイコン情報の取得
+                const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, (item.metadata?.title || item.reason));
 
                 // メタデータから明細行を生成
                 let detailsHTML = '';
                 const m = item.metadata || {};
 
                 if (item.type === 'earn') {
-                    // 学習時間がある場合
                     if (m.duration) {
                         const minutes = Math.floor(m.duration / 60);
                         const seconds = m.duration % 60;
                         const timeStr = minutes > 0 ? `${minutes}分${seconds > 0 ? seconds+'秒' : ''}` : `${seconds}秒`;
                         detailsHTML += `
-                            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">学習内容</span>
                                 <span class="text-sm font-bold text-gray-900 dark:text-white text-right break-words max-w-[60%]">${m.title || item.reason}</span>
                             </div>
-                            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">学習時間</span>
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">${timeStr}</span>
                             </div>
                         `;
                     } else {
-                        // ボーナスなど時間がない場合
                          detailsHTML += `
-                            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">獲得内容</span>
                                 <span class="text-sm font-bold text-gray-900 dark:text-white text-right">${m.title || item.reason}</span>
                             </div>
                         `;
                     }
                     detailsHTML += `
-                        <div class="flex justify-between py-3 border-transparent">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">獲得ポイント</span>
-                            <span class="text-sm font-bold text-red-500">+${item.amount.toLocaleString()} LP</span>
+                            <span class="text-sm font-bold text-[#1CBE78]">+${item.amount.toLocaleString()} LP</span>
                         </div>
                     `;
                 } else if (item.type === 'spend') {
-                    // アイテム交換の場合
                     const typeMap = { 'theme': 'テーマカラー', 'background': '壁紙', 'game': 'ゲーム', 'music': 'BGM' };
                     const catName = typeMap[m.itemType] || 'アイテム';
                     detailsHTML += `
-                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">交換アイテム</span>
                             <span class="text-sm font-bold text-gray-900 dark:text-white text-right max-w-[60%] break-words">${m.itemName || item.reason}</span>
                         </div>
-                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">カテゴリ</span>
                             <span class="text-sm font-bold text-gray-900 dark:text-white">${catName}</span>
                         </div>
-                        <div class="flex justify-between py-3 border-transparent">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">消費ポイント</span>
                             <span class="text-sm font-bold text-gray-900 dark:text-white">-${item.amount.toLocaleString()} LP</span>
                         </div>
                     `;
                 } else if (item.type === 'penalty') {
-                    // ペナルティ没収の場合
                     detailsHTML += `
-                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">ペナルティ理由</span>
                             <span class="text-sm font-bold text-gray-900 dark:text-white text-right">${item.reason}</span>
                         </div>
-                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">サボり超過時間</span>
                             <span class="text-sm font-bold text-red-500">${m.overMinutes} 分オーバー</span>
                         </div>
-                        <div class="flex justify-between py-3 border-transparent">
+                        <div class="flex justify-between py-4 border-b border-gray-100 dark:border-gray-700 last:border-none">
                             <span class="text-sm text-gray-500 dark:text-gray-400">没収ポイント</span>
                             <span class="text-sm font-bold text-gray-900 dark:text-white">-${item.amount.toLocaleString()} LP</span>
                         </div>
@@ -8081,24 +8102,37 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
                 // 画面全体の組み立て (PayPay風 UI)
                 content.innerHTML = `
-                    <div class="flex flex-col items-center justify-center pt-6 pb-6">
-                        <p class="text-sm font-bold text-gray-500 dark:text-gray-400 mb-1">${mainTitle}</p>
-                        <div class="flex items-baseline justify-center mb-3">
+                    <div class="flex flex-col items-center justify-center pt-8 pb-6">
+                        <!-- 角丸長方形のラベル -->
+                        <div class="${badgeBg} text-white text-[11px] font-bold px-3 py-1 rounded-md mb-4 tracking-wider">${mainTitle}</div>
+                        
+                        <!-- 金額表示 (黒文字) -->
+                        <div class="flex items-baseline justify-center mb-2">
                             <span class="text-5xl font-black tabular-nums tracking-tighter ${amountColor}">${sign}${item.amount.toLocaleString()}</span>
                             <span class="text-lg font-bold ml-1 ${amountColor}">LP</span>
                         </div>
-                        <p class="text-base font-bold text-gray-800 dark:text-gray-200 mb-1 px-4 text-center break-words">${item.reason}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">${item.dateStr}</p>
+                        
+                        <!-- 取引名とアイコン -->
+                        <div class="flex items-center mt-3 bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-full max-w-[90%]">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2 flex-shrink-0 ${iconBg}">
+                                <i data-lucide="${icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
+                            </div>
+                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">${item.reason}</p>
+                        </div>
+                        
+                        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-4">${item.dateStr}</p>
                     </div>
 
-                    <div class="mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 px-5 py-1">
+                    <!-- 丸みを帯びた詳細枠 -->
+                    <div class="mt-2 bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden px-5 py-2 border border-gray-100 dark:border-gray-700">
                         ${detailsHTML}
                     </div>
                 `;
 
+                lucide.createIcons({ root: content });
                 lpHistoryDetailPage.open();
             };
-            // ▲▲▲ 追加ここまで ▲▲▲
+            // ▲▲▲ 差し替えここまで ▲▲▲
 
             // 閉じるボタン
             $('#close-lp-history-btn').addEventListener('click', () => lpHistoryPage.close());
