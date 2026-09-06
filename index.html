@@ -2299,6 +2299,29 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             </div>
         </div>
     </div>
+
+    <!-- ▼▼▼ 追加: LP履歴詳細画面 ▼▼▼ -->
+    <div id="lp-history-detail-screen" class="screen-layer z-[200] flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-lp-history-detail-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">取引詳細</h2>
+            <div class="flex-1"></div>
+        </header>
+
+        <div class="flex-grow overflow-y-auto pb-safe">
+            <div id="lp-history-detail-content" class="p-4">
+                <!-- ここに詳細が描画されます -->
+            </div>
+        </div>
+    </div>
+    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
     
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
     <div id="assessment-modal" class="hidden fixed inset-0 bg-black/70 z-[210] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
@@ -4933,37 +4956,33 @@ const showToast = (message, type = 'normal') => {
         toast.classList.add('translate-y-[-150%]', 'opacity-0', 'scale-x-50');
     }, 3000);
 };
-            // ▼▼▼ 追加: 履歴を記録するヘルパー関数 ▼▼▼
-            const addLpHistory = (type, amount, reason) => {
+            // ▼▼▼ 修正: メタデータ(詳細情報)も保存できるようにする ▼▼▼
+            const addLpHistory = (type, amount, reason, metadata = {}) => {
                 if (!state.profile.lpHistory) state.profile.lpHistory = [];
                 const now = new Date();
-                
-                // 日付を「YYYY/MM/DD HH:MM」形式にする
                 const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                 
-                state.profile.lpHistory.unshift({ // 配列の先頭（一番上）に追加
+                state.profile.lpHistory.unshift({ 
                     id: 'lph_' + Date.now() + Math.random().toString(36).substr(2, 5),
-                    type: type, // 'earn'(獲得), 'spend'(使用), 'penalty'(没収)
+                    type: type, 
                     amount: amount,
                     reason: reason,
-                    dateStr: dateStr
+                    dateStr: dateStr,
+                    metadata: metadata // ★追加: 学習時間やアイテム名などの詳細データ
                 });
                 
-                // データが重くならないよう最新100件だけ保存する
-                if (state.profile.lpHistory.length > 100) {
-                    state.profile.lpHistory = state.profile.lpHistory.slice(0, 100);
+                if (state.profile.lpHistory.length > 200) {
+                    state.profile.lpHistory = state.profile.lpHistory.slice(0, 200);
                 }
             };
-            // ▲▲▲ 追加ここまで ▲▲▲
 
-            // 既存の addLP 関数の中に履歴記録を組み込む
-            const addLP = (amount, reason, show = true) => {
-                if (amount <= 0) return; // ★追加: 0以下の場合は何もしない
-                
+            // ▼▼▼ 修正: addLPの引数に metadata を追加 ▼▼▼
+            const addLP = (amount, reason, show = true, metadata = {}) => {
+                if (amount <= 0) return; 
                 state.profile.lp += amount;
                 
-                // ★追加: 獲得の履歴を残す
-                addLpHistory('earn', amount, reason);
+                // 獲得の履歴を残す
+                addLpHistory('earn', amount, reason, metadata);
 
                 updateLpDisplay();
                 saveState();
@@ -5558,7 +5577,7 @@ const showItemPopup = (item, type) => {
                     const earnedLP = Math.floor(currentQuizElapsed / 60);
                     
                     if (earnedLP > 0) {
-                        addLP(earnedLP, 'クイズ');
+                        addLP(earnedLP, 'クイズ', true, { title: title, duration: currentQuizElapsed });
                     }
                     
                     currentQuizElapsed = 0; // 使い終わったらリセット
@@ -5903,7 +5922,11 @@ const showItemPopup = (item, type) => {
             const endFocusTimer = () => {
                 if (!focusTimer.isRunning) return;
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
-                if (elapsed > 0) { recordSession('タイマー', elapsed); addLP(Math.floor(elapsed / 60), 'タイマー'); state.focus.totalTime += elapsed; saveState(); }
+                if (elapsed > 0) { 
+                    recordSession('タイマー', elapsed); 
+                    addLP(Math.floor(elapsed / 60), 'タイマー', true, { title: 'タイマー', duration: elapsed }); 
+                    state.focus.totalTime += elapsed; saveState(); 
+                }
                 resetTimerUI();
             
                 // 【追加】Service Workerにタイマー停止を通知
@@ -5920,7 +5943,11 @@ const showItemPopup = (item, type) => {
             const endStopwatch = () => {
                 if (!stopwatch.isRunning) return;
                 const elapsed = Math.round(stopwatch.elapsedTime);
-                if (elapsed > 0) { recordSession('ストップウォッチ', elapsed); addLP(Math.floor(elapsed / 60), 'ストップウォッチ'); state.focus.totalTime += elapsed; saveState(); }
+                if (elapsed > 0) { 
+                    recordSession('ストップウォッチ', elapsed); 
+                    addLP(Math.floor(elapsed / 60), 'ストップウォッチ', true, { title: 'ストップウォッチ', duration: elapsed }); 
+                    state.focus.totalTime += elapsed; saveState(); 
+                }
                 resetStopwatchUI();
                 // ▼▼▼【追加】ここから▼▼▼
                 state.focus.isRunning = false;
@@ -6584,7 +6611,7 @@ const showItemPopup = (item, type) => {
                         const penaltyLp = overMinutes * 100;
                         state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
                         // ▼▼▼ 追加: 没収の履歴を残す ▼▼▼
-                        addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ');
+                        addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ', { overMinutes: overMinutes });
                         
                         updateLpDisplay();
                         saveState();
@@ -6697,8 +6724,7 @@ const showItemPopup = (item, type) => {
                             if (elapsed > 0) {
                                 recordSession(currentStep.text, elapsed);
                                 const earned = Math.floor(elapsed / 60);
-                                // 第3引数を false にしてポップアップを抑制
-                                addLP(earned, 'クエストセクション', false); 
+                                addLP(earned, 'クエストセクション', false, { title: currentStep.text, duration: elapsed });
                                 // 累積変数に加算
                                 quest.accumulatedLp = (quest.accumulatedLp || 0) + earned;
                                 state.focus.totalTime += elapsed;
@@ -7880,14 +7906,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             // 2. ステータス画面
 
-            // ▼▼▼ 新規追加: LP履歴画面のサブページと描画ロジック ▼▼▼
+            // ▼▼▼ renderLpHistory の中身を修正 ▼▼▼
             const renderLpHistory = () => {
                 const container = $('#lp-history-list');
                 if (!container) return;
 
                 const history = state.profile.lpHistory || [];
 
-                // 履歴が空の場合
                 if (history.length === 0) {
                     container.innerHTML = `
                         <div class="py-20 flex flex-col items-center justify-center text-gray-400">
@@ -7899,32 +7924,32 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     return;
                 }
 
-                // 履歴リストを生成（PayPay風）
                 container.innerHTML = history.map(item => {
                     let icon, iconBg, iconColor, amountText, amountColor, sign;
 
                     if (item.type === 'earn') {
-                        icon = 'coins'; // 獲得
+                        icon = 'coins'; 
                         iconBg = 'bg-yellow-100 dark:bg-yellow-900/30';
                         iconColor = 'text-yellow-600 dark:text-yellow-400';
                         sign = '+';
-                        amountColor = 'text-red-500 font-bold'; // 獲得は目立つ赤
+                        amountColor = 'text-red-500 font-bold'; 
                     } else if (item.type === 'spend') {
-                        icon = 'shopping-cart'; // 使用
+                        icon = 'shopping-cart'; 
                         iconBg = 'bg-blue-100 dark:bg-blue-900/30';
                         iconColor = 'text-blue-600 dark:text-blue-400';
                         sign = '-';
-                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 使用は黒
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; 
                     } else if (item.type === 'penalty') {
-                        icon = 'alert-triangle'; // 没収（ペナルティ）
+                        icon = 'alert-triangle'; 
                         iconBg = 'bg-red-100 dark:bg-red-900/30';
                         iconColor = 'text-red-600 dark:text-red-400';
                         sign = '-';
-                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 没収は黒
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; 
                     }
 
                     return `
-                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                        <!-- ▼ クラスに cursor-pointer と lp-history-item を追加 -->
+                        <div class="lp-history-item flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-700" data-id="${item.id}">
                             <div class="flex items-center flex-grow min-w-0 mr-4">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-3 ${iconBg}">
                                     <i data-lucide="${icon}" class="w-5 h-5 ${iconColor}"></i>
@@ -7943,6 +7968,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }).join('');
 
                 lucide.createIcons({ root: container });
+
+                // ▼▼▼ 追加: 履歴アイテムのクリックイベント ▼▼▼
+                container.querySelectorAll('.lp-history-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        renderLpHistoryDetail(el.dataset.id);
+                    });
+                });
             };
 
             const lpHistoryPage = new SubPage('lp-history-screen', {
@@ -7950,6 +7982,123 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     renderLpHistory();
                 }
             });
+
+            // ▼▼▼ 新規追加: 取引詳細画面の描画と表示 ▼▼▼
+            const lpHistoryDetailPage = new SubPage('lp-history-detail-screen');
+            $('#close-lp-history-detail-btn').addEventListener('click', () => lpHistoryDetailPage.close());
+
+            const renderLpHistoryDetail = (historyId) => {
+                const item = state.profile.lpHistory.find(h => h.id === historyId);
+                if (!item) return;
+
+                const content = $('#lp-history-detail-content');
+                
+                let amountColor, sign, mainTitle;
+                if (item.type === 'earn') {
+                    amountColor = 'text-red-500';
+                    sign = '+';
+                    mainTitle = 'LP獲得';
+                } else if (item.type === 'spend') {
+                    amountColor = 'text-gray-900 dark:text-white';
+                    sign = '-';
+                    mainTitle = 'LP支払い';
+                } else {
+                    amountColor = 'text-gray-900 dark:text-white';
+                    sign = '-';
+                    mainTitle = 'LP没収';
+                }
+
+                // メタデータから明細行を生成
+                let detailsHTML = '';
+                const m = item.metadata || {};
+
+                if (item.type === 'earn') {
+                    // 学習時間がある場合
+                    if (m.duration) {
+                        const minutes = Math.floor(m.duration / 60);
+                        const seconds = m.duration % 60;
+                        const timeStr = minutes > 0 ? `${minutes}分${seconds > 0 ? seconds+'秒' : ''}` : `${seconds}秒`;
+                        detailsHTML += `
+                            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">学習内容</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white text-right break-words max-w-[60%]">${m.title || item.reason}</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">学習時間</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">${timeStr}</span>
+                            </div>
+                        `;
+                    } else {
+                        // ボーナスなど時間がない場合
+                         detailsHTML += `
+                            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">獲得内容</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white text-right">${m.title || item.reason}</span>
+                            </div>
+                        `;
+                    }
+                    detailsHTML += `
+                        <div class="flex justify-between py-3 border-transparent">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">獲得ポイント</span>
+                            <span class="text-sm font-bold text-red-500">+${item.amount.toLocaleString()} LP</span>
+                        </div>
+                    `;
+                } else if (item.type === 'spend') {
+                    // アイテム交換の場合
+                    const typeMap = { 'theme': 'テーマカラー', 'background': '壁紙', 'game': 'ゲーム', 'music': 'BGM' };
+                    const catName = typeMap[m.itemType] || 'アイテム';
+                    detailsHTML += `
+                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">交換アイテム</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white text-right max-w-[60%] break-words">${m.itemName || item.reason}</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">カテゴリ</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">${catName}</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-transparent">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">消費ポイント</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">-${item.amount.toLocaleString()} LP</span>
+                        </div>
+                    `;
+                } else if (item.type === 'penalty') {
+                    // ペナルティ没収の場合
+                    detailsHTML += `
+                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">ペナルティ理由</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white text-right">${item.reason}</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">サボり超過時間</span>
+                            <span class="text-sm font-bold text-red-500">${m.overMinutes} 分オーバー</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-transparent">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">没収ポイント</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">-${item.amount.toLocaleString()} LP</span>
+                        </div>
+                    `;
+                }
+
+                // 画面全体の組み立て (PayPay風 UI)
+                content.innerHTML = `
+                    <div class="flex flex-col items-center justify-center pt-6 pb-6">
+                        <p class="text-sm font-bold text-gray-500 dark:text-gray-400 mb-1">${mainTitle}</p>
+                        <div class="flex items-baseline justify-center mb-3">
+                            <span class="text-5xl font-black tabular-nums tracking-tighter ${amountColor}">${sign}${item.amount.toLocaleString()}</span>
+                            <span class="text-lg font-bold ml-1 ${amountColor}">LP</span>
+                        </div>
+                        <p class="text-base font-bold text-gray-800 dark:text-gray-200 mb-1 px-4 text-center break-words">${item.reason}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">${item.dateStr}</p>
+                    </div>
+
+                    <div class="mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 px-5 py-1">
+                        ${detailsHTML}
+                    </div>
+                `;
+
+                lpHistoryDetailPage.open();
+            };
+            // ▲▲▲ 追加ここまで ▲▲▲
 
             // 閉じるボタン
             $('#close-lp-history-btn').addEventListener('click', () => lpHistoryPage.close());
@@ -8346,7 +8495,7 @@ const checkQuestResume = () => {
                             const penaltyLp = overMinutes * 100;
                             state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
                             // ▼▼▼ 追加: 没収の履歴を残す ▼▼▼
-                            addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ');
+                            addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ', { overMinutes: overMinutes });
                             
                             updateLpDisplay();
                             saveState();
@@ -8873,7 +9022,7 @@ const checkQuestResume = () => {
 
                 // ▼▼▼ 追加: 使用の履歴を残す ▼▼▼
                 const itemName = initialData[type === 'background' ? 'backgrounds' : type + 's']?.[id]?.name || 'アイテム';
-                addLpHistory('spend', cost, `${itemName}と交換`);
+                addLpHistory('spend', cost, `${itemName}と交換`, { itemName: itemName, itemType: type });
                 
                 let itemData = null;
 
