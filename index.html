@@ -2289,12 +2289,12 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                 </button>
             </div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">LPの履歴</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">LP履歴</h2>
             <div class="flex-1"></div>
         </header>
 
         <div class="flex-grow overflow-y-auto pb-safe">
-            <div id="lp-history-list" class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700 border-b border-gray-100 dark:border-gray-700 shadow-sm">
+            <div id="lp-history-list" class="bg-white dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700 shadow-sm">
                 <!-- 履歴がここに入る -->
             </div>
         </div>
@@ -2311,7 +2311,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                 </button>
             </div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">取引詳細</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">履歴詳細</h2>
             <div class="flex-1"></div>
         </header>
 
@@ -4847,7 +4847,7 @@ const renderDailyDetails = (targetDate) => {
                 if (targetLpHistory) {
                     renderLpHistoryDetail(targetLpHistory.id); // 詳細画面を開く
                 } else {
-                    showToast('このログのLP履歴は見つかりませんでした');
+                    showToast('このデータの詳細はありません');
                 }
             });
         });
@@ -6728,9 +6728,12 @@ const showItemPopup = (item, type) => {
                             // 代わりに showToast だけ呼んで、画面内のメッセージだけ表示します。
                             const elapsed = currentStep.duration;
                             if (elapsed > 0) {
-                                const sId = recordSession(currentStep.text, elapsed);
+                                const sTitle = 'クエスト: ' + currentStep.text;
+                                const sId = recordSession(sTitle, elapsed);
                                 const earned = Math.floor(elapsed / 60);
-                                addLP(earned, 'クエスト', false, { title: currentStep.text, duration: elapsed, sessionId: sId }); 
+                                
+                                addLP(earned, 'クエスト', false, { title: sTitle, duration: elapsed, sessionId: sId }); 
+                                
                                 quest.accumulatedLp = (quest.accumulatedLp || 0) + earned;
                                 state.focus.totalTime += elapsed;
                                 
@@ -6840,12 +6843,14 @@ const showItemPopup = (item, type) => {
             cancelQuestAlarm();
             if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
                 const currentStep = quest.plan[quest.currentIndex];
-                // 現在のステップが 'section' (学習中) の場合のみ記録
                 if (currentStep.type === 'section') {
-                    const elapsed = currentStep.duration - quest.timeLeft; // 経過時間
+                    const elapsed = currentStep.duration - quest.timeLeft; 
                     if (elapsed > 0) {
-                        recordSession(`${currentStep.text} (中断)`, elapsed);
-                        addLP(Math.floor(elapsed / 60), 'クエスト（中断）');
+                        const sTitle = `クエスト: ${currentStep.text} (中断)`;
+                        const sId = recordSession(sTitle, elapsed);
+                        
+                        addLP(Math.floor(elapsed / 60), 'クエスト（中断）', false, { title: sTitle, duration: elapsed, sessionId: sId });
+                        
                         state.focus.totalTime += elapsed;
                         saveState();
                         showToast(`セクションの ${formatTime(elapsed)} を記録しました。`);
@@ -7913,23 +7918,22 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             // ▼▼▼ 新規追加: LP履歴画面のサブページと描画ロジック ▼▼▼
 
-            // 履歴と学習ログのアイコン・色を共通化して取得するヘルパー関数
-            const getHistoryIconProps = (type, title) => {
+            // ▼▼▼ 修正: 第3引数 reason を追加し、判定をより強力にする ▼▼▼
+            const getHistoryIconProps = (type, title, reason = '') => {
                 if (type === 'spend') return { icon: 'shopping-cart', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' };
                 if (type === 'penalty') return { icon: 'alert-triangle', bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' };
                 
-                const t = title || '';
+                // タイトルと理由をつなげて判定する
+                const t = (title || '') + ' ' + (reason || '');
                 if (t.includes('タイマー')) return { icon: 'timer', bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' };
                 if (t.includes('ストップウォッチ')) return { icon: 'watch', bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' };
                 if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' };
                 if (t.includes('休憩') || t.includes('ブレイク')) return { icon: 'coffee', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' };
                 
-                // ログインボーナスやお礼などの「純粋なコイン獲得」
                 if (t.includes('ログイン') || t.includes('お礼') || t.includes('開発者') || t.includes('はじめまして')) {
                     return { icon: 'coins', bg: 'bg-yellow-100 dark:bg-yellow-900/30', color: 'text-yellow-600 dark:text-yellow-400' };
                 }
                 
-                // ▼ 修正: 上記のどれにも当てはまらない場合（＝各種教材）はシアン色の本アイコン
                 return { icon: 'book-open', bg: 'bg-cyan-100 dark:bg-cyan-900/30', color: 'text-cyan-600 dark:text-cyan-400' };
             };
 
@@ -7950,36 +7954,43 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     return;
                 }
 
-                container.innerHTML = history.map(item => {
-                    // ヘルパー関数からアイコンの情報を取得
-                    const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, (item.metadata?.title || item.reason));
+                // ▼▼▼ 修正: 履歴一覧アイテムの描画 (線のデザイン変更 & 第3引数 reason 渡し) ▼▼▼
+                container.innerHTML = history.map((item, index) => {
+                    const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, item.metadata?.title, item.reason);
                     
                     let amountColor, sign;
                     if (item.type === 'earn') {
                         sign = '+';
-                        amountColor = 'text-[#1CBE78] font-bold'; // 獲得は緑色
+                        amountColor = 'text-[#1CBE78] font-bold'; 
                     } else if (item.type === 'spend') {
                         sign = '-';
-                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 使用は黒(白)色
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; 
                     } else if (item.type === 'penalty') {
                         sign = '-';
-                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; // 没収は黒(白)色
+                        amountColor = 'text-gray-800 dark:text-gray-200 font-bold'; 
                     }
 
+                    // 最後のアイテム以外に下線を引く
+                    const isLast = index === history.length - 1;
+                    const borderClass = isLast ? '' : 'border-b border-gray-100 dark:border-gray-700';
+
                     return `
-                        <div class="lp-history-item flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-700" data-id="${item.id}">
-                            <div class="flex items-center flex-grow min-w-0 mr-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-3 ${iconBg}">
-                                    <i data-lucide="${icon}" class="w-5 h-5 ${iconColor}"></i>
+                        <div class="lp-history-item hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-700" data-id="${item.id}">
+                            <!-- mx-4 で左右に余白を作り、borderClassで線を引く -->
+                            <div class="flex items-center justify-between py-4 mx-4 ${borderClass}">
+                                <div class="flex items-center flex-grow min-w-0 mr-4">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-3 ${iconBg}">
+                                        <i data-lucide="${icon}" class="w-5 h-5 ${iconColor}"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-sm text-gray-900 dark:text-gray-100 truncate mb-0.5">${item.reason}</p>
+                                        <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">${item.dateStr}</p>
+                                    </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <p class="font-bold text-sm text-gray-900 dark:text-gray-100 truncate mb-0.5">${item.reason}</p>
-                                    <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">${item.dateStr}</p>
+                                <div class="text-right flex-shrink-0 flex items-baseline">
+                                    <p class="text-lg ${amountColor} tabular-nums leading-none tracking-tight">${sign}${item.amount.toLocaleString()}</p>
+                                    <p class="text-[10px] text-gray-400 font-bold ml-0.5">LP</p>
                                 </div>
-                            </div>
-                            <div class="text-right flex-shrink-0 flex items-baseline">
-                                <p class="text-lg ${amountColor} tabular-nums leading-none tracking-tight">${sign}${item.amount.toLocaleString()}</p>
-                                <p class="text-[10px] text-gray-400 font-bold ml-0.5">LP</p>
                             </div>
                         </div>
                     `;
@@ -8040,7 +8051,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 const amountColor = 'text-gray-900 dark:text-white';
                 
                 // アイコン情報の取得
-                const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, (item.metadata?.title || item.reason));
+                const { icon, bg: iconBg, color: iconColor } = getHistoryIconProps(item.type, item.metadata?.title, item.reason);
 
                 // メタデータから明細行を生成
                 let detailsHTML = '';
@@ -8560,9 +8571,11 @@ const checkQuestResume = () => {
                     if (!isPenalty) {
                         showToast('閉じている間にこのステップは終了しました。');
                         if (currentStep.type === 'section') {
-                            recordSession(currentStep.text + '(中断)', currentStep.duration);
+                            const sTitle = 'クエスト: ' + currentStep.text + ' (中断)';
+                            const sId = recordSession(sTitle, currentStep.duration);
+                            
                             state.focus.totalTime += currentStep.duration;
-                            addLP(Math.floor(currentStep.duration / 60), 'クエスト');
+                            addLP(Math.floor(currentStep.duration / 60), 'クエスト', false, { title: sTitle, duration: currentStep.duration, sessionId: sId });
                             saveState();
                         }
                         runNextQuestStep();
