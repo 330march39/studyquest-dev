@@ -3644,6 +3644,18 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
 
+            // ▼▼▼ ここから追加: ルーティン設定の一番上にある時間を取得する関数 ▼▼▼
+            const getDefaultDuration = (type) => {
+                const template = state.profile.routineTemplate || [];
+                // 指定されたtype（section または break）の最初の要素を探す
+                const firstMatch = template.find(item => item.type === type);
+                // 見つかればその時間を、見つからなければフォールバックで25分/5分を返す
+                if (firstMatch && firstMatch.duration) {
+                    return firstMatch.duration;
+                }
+                return type === 'section' ? 25 * 60 : 5 * 60;
+            };
+
             // ★新規追加: テーマカラーをモードに合わせて適用する関数
             const applyThemeColor = () => {
                 const themeId = state.profile.activeTheme;
@@ -6003,7 +6015,7 @@ const showItemPopup = (item, type) => {
                     id: Date.now(),
                     type: 'section',
                     text: '', // ★ここを空文字にする（これで入力欄が空になる）
-                    duration: 25 * 60
+                    duration: getDefaultDuration('section') // ★変更: 関数から取得
                 });
                 renderQuestPlan();
             });
@@ -6012,11 +6024,11 @@ const showItemPopup = (item, type) => {
                 quest.plan.push({
                     id: Date.now(),
                     type: 'break',
-                    duration: 5 * 60
+                    duration: getDefaultDuration('break') // ★変更: 関数から取得
                 });
                 renderQuestPlan();
             });
-
+            
             startQuestBtn.addEventListener('click', startQuest);
 
             // クエスト実行画面の終了ボタン（バツボタン）
@@ -7771,12 +7783,12 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     }
 
                     content.querySelector('#wiz-add-section').onclick = () => {
-                        state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: 25 * 60 });
+                        state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: getDefaultDuration('section') }); // ★変更
                         renderList();
                         setTimeout(() => listEl.scrollTop = listEl.scrollHeight, 100);
                     };
                     content.querySelector('#wiz-add-break').onclick = () => {
-                        state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: 5 * 60 });
+                        state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: getDefaultDuration('break') }); // ★変更
                         renderList();
                         setTimeout(() => listEl.scrollTop = listEl.scrollHeight, 100);
                     };
@@ -10139,14 +10151,14 @@ const routineSettingsPage = new SubPage('routine-settings-screen', {
 
         // ボタンイベント設定
         document.getElementById('btn-add-section').addEventListener('click', () => {
-            state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: 25 * 60 });
+            state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: getDefaultDuration('section') }); // ★変更
             saveState();
             // ページ全体をリロードしてSortableを再設定
             routineSettingsPage.onOpen();
         });
 
         document.getElementById('btn-add-break').addEventListener('click', () => {
-            state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: 5 * 60 });
+            state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: getDefaultDuration('break') }); // ★変更
             saveState();
             routineSettingsPage.onOpen();
         });
