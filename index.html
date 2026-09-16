@@ -6418,7 +6418,37 @@ const showItemPopup = (item, type) => {
                     // 1. 削除スワイプ
                     new SwipeHandler(itemEl, {
                         onDelete: () => {
+                            // アイテムを配列から削除
                             quest.plan = quest.plan.filter(p => p.id !== item.id);
+                            
+                            // ▼▼▼ ここから追加: 削除後にもブレイクタイムの上限を再計算 ▼▼▼
+                            let sectionTotalMin = 0;
+                            let modified = false;
+
+                            quest.plan.forEach(p => {
+                                if (p.type === 'section') {
+                                    sectionTotalMin += Math.floor(p.duration / 60);
+                                } else if (p.type === 'break') {
+                                    let limit = Math.ceil(sectionTotalMin / 5) * 5;
+                                    if (limit > 60) limit = 60;
+                                    
+                                    let currentMin = Math.floor(p.duration / 60);
+
+                                    if (limit === 0 && currentMin > 1) {
+                                        p.duration = 60; // 1分に強制
+                                        modified = true;
+                                    } else if (limit > 0 && currentMin > limit) {
+                                        p.duration = limit * 60; // 上限値に切り詰め
+                                        modified = true;
+                                    }
+                                }
+                            });
+
+                            if (modified) {
+                                showToast('ブレイクの上限を再調整しました', 'normal');
+                            }
+                            // ▲▲▲ ここまで追加 ▲▲▲
+
                             setTimeout(renderQuestPlan, 300);
                         }
                     });
@@ -6471,7 +6501,7 @@ const showItemPopup = (item, type) => {
                                 else if (limit > 0 && currentMin > limit) {
                                     p.duration = limit * 60;
                                     modified = true;
-                                    if (p.id === item.id) toastMsg = `ブレイクタイムの上限は ${limit} 分までです`;
+                                    if (p.id === item.id) toastMsg = `このブレイクタイムの上限は ${limit} 分です`;
                                 }
                             }
                         });
@@ -6482,7 +6512,7 @@ const showItemPopup = (item, type) => {
                                 showToast(toastMsg, 'error'); // エラー通知
                             } else if (item.type === 'section') {
                                 // セクションの時間を減らした結果、後ろのブレイクが上限オーバーになった場合
-                                showToast('セクションの時間に合わせてブレイクの上限を調整しました', 'normal');
+                                showToast('ブレイクの上限を調整しました', 'normal');
                             }
                         }
                         // ▲▲▲ ここまで追加 ▲▲▲
@@ -6834,7 +6864,13 @@ const showItemPopup = (item, type) => {
             // ▼▼▼ ここから追加: ブレイクタイム単体でのクエスト開始を禁止 ▼▼▼
             const hasSection = quest.plan.some(item => item.type === 'section');
             if (!hasSection) {
-                showToast('セクションを追加してください（ブレイクタイムのみでは開始できません）', 'error');
+                showToast('ブレイクタイムのみでは開始できません', 'error');
+                return;
+            }
+
+            // ★追加: 先頭がブレイクタイムの場合は開始不可にする
+            if (quest.plan[0].type === 'break') {
+                showToast('ブレイクタイムからスタートはできません', 'error');
                 return;
             }
             // ▼▼▼ 追加: クエスト開始時に横画面固定（フルスクリーン）にする ▼▼▼
