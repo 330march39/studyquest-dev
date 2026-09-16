@@ -6443,10 +6443,49 @@ const showItemPopup = (item, type) => {
                         if (val > 720) val = 720; // 720分(12時間)でカンスト
                         
                         e.target.value = val; // 入力欄の数字も書き換える
-                        // ▲▲▲ 修正ここまで ▲▲▲
-                    
-                        const defaultVal = (item.type === 'section') ? 25 : 5;
                         item.duration = val * 60;
+                        
+                        // ▼▼▼ ここから追加: ブレイクタイムのルールに基づくバリデーション ▼▼▼
+                        let sectionTotalMin = 0;
+                        let modified = false;
+                        let toastMsg = '';
+
+                        // リストを上から順にチェックし、セクションの合計時間を計算しながらブレイクの上限をチェックする
+                        quest.plan.forEach(p => {
+                            if (p.type === 'section') {
+                                sectionTotalMin += Math.floor(p.duration / 60);
+                            } else if (p.type === 'break') {
+                                // 上限の計算：(セクション合計を5で割って切り上げ) × 5 （最大60分）
+                                let limit = Math.ceil(sectionTotalMin / 5) * 5;
+                                if (limit > 60) limit = 60;
+                                
+                                let currentMin = Math.floor(p.duration / 60);
+
+                                // 前にセクションがなくて limit=0 の場合、実質ブレイク不可なので1分に強制
+                                if (limit === 0 && currentMin > 1) {
+                                    p.duration = 60; // 1分(60秒)に強制
+                                    modified = true;
+                                    if (p.id === item.id) toastMsg = 'セクションの後にブレイクを配置してください';
+                                } 
+                                // 上限を超えている場合、上限値に書き換える
+                                else if (limit > 0 && currentMin > limit) {
+                                    p.duration = limit * 60;
+                                    modified = true;
+                                    if (p.id === item.id) toastMsg = `ブレイクタイムの上限は ${limit} 分までです`;
+                                }
+                            }
+                        });
+
+                        if (modified) {
+                            renderQuestPlan(); // 変更があった場合は再描画して数値を反映
+                            if (toastMsg) {
+                                showToast(toastMsg, 'error'); // エラー通知
+                            } else if (item.type === 'section') {
+                                // セクションの時間を減らした結果、後ろのブレイクが上限オーバーになった場合
+                                showToast('セクションの時間に合わせてブレイクの上限を調整しました', 'normal');
+                            }
+                        }
+                        // ▲▲▲ ここまで追加 ▲▲▲
                     });
                 });
             
@@ -6785,11 +6824,17 @@ const showItemPopup = (item, type) => {
             }
             // ▲▲▲ クエスト進行ロジック修正完了 ▲▲▲
 
-        // クエストを開始する関数
         // クエストを開始する関数（編集画面維持版）
         function startQuest() {
             if (quest.plan.length === 0) {
                 showToast('クエストの予定がありません');
+                return;
+            }
+
+            // ▼▼▼ ここから追加: ブレイクタイム単体でのクエスト開始を禁止 ▼▼▼
+            const hasSection = quest.plan.some(item => item.type === 'section');
+            if (!hasSection) {
+                showToast('セクションを追加してください（ブレイクタイムのみでは開始できません）', 'error');
                 return;
             }
             // ▼▼▼ 追加: クエスト開始時に横画面固定（フルスクリーン）にする ▼▼▼
@@ -8960,9 +9005,37 @@ const checkQuestResume = () => {
                             filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加
                             onEnd: (evt) => {
                                 // quest.plan 配列を並び替え
-                                // (quest.plan は state に保存されない一時的なもの)
                                 const item = quest.plan.splice(evt.oldIndex, 1)[0];
                                 quest.plan.splice(evt.newIndex, 0, item);
+                                
+                                // ▼▼▼ ここから追加: 並び替え後にもブレイクタイムの上限を再計算 ▼▼▼
+                                let sectionTotalMin = 0;
+                                let modified = false;
+
+                                quest.plan.forEach(p => {
+                                    if (p.type === 'section') {
+                                        sectionTotalMin += Math.floor(p.duration / 60);
+                                    } else if (p.type === 'break') {
+                                        let limit = Math.ceil(sectionTotalMin / 5) * 5;
+                                        if (limit > 60) limit = 60;
+                                        
+                                        let currentMin = Math.floor(p.duration / 60);
+
+                                        if (limit === 0 && currentMin > 1) {
+                                            p.duration = 60; 
+                                            modified = true;
+                                        } else if (limit > 0 && currentMin > limit) {
+                                            p.duration = limit * 60;
+                                            modified = true;
+                                        }
+                                    }
+                                });
+
+                                if (modified) {
+                                    showToast('順序変更に合わせてブレイクの上限を調整しました', 'normal');
+                                }
+                                // ▲▲▲ ここまで追加 ▲▲▲
+
                                 renderQuestPlan(); // 番号を振り直すために再描画
                             }
                         });
