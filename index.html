@@ -6861,7 +6861,7 @@ const showItemPopup = (item, type) => {
                 return;
             }
 
-            // ▼▼▼ ここから追加: ブレイクタイム単体でのクエスト開始を禁止 ▼▼▼
+            // ▼▼▼ ブレイクタイム単体でのクエスト開始を禁止 ▼▼▼
             const hasSection = quest.plan.some(item => item.type === 'section');
             if (!hasSection) {
                 showToast('ブレイクタイムのみでは開始できません', 'error');
@@ -6871,6 +6871,19 @@ const showItemPopup = (item, type) => {
             // ★追加: 先頭がブレイクタイムの場合は開始不可にする
             if (quest.plan[0].type === 'break') {
                 showToast('ブレイクタイムからスタートはできません', 'error');
+                return;
+            }
+            
+            let hasConsecutiveBreaks = false;
+            for (let i = 0; i < quest.plan.length - 1; i++) {
+                if (quest.plan[i].type === 'break' && quest.plan[i+1].type === 'break') {
+                    hasConsecutiveBreaks = true;
+                    break;
+                }
+            }
+
+            if (hasConsecutiveBreaks) {
+                showToast('ブレイクタイムは連続できません', 'error');
                 return;
             }
             // ▼▼▼ 追加: クエスト開始時に横画面固定（フルスクリーン）にする ▼▼▼
@@ -9068,7 +9081,7 @@ const checkQuestResume = () => {
                                 });
 
                                 if (modified) {
-                                    showToast('順序変更に合わせてブレイクの上限を調整しました', 'normal');
+                                    showToast('ブレイクの上限を調整しました', 'normal');
                                 }
                                 // ▲▲▲ ここまで追加 ▲▲▲
 
