@@ -6092,89 +6092,95 @@ const showItemPopup = (item, type) => {
             $('#stopwatch-end-btn').addEventListener('click', endStopwatch);
             
             // ▼▼▼ 修正版v4: CSS制御による完全な色管理 ▼▼▼
-            let isAnimating = false;
 
-            $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
-                const targetBtn = e.currentTarget;
-                const nextPageId = targetBtn.dataset.page;
-                const activePage = document.querySelector('.page.active');
-                
-                // ▼▼▼ ここを修正 ▼▼▼
-                if (activePage && activePage.id === nextPageId) {
-                    // 現在開いているタブをもう一度タップしたら、メイン領域を一番上へスムーズスクロール
-                    const mainContainer = document.querySelector('main');
-                    if (mainContainer) {
-                        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                    return; // ページ遷移処理はキャンセル
-                }
-                
-                if (isAnimating) return;
+            let pageScrollPositions = {}; // ★追加：各タブのスクロール位置を保存する変数
+let isAnimating = false;
 
-                const nextPage = $(`#${nextPageId}`);
-                if (!nextPage) return;
+$$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
+    const targetBtn = e.currentTarget;
+    const nextPageId = targetBtn.dataset.page;
+    const activePage = document.querySelector('.page.active');
+    const mainContainer = document.querySelector('main'); // スクロール領域を取得
+    
+    // 同じタブをタップした場合は一番上へ戻る
+    if (activePage && activePage.id === nextPageId) {
+        if (mainContainer) {
+            mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        return; 
+    }
+    
+    if (isAnimating) return;
 
-                $('main').scrollTop = 0;
+    const nextPage = $(`#${nextPageId}`);
+    if (!nextPage) return;
 
-                // --- 1. タブの状態更新 ---
-                // すべてのタブから active-tab を削除
-                $$('.tab-btn').forEach(b => {
-                    b.classList.remove('active-tab');
-                    
-                    // 集中ボタン(center-fab)のリセット（変形のみ）
-                    if (b.classList.contains('center-fab')) {
-                        b.style.transform = '';
-                    }
-                });
+    // ▼▼▼ 修正ポイント1：別のタブに行く直前に、今のスクロール位置を記憶する ▼▼▼
+    if (activePage && mainContainer) {
+        pageScrollPositions[activePage.id] = mainContainer.scrollTop;
+    }
 
-                // 押されたタブに active-tab を付与
-                // (CSSで色が自動的に変わります。真ん中ボタンはCSSで無視されるので安全です)
-                targetBtn.classList.add('active-tab');
+    // ❌ 削除: $('main').scrollTop = 0; （←これは消してください）     
+    // --- 1. タブの状態更新 ---     
+    $$('.tab-btn').forEach(b => {
+        b.classList.remove('active-tab');
+        if (b.classList.contains('center-fab')) {
+            b.style.transform = '';
+        }
+    });
 
-                // --- 2. 集中ボタン独自のアニメーション ---
-                if (targetBtn.classList.contains('center-fab')) {
-                    targetBtn.animate([
-                        { transform: 'translateX(-50%) scale(0.9)' },
-                        { transform: 'translateX(-50%) scale(1.1)' },
-                        { transform: 'translateX(-50%) scale(1)' }
-                    ], { duration: 300, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
-                }
+    targetBtn.classList.add('active-tab');
 
-                $('#header-title').textContent = targetBtn.dataset.title;
+    // --- 2. 集中ボタン独自のアニメーション ---
+    if (targetBtn.classList.contains('center-fab')) {
+        targetBtn.animate([
+            { transform: 'translateX(-50%) scale(0.9)' },
+            { transform: 'translateX(-50%) scale(1.1)' },
+            { transform: 'translateX(-50%) scale(1)' }
+        ], { duration: 300, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
+    }
 
-                // --- 3. ページ遷移処理 (変更なし) ---
-                isAnimating = true;
+    $('#header-title').textContent = targetBtn.dataset.title;
 
-                if (activePage) {
-                    activePage.classList.add('page-exit');
-                    activePage.classList.remove('active');
-                    activePage.addEventListener('animationend', () => {
-                        activePage.classList.remove('page-exit');
-                    }, { once: true });
-                }
+    // --- 3. ページ遷移処理 ---
+    isAnimating = true;
 
-                nextPage.classList.add('page-enter');
+    if (activePage) {
+        activePage.classList.add('page-exit');
+        activePage.classList.remove('active');
+        activePage.addEventListener('animationend', () => {
+            activePage.classList.remove('page-exit');
+        }, { once: true });
+    }
 
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        if (renderEngine.pages[nextPageId]) { 
-                            renderEngine.pages[nextPageId](); 
-                        }
-                        if (nextPageId === 'focus-page') {
-                            miniTimerTemporarilyHidden = false;
-                        }
-                        updateMiniTimer();
-                        lucide.createIcons();
-                    }, 10);
-                });
+    nextPage.classList.add('page-enter');
 
-                nextPage.addEventListener('animationend', () => {
-                    nextPage.classList.remove('page-enter');
-                    nextPage.classList.add('active');
-                    isAnimating = false;
-                }, { once: true });
-            }));
-            // ▲▲▲ 修正ここまで ▲▲▲
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            // ページの中身を描画
+            if (renderEngine.pages[nextPageId]) { 
+                renderEngine.pages[nextPageId](); 
+            }
+            if (nextPageId === 'focus-page') {
+                miniTimerTemporarilyHidden = false;
+            }
+            updateMiniTimer();
+            lucide.createIcons();
+
+            // ▼▼▼ 修正ポイント2：中身が描画されて高さが確保された【後】に位置を復元 ▼▼▼
+            if (mainContainer) {
+                mainContainer.scrollTop = pageScrollPositions[nextPageId] || 0;
+            }
+
+        }, 10);
+    });
+
+    nextPage.addEventListener('animationend', () => {
+        nextPage.classList.remove('page-enter');
+        nextPage.classList.add('active');
+        isAnimating = false;
+    }, { once: true });
+}));
 
             // ▼▼▼ 修正版: 要素が存在するか確認してからイベントを設定する ▼▼▼
             const miniTimerBar = $('#mini-timer-bar');
@@ -10702,6 +10708,64 @@ window.addEventListener('resize', () => {
     }, 300); // 0.3秒待機（iOSの回転アニメーション時間に合わせる）
 });
 // ▲▲▲ 追加ここまで ▲▲▲
+        const initializeApp = async () => {
+            // 1. ローカルデータの読み込みと初期描画準備
+            loadState(); 
+            updateAppearance();
+            
+            // 2. 外部データの取得処理（※URL等は実際の環境に合わせてください）
+            const fetchPromise = fetch('https://your-api-or-json-url.com/data')
+                .then(res => {
+                    if (!res.ok) throw new Error('通信エラー');
+                    return res.json();
+                })
+                .then(newData => {
+                    // 成功時: 最新データを反映する処理をここに書く
+                    // 例: initialData.quizzes = newData.quizzes;
+                    return true; 
+                })
+                .catch(err => {
+                    console.warn('通信失敗:', err);
+                    return false;
+                });
+
+            // 3. 3秒のタイムアウト処理
+            const timeoutPromise = new Promise(resolve => {
+                setTimeout(() => resolve('timeout'), 3000);
+            });
+
+            // 4. アプリを表示し、スプラッシュ画面を消す関数
+            const launchUI = () => {
+                renderEngine.renderAll(); // 画面を描画
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.style.display = 'none', 500);
+                }
+            };
+
+            // 5. 通信と3秒タイマーを競争させる
+            const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+            if (result === 'timeout') {
+                console.log('3秒経過。ローカルデータで起動し、裏で通信を継続します。');
+                launchUI(); // 先に画面を開く
+                
+                // 裏で通信が終わった時の処理
+                fetchPromise.then(success => {
+                    if (success) {
+                        console.log('バックグラウンドで最新データを取得しました');
+                        // ユーザーの操作を邪魔しない程度に画面を更新
+                    }
+                });
+            } else {
+                console.log('3秒以内に通信完了。最新データで起動します。');
+                launchUI(); // 最新データで画面を開く
+            }
+        };
+
+        // アプリ起動フローを実行
+        initializeApp();
     </script>
     <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden animate-fadeIn" onclick="this.classList.add('hidden')">
         
