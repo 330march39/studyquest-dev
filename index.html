@@ -251,8 +251,11 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         }
 
         /* ▼▼▼ 追加: プロフィールが開いている時のメイン画面の状態 ▼▼▼ */
-        #app-container.background-pushed {
+        #app-container.background-pushed,
+        .screen-layer.background-pushed {
             transform: translateX(-30%); /* 左に少しずれる */
+            /* サブページが奥に行く時もなめらかに動かす */
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
         }
         
         /* ↓↓↓ 既存の .break-content-btn 関連をこれに置き換えてください ↓↓↓ */
@@ -3277,6 +3280,10 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             // ==========================================
             // ▼▼▼ 汎用サブページ管理クラス (これ1つで全ページ対応) ▼▼▼
             // ==========================================
+            
+            // ★追加: 開いているサブページを順番に記憶する配列
+            const subPageStack = [];
+
             class SubPage {
                 constructor(elementId, options = {}) {
                     this.el = document.getElementById(elementId);
@@ -3297,6 +3304,21 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     this.initEvents();
                 }
 
+                // ★追加: 現在のこのページの下にある要素（親ページ）を取得する関数
+                getPreviousElement() {
+                    const index = subPageStack.indexOf(this);
+                    if (index > 0) {
+                        return subPageStack[index - 1].el; // 自分の1つ下のサブページ
+                    } else if (index === 0) {
+                        return this.appContainer; // 自分が一番下ならメイン画面
+                    }
+                    // まだ開いていない場合は、現在開いている一番上のページ、なければメイン画面
+                    if (subPageStack.length > 0) {
+                        return subPageStack[subPageStack.length - 1].el;
+                    }
+                    return this.appContainer;
+                }
+
                 // イベントリスナーの設定
                 initEvents() {
                     if (!this.el) return;
@@ -3308,16 +3330,17 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         this.touchStartX = touch.clientX;
                         this.touchStartY = touch.clientY;
                         
-                        // ▼▼▼ 追加: タップだけで終わった場合の誤判定防止のため、現在地も初期化 ▼▼▼
                         this.touchCurrentX = this.touchStartX; 
-                        // ▲▲▲ 追加ここまで ▲▲▲
 
                         // 画面左端(50px以内)からの操作のみスワイプバックとみなす
                         if (this.touchStartX < 50) {
                             this.isEdgeSwipe = true;
                             this.swipeTouchId = touch.identifier;
                             this.el.classList.add('is-swiping');
-                            this.appContainer.style.transition = 'none';
+                            
+                            // 直前の画面のアニメーションを切って指に追従させる
+                            const prevEl = this.getPreviousElement();
+                            if (prevEl) prevEl.style.transition = 'none';
                         }
                     }, { passive: true });
 
@@ -3334,7 +3357,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         const diffX = this.touchCurrentX - this.touchStartX;
                         const diffY = currentY - this.touchStartY;
 
-                        // ▼▼▼ 縦移動判定 (縦スクロール中はスワイプバックをキャンセル) ▼▼▼
+                        // 縦移動判定 (縦スクロール中はスワイプバックをキャンセル)
                         if (Math.abs(diffY) > Math.abs(diffX)) {
                             this.resetSwipeState();
                             return;
@@ -3346,12 +3369,15 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                             // ページの移動
                             this.el.style.transform = `translateX(${diffX}px)`;
                             
-                            // 背景（メイン画面）のパララックス移動
-                            const screenWidth = window.innerWidth;
-                            const progress = Math.min(diffX / screenWidth, 1);
-                            const startX = -30;
-                            const currentMainX = startX + (Math.abs(startX) * progress);
-                            this.appContainer.style.transform = `translateX(${currentMainX}%)`;
+                            // ★修正: 直前の画面のパララックス移動
+                            const prevEl = this.getPreviousElement();
+                            if (prevEl) {
+                                const screenWidth = window.innerWidth;
+                                const progress = Math.min(diffX / screenWidth, 1);
+                                const startX = -30;
+                                const currentMainX = startX + (Math.abs(startX) * progress);
+                                prevEl.style.transform = `translateX(${currentMainX}%)`;
+                            }
                         }
                     }, { passive: false });
 
@@ -3362,7 +3388,10 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         if (!touch) return;
 
                         this.el.classList.remove('is-swiping');
-                        this.appContainer.style.transition = '';
+                        
+                        // アニメーションを元に戻す
+                        const prevEl = this.getPreviousElement();
+                        if (prevEl) prevEl.style.transition = '';
 
                         const diff = this.touchCurrentX - this.touchStartX;
                         const threshold = window.innerWidth / 3; // 画面の1/3以上動かしたら閉じる
@@ -3382,15 +3411,19 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                 resetSwipeState() {
                     this.isEdgeSwipe = false;
                     this.el.classList.remove('is-swiping');
-                    this.appContainer.style.transition = '';
+                    const prevEl = this.getPreviousElement();
+                    if (prevEl) prevEl.style.transition = '';
                     this.resetPosition();
                 }
 
                 // 位置を元に戻す（キャンセル時）
                 resetPosition() {
                     this.el.style.transform = '';
-                    this.appContainer.style.transform = '';
-                    this.appContainer.style.filter = '';
+                    const prevEl = this.getPreviousElement();
+                    if (prevEl) {
+                        prevEl.style.transform = '';
+                        prevEl.style.filter = '';
+                    }
                 }
 
                 // ページを開く
@@ -3400,8 +3433,20 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         this.closeTimer = null;
                     }
 
-                    // 開く前の処理（データの描画など）
+                    // 開く前の処理
                     if (this.onOpen) this.onOpen();
+
+                    // ★修正: 開く前に、現在の直前の画面を奥へ押しやる
+                    const prevEl = this.getPreviousElement();
+                    if (prevEl) prevEl.classList.add('background-pushed');
+                    
+                    // スタックに自分を追加（既にいる場合は一旦消して上に持ってくる）
+                    const index = subPageStack.indexOf(this);
+                    if (index > -1) subPageStack.splice(index, 1);
+                    subPageStack.push(this);
+
+                    // 後から開いたものが必ず上に来るように z-index を動的に設定
+                    this.el.style.zIndex = 100 + (subPageStack.length * 10);
 
                     // スタイルリセット
                     this.resetPosition();
@@ -3410,9 +3455,6 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     this.el.style.display = 'flex';
                     void this.el.offsetWidth; // リフロー強制
                     this.el.classList.add('active');
-                    
-                    // メイン画面を奥へ
-                    this.appContainer.classList.add('background-pushed');
                 }
 
                 // ページを閉じる
@@ -3422,8 +3464,17 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     // 閉じる前の処理
                     if (this.onClose) this.onClose();
 
-                    // メイン画面を戻す
-                    this.appContainer.classList.remove('background-pushed');
+                    // スタックから自分を削除
+                    const index = subPageStack.indexOf(this);
+                    if (index > -1) subPageStack.splice(index, 1);
+
+                    // ★修正: 次に一番上になる画面（自分の下にあった画面）を元に戻す
+                    let newTopEl = this.appContainer;
+                    if (subPageStack.length > 0) {
+                        newTopEl = subPageStack[subPageStack.length - 1].el;
+                    }
+                    if (newTopEl) newTopEl.classList.remove('background-pushed');
+
                     this.resetPosition();
 
                     if (this.closeTimer) clearTimeout(this.closeTimer);
