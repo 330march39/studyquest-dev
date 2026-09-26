@@ -5742,36 +5742,6 @@ const showItemPopup = (item, type) => {
                 }
                 // ▲▲▲ 修正ここまで ▲▲▲
 
-                // 1. クエストページのインスタンス化 (SubPageクラス定義の後に追加)
-                const questPage = new SubPage('quest-view', {
-                    onOpen: () => {
-                        // 開いたときに実行する処理
-                        renderQuestPlan();
-                        lucide.createIcons();
-                    }
-                });
-                
-                // 2. 「クエスト」ボタン（Focusページ内）の処理を変更
-                // （既存の showQuestBtn 関連のコードを削除または以下に書き換え）
-                const showQuestBtn = document.getElementById('show-quest-btn'); // 変数定義を確認
-                if (showQuestBtn) {
-                    showQuestBtn.addEventListener('click', () => {
-                        // focus-main-view を隠す必要はなくなりました（SubPageが上に重なるため）
-                        questPage.open(); 
-                    });
-                }
-                
-                // 3. 「戻る」ボタンの処理を変更
-                // （既存の questBackBtn 関連のコードを削除または以下に書き換え）
-                const questBackBtn = document.getElementById('quest-back-btn');
-                if (questBackBtn) {
-                    questBackBtn.addEventListener('click', () => {
-                        questPage.close();
-                        // 戻るときにFocus画面のUI更新が必要ならここで行う
-                        updateFocusModeUI(); 
-                    });
-                }
-
                 // 時間加算ボタンの処理
                 const timeAddBtn = e.target.closest('.time-add-btn');
                 if(timeAddBtn) {
