@@ -250,12 +250,13 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             transform-origin: center left;
         }
 
-        /* ▼▼▼ 追加: プロフィールが開いている時のメイン画面の状態 ▼▼▼ */
+        /* ▼▼▼ 追加: サブページが開いている時の後ろの画面の状態 ▼▼▼ */
         #app-container.background-pushed,
-        .screen-layer.background-pushed {
-            transform: translateX(-30%); /* 左に少しずれる */
+        .screen-layer.active.background-pushed {
+            /* !important をつけて、他の transform(位置指定) より確実に優先させる */
+            transform: translateX(-30%) !important; 
             /* サブページが奥に行く時もなめらかに動かす */
-            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1) !important;
         }
         
         /* ↓↓↓ 既存の .break-content-btn 関連をこれに置き換えてください ↓↓↓ */
