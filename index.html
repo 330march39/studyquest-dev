@@ -3555,7 +3555,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
                 // 3. ログインボーナス処理 (元のロジックをそのまま流用)
                 if(state.user.isRegistered && state.lastLogin !== new Date().toDateString()){
-                    addLP(500, 'ログインボーナス', true);
+                    addLP(300, 'ログインボーナス', true);
                     state.lastLogin = new Date().toDateString();
                     saveState();
                 }
@@ -5595,7 +5595,7 @@ const showItemPopup = (item, type) => {
                     logStudyTime('quiz', currentQuizElapsed);
                     state.focus.totalTime += currentQuizElapsed;
                     
-                    const earnedLP = Math.floor(currentQuizElapsed / 60);
+                    const earnedLP = Math.floor(currentQuizElapsed / 60) * 10;
                     if (earnedLP > 0) {
                         addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
                     }
@@ -5941,7 +5941,7 @@ const showItemPopup = (item, type) => {
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
                 if (elapsed > 0) { 
                     const sId = recordSession('タイマー', elapsed); 
-                    addLP(Math.floor(elapsed / 60), 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId }); 
+                    addLP(Math.floor(elapsed / 60) * 10, 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
                     state.focus.totalTime += elapsed; saveState(); 
                 }
                 resetTimerUI();
@@ -5962,7 +5962,7 @@ const showItemPopup = (item, type) => {
                 const elapsed = Math.round(stopwatch.elapsedTime);
                 if (elapsed > 0) { 
                     const sId = recordSession('ストップウォッチ', elapsed); 
-                    addLP(Math.floor(elapsed / 60), 'ストップウォッチ', true, { title: 'ストップウォッチ', duration: elapsed, sessionId: sId }); 
+                    addLP(Math.floor(elapsed / 60) * 10, 'ストップウォッチ', true, { title: 'ストップウォッチ', duration: elapsed, sessionId: sId });
                     state.focus.totalTime += elapsed; saveState(); 
                 }
                 resetStopwatchUI();
@@ -6655,8 +6655,11 @@ const showItemPopup = (item, type) => {
 
                         // 1分経過するごとに催促の通知を送る
                         if (overMinutes > lastNotifiedMinutes && overMinutes >= 1) {
-                            lastNotifiedMinutes = overMinutes;
-                            const penalty = overMinutes * 100;
+                        lastNotifiedMinutes = overMinutes;
+                        
+                        // ▼最大30分(3000LP)まで、かつ現在の所持LPを超えないように計算
+                        const effectiveOverMinutes = Math.min(overMinutes, 30);
+                        const penalty = Math.min(effectiveOverMinutes * 100, state.profile.lp);
                             
                             // SW経由で通知を送信（バックグラウンドにいるユーザーを呼び戻す）
                             if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
@@ -6694,9 +6697,12 @@ const showItemPopup = (item, type) => {
 
                     // 学習開始が1分以上遅れていた場合、ポップアップを出して没収する
                     if (step.type === 'section' && overMinutes >= 1) {
-                        const penaltyLp = overMinutes * 100;
-                        state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
-                        // ▼▼▼ 追加: 没収の履歴を残す ▼▼▼
+                        // ▼最大30分、所持LPを超えない計算を追加
+                        const effectiveOverMinutes = Math.min(overMinutes, 30);
+                        let penaltyLp = effectiveOverMinutes * 100;
+                        penaltyLp = Math.min(penaltyLp, state.profile.lp); // マイナス防止
+                    
+                        state.profile.lp -= penaltyLp;
                         addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ', { overMinutes: overMinutes });
                         
                         updateLpDisplay();
@@ -6810,7 +6816,7 @@ const showItemPopup = (item, type) => {
                             if (elapsed > 0) {
                                 const sTitle = 'クエスト: ' + currentStep.text;
                                 const sId = recordSession(sTitle, elapsed);
-                                const earned = Math.floor(elapsed / 60);
+                                const earned = Math.floor(elapsed / 60) * 10;
                                 
                                 addLP(earned, 'クエスト', false, { title: sTitle, duration: elapsed, sessionId: sId }); 
                                 
@@ -6954,7 +6960,7 @@ const showItemPopup = (item, type) => {
                         const sTitle = `クエスト: ${currentStep.text} (中断)`;
                         const sId = recordSession(sTitle, elapsed);
                         
-                        addLP(Math.floor(elapsed / 60), 'クエスト（中断）', false, { title: sTitle, duration: elapsed, sessionId: sId });
+                        addLP(Math.floor(elapsed / 60) * 10, 'クエスト（中断）', false, { title: sTitle, duration: elapsed, sessionId: sId });
                         
                         state.focus.totalTime += elapsed;
                         saveState();
@@ -8609,7 +8615,7 @@ const checkQuestResume = () => {
                     const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
                     recordSession(currentStep.text + statusText, actualDuration);
                     if (actualDuration > 60) {
-                        addLP(Math.floor(actualDuration / 60), 'クエスト終了');
+                        addLP(Math.floor(actualDuration / 60) * 10, 'クエスト終了');
                     }
                 }
                 
@@ -8652,9 +8658,13 @@ const checkQuestResume = () => {
                         // 1分以上放置されていたら
                         if (overtimeSeconds >= 60) {
                             const overMinutes = Math.floor(overtimeSeconds / 60);
-                            const penaltyLp = overMinutes * 100;
-                            state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
-                            // ▼▼▼ 追加: 没収の履歴を残す ▼▼▼
+                            
+                            // ▼最大30分、所持LPを超えない計算を追加
+                            const effectiveOverMinutes = Math.min(overMinutes, 30);
+                            let penaltyLp = effectiveOverMinutes * 100;
+                            penaltyLp = Math.min(penaltyLp, state.profile.lp); // マイナス防止
+                        
+                            state.profile.lp -= penaltyLp;
                             addLpHistory('penalty', penaltyLp, '休憩時間超過ペナルティ', { overMinutes: overMinutes });
                             
                             updateLpDisplay();
@@ -8717,7 +8727,7 @@ const checkQuestResume = () => {
                             // 簡略化のため共通部分を関数化するか、ここにコピー
                             const elapsed = step.duration; // 満了扱い
                             recordSession(step.text, elapsed);
-                            addLP(Math.floor(elapsed / 60), 'クエスト');
+                            addLP(Math.floor(elapsed / 60) * 10, 'クエスト');
                             state.focus.totalTime += elapsed;
                             if (step.originalTaskId) {
                                 const tIndex = state.tasks.findIndex(t => t.id === parseInt(step.originalTaskId));
@@ -8741,12 +8751,15 @@ const checkQuestResume = () => {
                         // ▼▼▼ 変更: overtimeSeconds を受け取ってペナルティ処理 ▼▼▼
                         (overtimeSeconds) => {
                             closeIframe();
-
                             if (overtimeSeconds > 60) {
                                 const overMinutes = Math.floor(overtimeSeconds / 60);
-                                const penaltyLp = overMinutes * 100;
                                 
-                                state.profile.lp = Math.max(0, state.profile.lp - penaltyLp);
+                                // ▼最大30分、所持LPを超えない計算を追加
+                                const effectiveOverMinutes = Math.min(overMinutes, 30);
+                                let penaltyLp = effectiveOverMinutes * 100;
+                                penaltyLp = Math.min(penaltyLp, state.profile.lp); // マイナス防止
+                                
+                                state.profile.lp -= penaltyLp;
                                 updateLpDisplay();
                                 saveState();
                                 
