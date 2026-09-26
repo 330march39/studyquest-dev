@@ -5785,7 +5785,7 @@ const showItemPopup = (item, type) => {
                     
                     // ▼▼▼ 修正: セッション記録と詳細データの引き渡し ▼▼▼
                     const sId = recordSession('タイマー', elapsed);
-                    addLP(Math.floor(elapsed/60), 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
+                    addLP(Math.floor(elapsed/60) * 10, 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
                     state.focus.totalTime += elapsed;
                     
                     // ▼▼▼ 重要: 実行中フラグをオフにして二重付与を防ぐ ▼▼▼
@@ -6099,7 +6099,17 @@ const showItemPopup = (item, type) => {
                 const nextPageId = targetBtn.dataset.page;
                 const activePage = document.querySelector('.page.active');
                 
-                if ((activePage && activePage.id === nextPageId) || isAnimating) return;
+                // ▼▼▼ ここを修正 ▼▼▼
+                if (activePage && activePage.id === nextPageId) {
+                    // 現在開いているタブをもう一度タップしたら、メイン領域を一番上へスムーズスクロール
+                    const mainContainer = document.querySelector('main');
+                    if (mainContainer) {
+                        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                    return; // ページ遷移処理はキャンセル
+                }
+                
+                if (isAnimating) return;
 
                 const nextPage = $(`#${nextPageId}`);
                 if (!nextPage) return;
@@ -7379,7 +7389,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     showToast('アプリを閉じている間にタイマーが終了しました');
                     new Notification('StudyQuest', { body: '集中タイマーが終了していました。' }); // 通知も出す
                     recordSession('タイマー', state.focus.duration);
-                    addLP(Math.floor(state.focus.duration / 60), 'タイマー');
+                    addLP(Math.floor(state.focus.duration / 60) * 10, 'タイマー');
                     resetTimerUI();
                     // 状態をクリア
                     state.focus.isRunning = false;
