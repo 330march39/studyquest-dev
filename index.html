@@ -8918,13 +8918,11 @@ const checkQuestResume = () => {
             }
             // ▲▲▲ 追加ここまで ▲▲▲
 
-            const init = () => {
+            // ▼ 修正: async を追加します
+            const init = async () => {
                 // ▼▼▼ 追加: 起動時にクラッシュ復帰かどうかを判定 ▼▼▼
                 if (localStorage.getItem('SQ_IsVideoPreviewing') === 'true') {
-                    // フラグをリセット
                     localStorage.setItem('SQ_IsVideoPreviewing', 'false');
-                    
-                    // 起動アニメーションが終わる頃(約2秒後)にポップアップを表示
                     setTimeout(() => {
                         openGeneralConfirm(
                             'エラーからの復帰',
@@ -8932,44 +8930,34 @@ const checkQuestResume = () => {
                             'alert-octagon',
                             '確認しました',
                             'bg-red-500 hover:bg-red-600',
-                            () => {}, // OK時は閉じるだけ
-                            null // キャンセルボタンは隠す
+                            () => {}, null
                         );
                     }, 2000);
                 }
                 if (window.Chart) {
                     Chart.defaults.font.family = "'LINE Seed JP', 'Inter', 'Noto Sans JP', sans-serif";
                 }
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('sw.js')
-                        .then(registration => {console.log('Service Worker登録成功:', registration);
-                        // ▼▼▼ 追加: 更新を検知してキャッシュをリセットする処理 ▼▼▼
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => {
+                            console.log('Service Worker登録成功:', registration);
                             registration.onupdatefound = () => {
                                 const installingWorker = registration.installing;
                                 if (installingWorker) {
                                     installingWorker.onstatechange = () => {
                                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                            console.log('新しいバージョンが見つかりました。最新情報に更新します...');
-                                            // Service Workerに「今すぐ新しいキャッシュに切り替えて」と命令する
                                             installingWorker.postMessage({ type: 'SKIP_WAITING' });
                                         }
                                     };
                                 }
                             };
                         })
-                        .catch(error => console.log('Service Worker登録失敗:', error));
-                        
-                }
-                // ★追加: 画面の他の場所をタップしたら開いているスワイプメニューを閉じる処理
+                        .catch(error => console.log('Service Worker登録失敗:', error));
+                }
                 document.addEventListener('touchstart', (e) => {
-                    // タップされた要素が「開いているスワイプコンテナ」の内部でなければ閉じる
                     const openContainers = document.querySelectorAll('.swipe-container.swiped-open');
-                    
                     openContainers.forEach(container => {
-                        // コンテナ自身やその子要素をクリックした場合は何もしない（ボタン操作などのため）
                         if (container.contains(e.target)) return;
-
-                        // それ以外（外側）をタップした場合は閉じる
                         const content = container.querySelector('.swipe-content');
                         if (content) {
                             content.style.transform = 'translateX(0px)';
@@ -8977,40 +8965,69 @@ const checkQuestResume = () => {
                         }
                     });
                 }, { passive: true });
-                // ▼▼▼ 追加: オフライン検知とポップアップ表示 ▼▼▼
+
                 const showOfflinePopup = () => {
                     openGeneralConfirm(
                         'オフラインです',
                         '現在インターネットに接続されていません。\n新規アイテムの交換や背景やBGMなど、一部の機能が使用できない場合があります。',
                         'wifi-off',
                         '確認しました',
-                        'bg-gray-500 hover:bg-gray-600 text-white', // ボタンの色（グレー）
-                        () => {}, // OKを押したら閉じるだけ
-                        null // キャンセルボタンは隠す
+                        'bg-gray-500 hover:bg-gray-600 text-white', 
+                        () => {}, null
                     );
                 };
 
-                // 起動時にオフラインだった場合（他のポップアップと被らないよう少し遅延させる）
                 if (!navigator.onLine) {
                     setTimeout(showOfflinePopup, 1500);
                 }
-
-                // プレイ中に通信が切れた瞬間にも表示する
                 window.addEventListener('offline', showOfflinePopup);
 
-                // システムのテーマ変更をリアルタイムで監視する
                 if (window.matchMedia) {
                     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
                     colorSchemeQuery.addEventListener('change', (e) => {
-                        // OSのテーマが変わったら、アプリの見た目を再計算する
-                        // updateAppearance内で「デバイスに合わせる」設定かどうかが判定されるため、
-                        // ここでは無条件に呼び出すだけでOKです。
                         updateAppearance();
                     });
                 }
                 
-                loadState();
+                // ==========================================
+                // ▼▼▼ 追加: 3秒タイムアウト＆バックグラウンド更新処理 ▼▼▼
+                // ==========================================
+                
+                // 1. ローカルデータはとりあえず先に読み込んでおく
+                loadState();
+                
+                // 2. 外部データの取得処理（※将来的にAPIのURLに変更してください）
+                const fetchPromise = fetch('https://dummy-url.com/api/data')
+                    .then(res => {
+                        if (!res.ok) throw new Error('通信エラー');
+                        return res.json();
+                    })
+                    .then(newData => {
+                        // 成功時: 取得した最新データを反映する処理をここに書く
+                        // 例: initialData.quizzes = newData.quizzes;
+                        return true; 
+                    })
+                    .catch(err => false);
 
+                // 3. 3秒のタイムアウト処理
+                const timeoutPromise = new Promise(resolve => setTimeout(() => resolve('timeout'), 3000));
+
+                // 4. 通信と3秒タイマーを競争させる（最大3秒間ここで待機します）
+                const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+                if (result === 'timeout') {
+                    console.log('3秒経過。ローカルデータで起動し、裏で通信を継続します。');
+                    // 裏で通信が終わった時の処理
+                    fetchPromise.then(success => {
+                        if (success) console.log('バックグラウンドで最新データを取得しました');
+                    });
+                } else {
+                    console.log('3秒以内に通信完了(またはエラー)。起動します。');
+                }
+                // ==========================================
+                // ▲▲▲ 3秒タイムアウト処理 ここまで ▲▲▲
+                // ==========================================
+                
                 syncGamesToBreakIcons();
 
                 // 1. 新しいDOM要素を変数に割り当て
@@ -10708,64 +10725,12 @@ window.addEventListener('resize', () => {
     }, 300); // 0.3秒待機（iOSの回転アニメーション時間に合わせる）
 });
 // ▲▲▲ 追加ここまで ▲▲▲
-        const initializeApp = async () => {
-            // 1. ローカルデータの読み込みと初期描画準備
-            loadState(); 
-            updateAppearance();
-            
-            // 2. 外部データの取得処理（※URL等は実際の環境に合わせてください）
-            const fetchPromise = fetch('https://your-api-or-json-url.com/data')
-                .then(res => {
-                    if (!res.ok) throw new Error('通信エラー');
-                    return res.json();
-                })
-                .then(newData => {
-                    // 成功時: 最新データを反映する処理をここに書く
-                    // 例: initialData.quizzes = newData.quizzes;
-                    return true; 
-                })
-                .catch(err => {
-                    console.warn('通信失敗:', err);
-                    return false;
-                });
 
-            // 3. 3秒のタイムアウト処理
-            const timeoutPromise = new Promise(resolve => {
-                setTimeout(() => resolve('timeout'), 3000);
-            });
-
-            // 4. アプリを表示し、スプラッシュ画面を消す関数
-            const launchUI = () => {
-                renderEngine.renderAll(); // 画面を描画
-                const splash = document.getElementById('splash-screen');
-                if (splash) {
-                    splash.style.opacity = '0';
-                    setTimeout(() => splash.style.display = 'none', 500);
-                }
-            };
-
-            // 5. 通信と3秒タイマーを競争させる
-            const result = await Promise.race([fetchPromise, timeoutPromise]);
-
-            if (result === 'timeout') {
-                console.log('3秒経過。ローカルデータで起動し、裏で通信を継続します。');
-                launchUI(); // 先に画面を開く
-                
-                // 裏で通信が終わった時の処理
-                fetchPromise.then(success => {
-                    if (success) {
-                        console.log('バックグラウンドで最新データを取得しました');
-                        // ユーザーの操作を邪魔しない程度に画面を更新
-                    }
-                });
-            } else {
-                console.log('3秒以内に通信完了。最新データで起動します。');
-                launchUI(); // 最新データで画面を開く
-            }
-        };
-
-        // アプリ起動フローを実行
-        initializeApp();
+        // ▼▼▼ 追加: 画面回転・リサイズ時のバナー位置ズレ修正 ▼▼▼
+window.addEventListener('resize', () => {
+   // (この resize のブロックは残しておいてOKです)
+});
+        
     </script>
     <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden animate-fadeIn" onclick="this.classList.add('hidden')">
         
