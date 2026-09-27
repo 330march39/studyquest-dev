@@ -3045,12 +3045,58 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             let bannerInterval = null;
 
             let previewAudio = new Audio(); // 試聴用
-            let previewTimeout = null;      // 30秒停止用タイマー
+            previewAudio.crossOrigin = "anonymous"; // ★追加: 外部音源対応
+            let previewTimeout = null;      
             
             const bgmAudio = new Audio();
-            bgmAudio.loop = false; // プレイリスト再生のためループは手動制御
+            bgmAudio.crossOrigin = "anonymous"; // ★追加: 外部音源対応
+            bgmAudio.loop = false; 
             let currentTrackIndex = 0;
 
+            // ▼▼▼ 追加: iOSの制限を突破する音響エンジン（Web Audio API）の準備 ▼▼▼
+            let audioCtx, bgmGain, previewGain;
+            let isAudioContextInitialized = false;
+
+            const initAudioContext = () => {
+                if (isAudioContextInitialized) return;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                audioCtx = new AudioContext();
+                
+                // BGMの音量を調整するフィルターを作成
+                bgmGain = audioCtx.createGain();
+                const bgmSource = audioCtx.createMediaElementSource(bgmAudio);
+                bgmSource.connect(bgmGain).connect(audioCtx.destination);
+                
+                // 試聴用の音量を調整するフィルターを作成
+                previewGain = audioCtx.createGain();
+                const previewSource = audioCtx.createMediaElementSource(previewAudio);
+                previewSource.connect(previewGain).connect(audioCtx.destination);
+                
+                isAudioContextInitialized = true;
+            };
+
+            // 画面をどこかタッチした時にオーディオエンジンを起動（ブラウザの制限対策）
+            document.body.addEventListener('touchstart', () => {
+                initAudioContext();
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }, { once: false, passive: true });
+
+            // 音量を反映させる共通関数
+            const applyVolume = () => {
+                const vol = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
+                if (isAudioContextInitialized && bgmGain && previewGain) {
+                    bgmGain.gain.value = vol; // iOS向け
+                    previewGain.gain.value = vol;
+                } else {
+                    bgmAudio.volume = vol; // PC・Android向け
+                    previewAudio.volume = vol;
+                }
+            };
+            // ▲▲▲ 追加ここまで ▲▲▲
             // ▼▼▼ 追加: 外部ウィンドウを管理する変数 ▼▼▼
             let externalWindow = null;
 
@@ -5279,6 +5325,7 @@ const showItemPopup = (item, type) => {
                         bgmAudio.volume = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
                         
                         updateMediaSession(track.name);
+                        applyVolume(); // ★追加: 再生前に音量をセットする
                         bgmAudio.play().catch(e => {
                             console.log('再生エラー:', e);
                             if (!navigator.onLine) {
@@ -5347,17 +5394,17 @@ const showItemPopup = (item, type) => {
                 bgmAudio.load(); // これを呼ぶことでブラウザに空の状態を認識させる
             };
 
+            // 曲が終わったら次の曲へ
             bgmAudio.addEventListener('ended', () => {
                 currentTrackIndex++;
                 if (currentTrackIndex >= state.settings.playlist.length) {
-                    currentTrackIndex = 0; 
+                    currentTrackIndex = 0; // 最初に戻る
                 }
                 const nextTrackId = state.settings.playlist[currentTrackIndex];
                 const nextTrack = initialData.music[nextTrackId];
                 if (nextTrack) {
                     bgmAudio.src = nextTrack.url;
-                    // ▼▼▼ 修正: ここにも設定した音量を反映 ▼▼▼
-                    bgmAudio.volume = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
+                    applyVolume(); // ★追加: 次の曲でも音量をセットする
                     bgmAudio.play();
                 }
             });
@@ -10443,21 +10490,20 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
                             // 100% を 0.5 の音量に換算する
                             const actualVolume = (val / 100) * 0.5;
                             
-                            // プレビュー中なら即座に反映
-                            if (!previewAudio.paused) {
-                                previewAudio.volume = actualVolume;
-                            }
-                            // BGMが鳴っていれば即座に反映
-                            if (!bgmAudio.paused) {
+                            // リアルタイムに音量を更新
+                            if (isAudioContextInitialized && bgmGain && previewGain) {
+                                bgmGain.gain.value = actualVolume;
+                                previewGain.gain.value = actualVolume;
+                            } else {
                                 bgmAudio.volume = actualVolume;
+                                previewAudio.volume = actualVolume;
                             }
                         });
 
                         // 指を離した時（保存）
                         volumeSlider.addEventListener('change', (e) => {
                             const val = parseInt(e.target.value, 10);
-                            const actualVolume = (val / 100) * 0.5;
-                            state.settings.bgmVolume = actualVolume;
+                            state.settings.bgmVolume = (val / 100) * 0.5;
                             saveState();
                         });
                     }
@@ -10666,7 +10712,7 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
 
                 currentPreviewId = trackId; // IDを保存
                 previewAudio.src = url;
-                previewAudio.volume = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
+                applyVolume(); // ★追加: 保存されている音量を適用する
                 
                 updateMediaSession(titleName);
                 
