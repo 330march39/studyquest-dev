@@ -2048,10 +2048,15 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
         </header>
 
         <div class="flex-grow overflow-y-auto p-4 pb-36 bg-gray-100 dark:bg-gray-900">
-            <button id="load-tasks-btn" class="w-full mb-6 primary-bg primary-bg-hover text-white py-3 px-6 rounded-full font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center space-x-2">
-                <i data-lucide="check-square" class="w-5 h-5"></i>
-                <span>「今日のタスク」を読み込む</span>
-            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <button id="load-tasks-btn" class="flex-grow primary-bg primary-bg-hover text-white py-3 px-6 rounded-full font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center space-x-2">
+                    <i data-lucide="check-square" class="w-5 h-5"></i>
+                    <span>今日のタスク</span>
+                </button>
+                <button id="reset-quest-btn" class="flex-shrink-0 w-12 h-12 bg-white dark:bg-gray-800 text-red-500 rounded-full font-bold shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-transform active:scale-95 flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+            </div>
             
             <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden mb-24">
     
@@ -5628,30 +5633,32 @@ const showItemPopup = (item, type) => {
                 
                 const assessmentBtn = e.target.closest('.assessment-btn');
                 if(assessmentBtn) {
-                    // ▼▼▼ 追加: 既に処理済み(0秒)なら何もしない(連打・二重付与防止) ▼▼▼
                     if (currentQuizElapsed <= 0) return;
                     
                     const level = parseInt(assessmentBtn.dataset.level);
                     const quizId = $('#assessment-modal').dataset.quizId;
                     
-                    // 1. 進捗データを保存
                     state.progress[quizId] = { level, date: new Date().toISOString() };
                     
-                    // 教材の情報を取得してタイトルを決める
                     const quizObj = initialData.quizzes.find(q => q.id === quizId);
                     const title = quizObj ? quizObj.title : '教材';
 
-                    // ▼▼▼ 修正: LP付与とセッション記録のロジック ▼▼▼
-                    const sId = recordSession(title, currentQuizElapsed);
-                    logStudyTime('quiz', currentQuizElapsed);
-                    state.focus.totalTime += currentQuizElapsed;
-                    
-                    const earnedLP = Math.floor(currentQuizElapsed / 60) * 10;
-                    if (earnedLP > 0) {
-                        addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
+                    // ▼▼▼ 修正: 60秒以上のみ記録する ▼▼▼
+                    if (currentQuizElapsed >= 60) {
+                        const sId = recordSession(title, currentQuizElapsed);
+                        logStudyTime('quiz', currentQuizElapsed);
+                        state.focus.totalTime += currentQuizElapsed;
+                        
+                        const earnedLP = Math.floor(currentQuizElapsed / 60) * 10;
+                        if (earnedLP > 0) {
+                            addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
+                        }
+                    } else {
+                        showToast('1分未満のため記録されませんでした');
                     }
+                    // ▲▲▲ 修正ここまで ▲▲▲
                     
-                    currentQuizElapsed = 0; // 使い終わったら確実にリセット
+                    currentQuizElapsed = 0; 
                     saveState();
                     
                     renderEngine.renderAll();
@@ -5767,6 +5774,30 @@ const showItemPopup = (item, type) => {
                         breakSettingsPage.close();
                     }
             });
+
+            // ▼▼▼ 追加: クエストのリセットボタン ▼▼▼
+            const resetQuestBtn = document.getElementById('reset-quest-btn');
+            if (resetQuestBtn) {
+                resetQuestBtn.addEventListener('click', () => {
+                    if (quest.plan.length === 0) {
+                        showToast('リセットするクエストがありません', 'error');
+                        return;
+                    }
+                    openGeneralConfirm(
+                        'クエストをリセットしますか？',
+                        '設定したクエストの予定がすべて削除されます。\nよろしいですか？',
+                        'rotate-ccw',
+                        'リセットする',
+                        'bg-red-500 hover:bg-red-600',
+                        () => {
+                            quest.plan = [];
+                            saveState();
+                            renderQuestPlan();
+                            showToast('クエストをリセットしました', 'success');
+                        }
+                    );
+                });
+            }
             
             // --- Focus Page Logic ---
             const updateMiniTimer = () => {
@@ -5960,38 +5991,37 @@ const showItemPopup = (item, type) => {
             const endFocusTimer = () => {
                 if (!focusTimer.isRunning) return;
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
-                if (elapsed > 0) { 
+                if (elapsed >= 60) { // ★変更: 60秒以上のみ記録
                     const sId = recordSession('タイマー', elapsed); 
                     addLP(Math.floor(elapsed / 60) * 10, 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
                     state.focus.totalTime += elapsed; saveState(); 
+                } else if (elapsed > 0) { // ★追加
+                    showToast('1分未満のため記録されませんでした');
                 }
                 resetTimerUI();
-            
-                // 【追加】Service Workerにタイマー停止を通知
+                
                 if (navigator.serviceWorker.controller) {
                     navigator.serviceWorker.controller.postMessage({ command: 'focusTimer_stop' });
                 }
-                // ▼▼▼【追加】ここから▼▼▼
                 state.focus.isRunning = false;
                 state.focus.startTime = null;
                 saveState();
-                // ▲▲▲【追加】ここまで▲▲▲
             };
 
             const endStopwatch = () => {
                 if (!stopwatch.isRunning) return;
                 const elapsed = Math.round(stopwatch.elapsedTime);
-                if (elapsed > 0) { 
+                if (elapsed >= 60) { // ★変更: 60秒以上のみ記録
                     const sId = recordSession('ストップウォッチ', elapsed); 
                     addLP(Math.floor(elapsed / 60) * 10, 'ストップウォッチ', true, { title: 'ストップウォッチ', duration: elapsed, sessionId: sId });
                     state.focus.totalTime += elapsed; saveState(); 
+                } else if (elapsed > 0) { // ★追加
+                    showToast('1分未満のため記録されませんでした');
                 }
                 resetStopwatchUI();
-                // ▼▼▼【追加】ここから▼▼▼
                 state.focus.isRunning = false;
                 state.focus.startTime = null;
                 saveState();
-                // ▲▲▲【追加】ここまで▲▲▲
             };
             
             const setTimer = (seconds) => {
@@ -6985,41 +7015,50 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
             saveState();
             stopBGM();
             clearInterval(quest.timerInterval);
-            quest.timerInterval = null; // 忘れずにクリア
+            quest.timerInterval = null; 
 
-            // --- ★追加★ クエスト終了時にSWのアラームをキャンセルする ---
-            cancelQuestAlarm();
+            cancelQuestAlarm();
             if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
                 const currentStep = quest.plan[quest.currentIndex];
                 if (currentStep.type === 'section') {
                     const elapsed = currentStep.duration - quest.timeLeft; 
-                    if (elapsed > 0) {
+                    if (elapsed >= 60) { // ★60秒以上のみ
                         const sTitle = `クエスト: ${currentStep.text} (中断)`;
                         const sId = recordSession(sTitle, elapsed);
                         
                         addLP(Math.floor(elapsed / 60) * 10, 'クエスト（中断）', false, { title: sTitle, duration: elapsed, sessionId: sId });
-                        
                         state.focus.totalTime += elapsed;
-                        saveState();
                         showToast(`セクションの ${formatTime(elapsed)} を記録しました`);
+                    } else if (elapsed > 0) {
+                        showToast('1分未満のため記録されませんでした');
                     }
+                    // ★追加: 残り時間を更新（中断再開用）
+                    currentStep.duration = quest.timeLeft;
                 }
             }
             
+            // ★追加: 既に行ったセクションをリストから削除
+            if (quest.currentIndex > 0) {
+                quest.plan.splice(0, quest.currentIndex);
+                quest.currentIndex = 0;
+            }
+            if (completed) {
+                quest.plan = []; // 全て完了した場合は空にする
+            }
+
+            saveState();
+            renderQuestPlan(); // 裏のリストも即座に更新
+
             quest.active = false;
             questActiveScreen.style.display = 'none';
 
-            // アプリ2のヘッダーとタブバーを再表示
-            $('header').style.display = 'flex';
-            $('nav').style.display = '';
-
+            $('header').style.display = 'flex';$('nav').style.display = '';
             document.body.style.overflow = 'auto';
             closeIframe();
-            // ▼▼▼ 追加: クエスト終了時に縦画面に戻す（フルスクリーン解除） ▼▼▼
+            
             controlScreenOrientation('default');
             document.body.classList.remove('is-quest-mode');
             if (completed) {
-                // 累積LPがあればまとめてポップアップ表示
                 if ((quest.accumulatedLp || 0) > 0) {
                     showLpPopup(quest.accumulatedLp, 'クエスト完了');
                 }
@@ -8625,44 +8664,52 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             // ★新規追加: クエストの復元チェック関数
             // --- クエスト復元チェック (汎用モーダル版) ---
 const checkQuestResume = () => {
-    if (state.savedQuest && state.savedQuest.active) {
-        openGeneralConfirm(
-            'クエストを再開しますか？',
-            '中断されたクエストデータがあります。\n前回の続きから再開しますか？',
-            'rotate-ccw', // 再開アイコン
-            '再開する',   // 肯定ボタン
-            'primary-bg', // テーマカラー
-            () => { 
-                // OK時の処理
-                resumeQuestProcess();
-                showToast('クエストを再開しました', 'quest');
-            },
-            '破棄して終了', // キャンセルボタンのテキスト
-            () => { 
-                // キャンセル(破棄)時の処理
-                const saved = state.savedQuest;
-                const currentStep = saved.plan[saved.currentIndex];
-                
-                // 経過時間を計算してログに残す（任意）
-                const now = Date.now();
-                const elapsedSeconds = Math.floor((now - saved.startTime) / 1000);
-                const actualDuration = Math.min(elapsedSeconds, currentStep.duration);
+            if (state.savedQuest && state.savedQuest.active) {
+                openGeneralConfirm(
+                    'クエストを再開しますか？',
+                    '中断されたクエストデータがあります。\n前回の続きから再開しますか？',
+                    'rotate-ccw', 
+                    '再開する',   
+                    'primary-bg', 
+                    () => { 
+                        resumeQuestProcess();
+                        showToast('クエストを再開しました', 'quest');
+                    },
+                    '破棄して終了', 
+                    () => { 
+                        const saved = state.savedQuest;
+                        const currentStep = saved.plan[saved.currentIndex];
+                        
+                        const now = Date.now();
+                        const elapsedSeconds = Math.floor((now - saved.startTime) / 1000);
+                        const actualDuration = Math.min(elapsedSeconds, currentStep.duration);
 
-                if (currentStep.type === 'section' && actualDuration > 0) {
-                    const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
-                    recordSession(currentStep.text + statusText, actualDuration);
-                    if (actualDuration > 60) {
-                        addLP(Math.floor(actualDuration / 60) * 10, 'クエスト終了');
+                        if (currentStep.type === 'section' && actualDuration >= 60) { // ★60秒以上のみ
+                            const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
+                            const sId = recordSession(currentStep.text + statusText, actualDuration);
+                            addLP(Math.floor(actualDuration / 60) * 10, 'クエスト終了', false, {title: currentStep.text + statusText, duration: actualDuration, sessionId: sId});
+                        }
+
+                        // ★既に行ったセクションを削除
+                        if (saved.currentIndex > 0) {
+                            quest.plan.splice(0, saved.currentIndex);
+                        }
+                        // このステップも終わっていた場合はさらに消す
+                        if (elapsedSeconds >= currentStep.duration && currentStep.type === 'section') {
+                            quest.plan.shift();
+                        } else if (currentStep.type === 'section') {
+                            // 中断なら残り時間を保存
+                            quest.plan[0].duration -= actualDuration;
+                        }
+                        
+                        state.savedQuest = null;
+                        saveState();
+                        renderQuestPlan();
+                        showToast('クエストを破棄しました', 'info');
                     }
-                }
-                
-                state.savedQuest = null;
-                saveState();
-                showToast('クエストを破棄しました', 'info');
+                );
             }
-        );
-    }
-};
+        };
 
             // ★新規追加: クエスト復元実行プロセス
             const resumeQuestProcess = () => {
@@ -8724,16 +8771,17 @@ const checkQuestResume = () => {
                     if (!isPenalty) {
                         showToast('閉じている間にこのステップは終了しました');
                         if (currentStep.type === 'section') {
-                            const sTitle = 'クエスト: ' + currentStep.text + ' (中断)';
-                            const sId = recordSession(sTitle, currentStep.duration);
-                            
-                            state.focus.totalTime += currentStep.duration;
-                            addLP(Math.floor(currentStep.duration / 60), 'クエスト', false, { title: sTitle, duration: currentStep.duration, sessionId: sId });
+                            if (currentStep.duration >= 60) { // ★60秒以上のみ記録
+                                const sTitle = 'クエスト: ' + currentStep.text + ' (不在中完了)';
+                                const sId = recordSession(sTitle, currentStep.duration);
+                                
+                                state.focus.totalTime += currentStep.duration;
+                                addLP(Math.floor(currentStep.duration / 60) * 10, 'クエスト', false, { title: sTitle, duration: currentStep.duration, sessionId: sId });
+                            }
                             saveState();
                         }
                         runNextQuestStep();
                     }
-                    // ▲▲▲ 追加ここまで ▲▲▲
                 } else {
                     // まだ続いている場合 -> そのステップを途中から再開
                     // executeQuestStepを呼ぶとタイマーがリセットされるので、
