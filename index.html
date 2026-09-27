@@ -6378,6 +6378,19 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
             $('#countdown-save-btn').addEventListener('click', saveCountdown);
             $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
 
+            // ▼▼▼ ここから追加: 日付が空にされたらデフォルト(2週間後)に戻す ▼▼▼
+            $('#countdown-date').addEventListener('change', (e) => {
+                if (!e.target.value) {
+                    const defaultDate = new Date();
+                    defaultDate.setDate(defaultDate.getDate() + 14);
+                    const y = defaultDate.getFullYear();
+                    const m = String(defaultDate.getMonth() + 1).padStart(2, '0');
+                    const d = String(defaultDate.getDate()).padStart(2, '0');
+                    e.target.value = `${y}-${m}-${d}`;
+                }
+            });
+            // ▲▲▲ ここまで追加 ▲▲▲
+            
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
             // ▼▼▼ renderQuestPlan 関数全体を書き換え ▼▼▼
