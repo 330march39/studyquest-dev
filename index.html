@@ -4710,10 +4710,7 @@ const controlScreenOrientation = async (mode) => {
                             window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                         }));
 
-                        // ▼▼▼ 修正: キャッシュ削除ボタン（オフライン時は実行不可に変更） ▼▼▼
                         otherList.appendChild(createListItem('trash-2', 'キャッシュを削除', 'bg-red-500', () => {
-                            
-                            // ★ オフライン時はここで処理を止めてメッセージを出すだけにする
                             if (!navigator.onLine) {
                                 showToast('オフラインのため削除をすることはできません', 'error');
                                 return;
@@ -4728,15 +4725,31 @@ const controlScreenOrientation = async (mode) => {
                                 async () => {
                                     if ('caches' in window) {
                                         try {
-                                            const cacheNames = await caches.keys();
-                                            // すべてのキャッシュを完全に削除してリロード
-                                            await Promise.all(
-                                                cacheNames.map(name => caches.delete(name))
-                                            );
-                                            showToast('キャッシュを削除しました', 'success');
-                                            setTimeout(() => {
+                                            // ▼▼▼ 追加: すりガラスとローディングアニメーションの生成 ▼▼▼
+                                            const overlay = document.createElement('div');
+                                            overlay.className = 'fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-white transition-opacity duration-300 opacity-0';
+                                            overlay.innerHTML = `
+                                                <div class="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-6"></div>
+                                                <p class="font-bold text-lg tracking-wider animate-pulse">再起動しています...</p>
+                                            `;
+                                            document.body.appendChild(overlay);
+                                            
+                                            // アニメーションをオンにしてフェードイン
+                                            requestAnimationFrame(() => {
+                                                overlay.classList.remove('opacity-0');
+                                            });
+
+                                            // 演出を見せるため少し待機してから削除とリロードを実行
+                                            setTimeout(async () => {
+                                                const cacheNames = await caches.keys();
+                                                await Promise.all(
+                                                    cacheNames.map(name => caches.delete(name))
+                                                );
+                                                // リロード実行
                                                 location.reload();
-                                            }, 1500);
+                                            }, 800);
+                                            // ▲▲▲ 修正ここまで ▲▲▲
+
                                         } catch (e) {
                                             console.error('キャッシュ削除エラー:', e);
                                             showToast('削除中にエラーが発生しました', 'error');
@@ -4747,7 +4760,6 @@ const controlScreenOrientation = async (mode) => {
                                 }
                             );
                         }));
-                        // ▲▲▲ 修正ここまで ▲▲▲
                         
                         settingsPage.appendChild(otherList);
                     
@@ -7022,7 +7034,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 const currentStep = quest.plan[quest.currentIndex];
                 if (currentStep.type === 'section') {
                     const elapsed = currentStep.duration - quest.timeLeft; 
-                    if (elapsed >= 60) { // ★60秒以上のみ
+                    if (elapsed >= 60) {
                         const sTitle = `クエスト: ${currentStep.text} (中断)`;
                         const sId = recordSession(sTitle, elapsed);
                         
@@ -7032,8 +7044,10 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     } else if (elapsed > 0) {
                         showToast('1分未満のため記録されませんでした');
                     }
-                    // ★追加: 残り時間を更新（中断再開用）
-                    currentStep.duration = quest.timeLeft;
+                    // ▼▼▼ 修正: 残り時間を「分単位（切り上げ）」にして保存する ▼▼▼
+                    currentStep.duration = Math.ceil(quest.timeLeft / 60) * 60;
+                    if (currentStep.duration < 60) currentStep.duration = 60; // 最低1分は残す
+                    // ▲▲▲ 修正ここまで ▲▲▲
                 }
             }
             
@@ -8698,8 +8712,10 @@ const checkQuestResume = () => {
                         if (elapsedSeconds >= currentStep.duration && currentStep.type === 'section') {
                             quest.plan.shift();
                         } else if (currentStep.type === 'section') {
-                            // 中断なら残り時間を保存
-                            quest.plan[0].duration -= actualDuration;
+                            // ▼▼▼ 修正: 中断なら残り時間を計算し、「分単位（切り上げ）」にして保存 ▼▼▼
+                            quest.plan[0].duration = Math.ceil((quest.plan[0].duration - actualDuration) / 60) * 60;
+                            if (quest.plan[0].duration < 60) quest.plan[0].duration = 60; // 最低1分
+                            // ▲▲▲ 修正ここまで ▲▲▲
                         }
                         
                         state.savedQuest = null;
