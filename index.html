@@ -5655,7 +5655,7 @@ const showItemPopup = (item, type) => {
                     const quizObj = initialData.quizzes.find(q => q.id === quizId);
                     const title = quizObj ? quizObj.title : '教材';
 
-                    // ▼▼▼ 修正: 60秒以上のみ記録する ▼▼▼
+                    // ▼▼▼ 修正: 60秒以上のみ記録し、クエスト中ならポップアップを隠してストック ▼▼▼
                     if (currentQuizElapsed >= 60) {
                         const sId = recordSession(title, currentQuizElapsed);
                         logStudyTime('quiz', currentQuizElapsed);
@@ -5663,7 +5663,14 @@ const showItemPopup = (item, type) => {
                         
                         const earnedLP = Math.floor(currentQuizElapsed / 60) * 10;
                         if (earnedLP > 0) {
-                            addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
+                            if (quest.active) {
+                                // クエスト中ならポップアップを出さず、クエストの合計LPに合算
+                                addLP(earnedLP, '教材', false, { title: title, duration: currentQuizElapsed, sessionId: sId });
+                                quest.accumulatedLp = (quest.accumulatedLp || 0) + earnedLP;
+                            } else {
+                                // 通常時ならポップアップを表示
+                                addLP(earnedLP, '教材', true, { title: title, duration: currentQuizElapsed, sessionId: sId });
+                            }
                         }
                     } else {
                         showToast('1分未満のため記録されませんでした');
@@ -6269,6 +6276,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
             // 1. サブページのインスタンス化
             const countdownPage = new SubPage('countdown-screen');
             let editingCountdownId = null; // 編集中のIDを保持
+            let previousCountdownDate = ''; // ★追加: 直前の日付を記憶
 
             // 戻るボタン
             $('#close-countdown-btn').addEventListener('click', () => countdownPage.close());
@@ -6279,11 +6287,10 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 const titleEl = $('#countdown-screen-title');
                 const nameInput = $('#countdown-name');
                 const dateInput = $('#countdown-date');
-                const memoInput = $('#countdown-memo'); // ★追加
+                const memoInput = $('#countdown-memo'); 
                 const deleteBtn = $('#countdown-delete-btn');
 
                 if (id) {
-                    // 編集モード
                     titleEl.textContent = 'イベントの編集';
                     deleteBtn.classList.remove('hidden');
                     
@@ -6291,26 +6298,24 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     if (item) {
                         nameInput.value = item.name;
                         dateInput.value = item.date;
-                        memoInput.value = item.memo || ''; // ★メモを読み込み (なければ空文字)
+                        memoInput.value = item.memo || ''; 
+                        previousCountdownDate = item.date; // ★記憶
                     }
                 } else {
-                    // 新規追加モード
                     titleEl.textContent = 'イベントの追加';
                     deleteBtn.classList.add('hidden');
                     
                     nameInput.value = '';
-                    memoInput.value = ''; // ★メモをクリア
+                    memoInput.value = ''; 
                     
-                    // デフォルト日付: 2週間後
                     const defaultDate = new Date();
                     defaultDate.setDate(defaultDate.getDate() + 14);
-                    // ローカル時間のYYYY-MM-DDを取得
                     const y = defaultDate.getFullYear();
                     const m = String(defaultDate.getMonth() + 1).padStart(2, '0');
                     const d = String(defaultDate.getDate()).padStart(2, '0');
                     dateInput.value = `${y}-${m}-${d}`;
+                    previousCountdownDate = `${y}-${m}-${d}`; // ★記憶
                 }
-
                 countdownPage.open();
             }
 
@@ -6378,18 +6383,17 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
             $('#countdown-save-btn').addEventListener('click', saveCountdown);
             $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
 
-            // ▼▼▼ ここから追加: 日付が空にされたらデフォルト(2週間後)に戻す ▼▼▼
+            // ▼▼▼ 修正: 日付が空にされたら「直前の日付」に戻す ▼▼▼
             $('#countdown-date').addEventListener('change', (e) => {
-                if (!e.target.value) {
-                    const defaultDate = new Date();
-                    defaultDate.setDate(defaultDate.getDate() + 14);
-                    const y = defaultDate.getFullYear();
-                    const m = String(defaultDate.getMonth() + 1).padStart(2, '0');
-                    const d = String(defaultDate.getDate()).padStart(2, '0');
-                    e.target.value = `${y}-${m}-${d}`;
+                if (e.target.value) {
+                    previousCountdownDate = e.target.value; // 値が入力されたら記憶を更新
+                } else {
+                    setTimeout(() => {
+                        e.target.value = previousCountdownDate; // 空にされたら記憶した日付を復元
+                    }, 50);
                 }
             });
-            // ▲▲▲ ここまで追加 ▲▲▲
+            // ▲▲▲ 修正ここまで ▲▲▲
             
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
