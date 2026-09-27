@@ -5275,8 +5275,10 @@ const showItemPopup = (item, type) => {
                         if (!bgmAudio.src || !bgmAudio.src.includes(track.url)) {
                             bgmAudio.src = track.url;
                         }
+                        // ▼▼▼ 修正: 設定した音量を反映（未設定時はデフォルト0.5） ▼▼▼
+                        bgmAudio.volume = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
+                        
                         updateMediaSession(track.name);
-                        // ▼ 修正: オフライン時のエラー処理
                         bgmAudio.play().catch(e => {
                             console.log('再生エラー:', e);
                             if (!navigator.onLine) {
@@ -5345,16 +5347,17 @@ const showItemPopup = (item, type) => {
                 bgmAudio.load(); // これを呼ぶことでブラウザに空の状態を認識させる
             };
 
-            // 曲が終わったら次の曲へ
             bgmAudio.addEventListener('ended', () => {
                 currentTrackIndex++;
                 if (currentTrackIndex >= state.settings.playlist.length) {
-                    currentTrackIndex = 0; // 最初に戻る
+                    currentTrackIndex = 0; 
                 }
                 const nextTrackId = state.settings.playlist[currentTrackIndex];
                 const nextTrack = initialData.music[nextTrackId];
                 if (nextTrack) {
                     bgmAudio.src = nextTrack.url;
+                    // ▼▼▼ 修正: ここにも設定した音量を反映 ▼▼▼
+                    bgmAudio.volume = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
                     bgmAudio.play();
                 }
             });
@@ -10355,6 +10358,10 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
                     if (bgmSortablePlaylist) { bgmSortablePlaylist.destroy(); bgmSortablePlaylist = null; }
                     if (bgmSortableLibrary) { bgmSortableLibrary.destroy(); bgmSortableLibrary = null; }
 
+                    // ▼▼▼ 追加: 現在の音量からパーセンテージを計算（0.5を100%とする） ▼▼▼
+                    const currentVol = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
+                    const sliderVal = Math.round((currentVol / 0.5) * 100);
+
                     // HTML生成
                     pageRoot.innerHTML = `
                         <div class="space-y-8 pb-20">
@@ -10379,6 +10386,24 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- ▼▼▼ ここから追加: 音量調整バー ▼▼▼ -->
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">音量</h3>
+                                <div class="bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden p-5 border border-gray-100 dark:border-gray-700">
+                                    <div class="flex items-center space-x-4">
+                                        <i data-lucide="volume-1" class="w-5 h-5 text-gray-400 flex-shrink-0"></i>
+                                        <input type="range" id="bgm-volume-slider" min="0" max="100" value="${sliderVal}" 
+                                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700 outline-none"
+                                               style="accent-color: var(--primary-color);">
+                                        <i data-lucide="volume-2" class="w-5 h-5 text-gray-400 flex-shrink-0"></i>
+                                    </div>
+                                    <div class="mt-2 text-right">
+                                        <span id="bgm-volume-label" class="text-xs font-bold text-gray-500">${sliderVal}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
 
                             <div>
                                 <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 ml-2">プレイリスト</h3>
@@ -10405,6 +10430,38 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
                             saveState();
                         });
                     }
+
+                    // ▼▼▼ ここから追加: 音量スライダーのリアルタイム処理 ▼▼▼
+                    const volumeSlider = document.getElementById('bgm-volume-slider');
+                    const volumeLabel = document.getElementById('bgm-volume-label');
+                    if (volumeSlider) {
+                        // スライダーを動かしている最中（リアルタイムで音を反映）
+                        volumeSlider.addEventListener('input', (e) => {
+                            const val = parseInt(e.target.value, 10);
+                            volumeLabel.textContent = `${val}%`;
+                            
+                            // 100% を 0.5 の音量に換算する
+                            const actualVolume = (val / 100) * 0.5;
+                            
+                            // プレビュー中なら即座に反映
+                            if (!previewAudio.paused) {
+                                previewAudio.volume = actualVolume;
+                            }
+                            // BGMが鳴っていれば即座に反映
+                            if (!bgmAudio.paused) {
+                                bgmAudio.volume = actualVolume;
+                            }
+                        });
+
+                        // 指を離した時（保存）
+                        volumeSlider.addEventListener('change', (e) => {
+                            const val = parseInt(e.target.value, 10);
+                            const actualVolume = (val / 100) * 0.5;
+                            state.settings.bgmVolume = actualVolume;
+                            saveState();
+                        });
+                    }
+                    // ▲▲▲ 追加ここまで ▲▲▲
 
                     const playlistContainer = document.getElementById('bgm-playlist-container');
                     const libraryContainer = document.getElementById('bgm-library-container');
@@ -10609,7 +10666,7 @@ document.getElementById('close-routine-settings-btn').addEventListener('click', 
 
                 currentPreviewId = trackId; // IDを保存
                 previewAudio.src = url;
-                previewAudio.volume = 0.5;
+                previewAudio.volume = state.settings.bgmVolume !== undefined ? state.settings.bgmVolume : 0.5;
                 
                 updateMediaSession(titleName);
                 
