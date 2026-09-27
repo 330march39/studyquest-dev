@@ -176,3 +176,34 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
+// =========================================================
+// ▼▼▼ 追加: 通知をタップしたときの処理（別のPWAが開くのを防ぐ） ▼▼▼
+// =========================================================
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+
+  // ★重要: アプリのURLパスを正確に指定します。
+  // './index.html' とすることで、現在のsw.jsと同じ階層のindex.htmlを開きます。
+  const targetUrl = new URL('./index.html', self.location.href).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
+      // すでにアプリの画面が開いていれば、そこにフォーカスを合わせる
+      for (let i = 0; i < windowClients.length; i++) {
+        let client = windowClients[i];
+        // URLがこのアプリのものかチェック
+        if (client.url === targetUrl || client.url === new URL('./', self.location.href).href) {
+          if ('focus' in client) {
+            return client.focus();
+          }
+        }
+      }
+      // まだ開いていなければ新しくウィンドウを開く
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+// ▲▲▲ 追加ここまで ▲▲▲
