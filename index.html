@@ -6532,6 +6532,9 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                                         p.duration = limit * 60; // 上限値に切り詰め
                                         modified = true;
                                     }
+
+                                    // ★追加: ブレイクが来たら合計をリセット
+                                    sectionTotalMin = 0; 
                                 }
                             });
 
@@ -6576,24 +6579,24 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                             if (p.type === 'section') {
                                 sectionTotalMin += Math.floor(p.duration / 60);
                             } else if (p.type === 'break') {
-                                // 上限の計算：(セクション合計を5で割って切り上げ) × 5 （最大60分）
                                 let limit = Math.ceil(sectionTotalMin / 5) * 5;
                                 if (limit > 60) limit = 60;
                                 
                                 let currentMin = Math.floor(p.duration / 60);
 
-                                // 前にセクションがなくて limit=0 の場合、実質ブレイク不可なので1分に強制
                                 if (limit === 0 && currentMin > 1) {
                                     p.duration = 60; // 1分(60秒)に強制
                                     modified = true;
                                     if (p.id === item.id) toastMsg = 'セクションの後にブレイクを配置してください';
                                 } 
-                                // 上限を超えている場合、上限値に書き換える
                                 else if (limit > 0 && currentMin > limit) {
                                     p.duration = limit * 60;
                                     modified = true;
                                     if (p.id === item.id) toastMsg = `このブレイクタイムの上限は ${limit} 分です`;
                                 }
+
+                                // ★追加: ブレイクが来たら合計をリセット
+                                sectionTotalMin = 0;
                             }
                         });
 
@@ -7034,20 +7037,23 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 const currentStep = quest.plan[quest.currentIndex];
                 if (currentStep.type === 'section') {
                     const elapsed = currentStep.duration - quest.timeLeft; 
-                    if (elapsed >= 60) {
+                    if (elapsed >= 60) { // ★60秒以上のみ
                         const sTitle = `クエスト: ${currentStep.text} (中断)`;
                         const sId = recordSession(sTitle, elapsed);
                         
-                        addLP(Math.floor(elapsed / 60) * 10, 'クエスト（中断）', false, { title: sTitle, duration: elapsed, sessionId: sId });
+                        const earnedLP = Math.floor(elapsed / 60) * 10;
+                        addLP(earnedLP, 'クエスト（中断）', false, { title: sTitle, duration: elapsed, sessionId: sId });
                         state.focus.totalTime += elapsed;
                         showToast(`セクションの ${formatTime(elapsed)} を記録しました`);
+
+                        // ★追加: 獲得LPをポップアップ用にストック
+                        quest.accumulatedLp = (quest.accumulatedLp || 0) + earnedLP;
                     } else if (elapsed > 0) {
                         showToast('1分未満のため記録されませんでした');
                     }
-                    // ▼▼▼ 修正: 残り時間を「分単位（切り上げ）」にして保存する ▼▼▼
+                    // ★追加: 残り時間を更新（中断再開用）
                     currentStep.duration = Math.ceil(quest.timeLeft / 60) * 60;
                     if (currentStep.duration < 60) currentStep.duration = 60; // 最低1分は残す
-                    // ▲▲▲ 修正ここまで ▲▲▲
                 }
             }
             
@@ -7072,10 +7078,13 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
             
             controlScreenOrientation('default');
             document.body.classList.remove('is-quest-mode');
+            
+            // ▼▼▼ 修正: 中断時でもLP獲得があればポップアップを出す ▼▼▼
+            if ((quest.accumulatedLp || 0) > 0) {
+                const reason = completed ? 'クエスト完了' : 'クエスト中断';
+                showLpPopup(quest.accumulatedLp, reason);
+            }
             if (completed) {
-                if ((quest.accumulatedLp || 0) > 0) {
-                    showLpPopup(quest.accumulatedLp, 'クエスト完了');
-                }
                 showToast('クエスト完了！お疲れ様でした！');
             }
         };
@@ -8698,10 +8707,13 @@ const checkQuestResume = () => {
                         const elapsedSeconds = Math.floor((now - saved.startTime) / 1000);
                         const actualDuration = Math.min(elapsedSeconds, currentStep.duration);
 
+                        let earnedLP = 0; // ★追加
+
                         if (currentStep.type === 'section' && actualDuration >= 60) { // ★60秒以上のみ
                             const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
                             const sId = recordSession(currentStep.text + statusText, actualDuration);
-                            addLP(Math.floor(actualDuration / 60) * 10, 'クエスト終了', false, {title: currentStep.text + statusText, duration: actualDuration, sessionId: sId});
+                            earnedLP = Math.floor(actualDuration / 60) * 10;
+                            addLP(earnedLP, 'クエスト終了', false, {title: currentStep.text + statusText, duration: actualDuration, sessionId: sId});
                         }
 
                         // ★既に行ったセクションを削除
@@ -8712,16 +8724,20 @@ const checkQuestResume = () => {
                         if (elapsedSeconds >= currentStep.duration && currentStep.type === 'section') {
                             quest.plan.shift();
                         } else if (currentStep.type === 'section') {
-                            // ▼▼▼ 修正: 中断なら残り時間を計算し、「分単位（切り上げ）」にして保存 ▼▼▼
+                            // 中断なら残り時間を保存
                             quest.plan[0].duration = Math.ceil((quest.plan[0].duration - actualDuration) / 60) * 60;
-                            if (quest.plan[0].duration < 60) quest.plan[0].duration = 60; // 最低1分
-                            // ▲▲▲ 修正ここまで ▲▲▲
+                            if (quest.plan[0].duration < 60) quest.plan[0].duration = 60;
                         }
                         
                         state.savedQuest = null;
                         saveState();
                         renderQuestPlan();
                         showToast('クエストを破棄しました', 'info');
+
+                        // ★追加: 破棄時にLP獲得があればポップアップ表示
+                        if (earnedLP > 0) {
+                            showLpPopup(earnedLP, 'クエスト終了');
+                        }
                     }
                 );
             }
@@ -8792,7 +8808,11 @@ const checkQuestResume = () => {
                                 const sId = recordSession(sTitle, currentStep.duration);
                                 
                                 state.focus.totalTime += currentStep.duration;
-                                addLP(Math.floor(currentStep.duration / 60) * 10, 'クエスト', false, { title: sTitle, duration: currentStep.duration, sessionId: sId });
+                                const earnedLP = Math.floor(currentStep.duration / 60) * 10;
+                                addLP(earnedLP, 'クエスト', false, { title: sTitle, duration: currentStep.duration, sessionId: sId });
+                                
+                                // ★追加: 不在完了分をストックに加算
+                                quest.accumulatedLp = (quest.accumulatedLp || 0) + earnedLP;
                             }
                             saveState();
                         }
@@ -9220,6 +9240,9 @@ const checkQuestResume = () => {
                                             p.duration = limit * 60;
                                             modified = true;
                                         }
+
+                                        // ★追加: ブレイクが来たら合計をリセット
+                                        sectionTotalMin = 0;
                                     }
                                 });
 
