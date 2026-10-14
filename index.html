@@ -9119,12 +9119,26 @@ const checkQuestResume = () => {
                     navigator.serviceWorker.register('sw.js')
                         .then(registration => {
                             console.log('Service Worker登録成功:', registration);
+                            // Service Worker自体の更新が見つかった場合もポップアップでお知らせする
                             registration.onupdatefound = () => {
                                 const installingWorker = registration.installing;
                                 if (installingWorker) {
                                     installingWorker.onstatechange = () => {
                                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                            installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                                            setTimeout(() => {
+                                                openGeneralConfirm(
+                                                    'アップデートがあります',
+                                                    '最新版のプログラムが公開されています。\nアップデートして再起動しますか？\n※学習記録やLPなどのデータは消えません。',
+                                                    'RefreshCw',
+                                                    'アップデートする',
+                                                    'primary-bg',
+                                                    () => {
+                                                        if (typeof performAppUpdate === 'function') performAppUpdate();
+                                                        else location.reload();
+                                                    },
+                                                    'あとで'
+                                                );
+                                            }, 2000);
                                         }
                                     };
                                 }
@@ -9168,42 +9182,92 @@ const checkQuestResume = () => {
                 }
                 
                 // ==========================================
-                // ▼▼▼ 追加: 3秒タイムアウト＆バックグラウンド更新処理 ▼▼▼
+                // ▼▼▼ 修正: キャッシュで即時起動 ＆ 裏でHTML差分チェック ▼▼▼
                 // ==========================================
                 
-                // 1. ローカルデータはとりあえず先に読み込んでおく
+                // 1. 通信を一切待たず、ローカルデータで即座に起動させる
                 loadState();
-                
-                // 2. 外部データの取得処理（※将来的にAPIのURLに変更してください）
-                const fetchPromise = fetch('https://dummy-url.com/api/data')
-                    .then(res => {
-                        if (!res.ok) throw new Error('通信エラー');
-                        return res.json();
-                    })
-                    .then(newData => {
-                        // 成功時: 取得した最新データを反映する処理をここに書く
-                        // 例: initialData.quizzes = newData.quizzes;
-                        return true; 
-                    })
-                    .catch(err => false);
 
-                // 3. 3秒のタイムアウト処理
-                const timeoutPromise = new Promise(resolve => setTimeout(() => resolve('timeout'), 3000));
-
-                // 4. 通信と3秒タイマーを競争させる（最大3秒間ここで待機します）
-                const result = await Promise.race([fetchPromise, timeoutPromise]);
-
-                if (result === 'timeout') {
-                    console.log('3秒経過。ローカルデータで起動し、裏で通信を継続します。');
-                    // 裏で通信が終わった時の処理
-                    fetchPromise.then(success => {
-                        if (success) console.log('バックグラウンドで最新データを取得しました');
+                // 2. アップデート実行関数（設定画面のキャッシュ削除・再起動と全く同じ動作）
+                const performAppUpdate = () => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'fixed inset-0 z-[9999] bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-white transition-opacity duration-300 opacity-0';
+                    overlay.innerHTML = `
+                        <div class="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-6"></div>
+                        <p class="font-bold text-lg tracking-wider animate-pulse">アップデートしています...</p>
+                    `;
+                    document.body.appendChild(overlay);
+                    
+                    requestAnimationFrame(() => {
+                        overlay.classList.remove('opacity-0');
                     });
-                } else {
-                    console.log('3秒以内に通信完了(またはエラー)。起動します。');
-                }
+
+                    setTimeout(async () => {
+                        try {
+                            // 1. キャッシュストレージをすべて削除
+                            if ('caches' in window) {
+                                const cacheNames = await caches.keys();
+                                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                            }
+                            // 2. Service Workerの登録を一度解除して最新を取り直させる
+                            if ('serviceWorker' in navigator) {
+                                const registrations = await navigator.serviceWorker.getRegistrations();
+                                await Promise.all(registrations.map(reg => reg.unregister()));
+                            }
+                        } catch (e) {
+                            console.error('アップデート処理エラー:', e);
+                        }
+                        // 3. 再起動（リロード）して最新版のコードをキャッシュさせる
+                        location.reload(true);
+                    }, 800);
+                };
+
+                // 3. バックグラウンドでネット上の最新HTMLとキャッシュのHTMLを比較する関数
+                const checkHtmlUpdate = async () => {
+                    // オフラインならチェックせず終了（エラーも出さない）
+                    if (!navigator.onLine) return;
+
+                    try {
+                        const currentUrl = location.origin + location.pathname;
+                        
+                        // ① 現在端末に保存されている（キャッシュまたは表示元）HTMLを取得
+                        const localRes = await fetch(currentUrl, { cache: 'only-if-cached', mode: 'same-origin' })
+                            .catch(() => fetch(currentUrl));
+                        const localHtml = await localRes.text();
+
+                        // ② ネット上の最新のHTMLを取得（クエリパラメータとno-storeでキャッシュを完全回避）
+                        const remoteRes = await fetch(`${currentUrl}?t=${Date.now()}`, { cache: 'no-store' });
+                        if (!remoteRes.ok) return;
+                        const remoteHtml = await remoteRes.text();
+
+                        // ③ 空白や改行コードの微妙な違いを無視して中身を比較
+                        const normalize = (str) => str.replace(/\r\n/g, '\n').trim();
+                        
+                        if (normalize(localHtml) !== normalize(remoteHtml)) {
+                            // 違いがあればポップアップを表示（スプラッシュ画面が消えた後に出すため少し待つ）
+                            setTimeout(() => {
+                                openGeneralConfirm(
+                                    'アップデートがあります',
+                                    '最新版のプログラムが公開されています。\nアップデートして再起動しますか？\n※学習記録やLPなどのデータは消えません。',
+                                    'RefreshCw', // アイコン
+                                    'アップデートする',
+                                    'primary-bg',
+                                    () => {
+                                        performAppUpdate();
+                                    },
+                                    'あとで'
+                                );
+                            }, 2000);
+                        }
+                    } catch (err) {
+                        console.log('アップデート確認スキップ（オフラインまたは通信不安定）:', err);
+                    }
+                };
+
+                // 起動処理を邪魔しないよう、裏でチェックを実行
+                checkHtmlUpdate();
                 // ==========================================
-                // ▲▲▲ 3秒タイムアウト処理 ここまで ▲▲▲
+                // ▲▲▲ 修正ここまで ▲▲▲
                 // ==========================================
                 
                 syncGamesToBreakIcons();
