@@ -119,20 +119,37 @@ self.addEventListener('message', event => {
 });
 
 // =========================================================
-// オフライン・キャッシュ管理機能
+// オフライン・キャッシュ管理機能（完全Cache First ＋ 更新チェック対応版）
 // =========================================================
 self.addEventListener('fetch', event => {
-  // ブラウザの拡張機能など、http/https以外のリクエストは処理しない
   if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
+  // ★追加: アップデート確認用の通信（?t=... がついているもの）はキャッシュせず直接ネットへ通す
+  if (event.request.url.includes('?t=')) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
   // ① HTMLファイル（UI画面）へのアクセスの場合
   if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
-      caches.match(event.request).then(cachedResponse => {
-        const fetchPromise = fetch(event.request).then(networkResponse => {
-          // ★修正: 正常な通信(ステータス200)の時のみキャッシュを更新し、先にクローンを作る
+      caches.match(event.request).then(async cachedResponse => {
+        // ★修正: キャッシュがあれば、裏で通信せず【即座にキャッシュだけを返す】
+        // （ここで勝手にキャッシュを上書きしないことで、アプリ側の差分チェックが正しく動くようになります）
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // URL末尾の違い（'/' と './index.html'）でヒットしなかった場合の保険
+        const fallbackCache = await caches.match('./index.html') || await caches.match('./');
+        if (fallbackCache) {
+          return fallbackCache;
+        }
+
+        // キャッシュが全くない時（初回起動時・またはアップデートボタンを押してキャッシュ削除した直後）のみネットから取得して保存
+        return fetch(event.request).then(networkResponse => {
           if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then(cache => {
@@ -140,14 +157,9 @@ self.addEventListener('fetch', event => {
             });
           }
           return networkResponse;
-        }).catch(async () => {
-          // オフライン時のエラー対応：キャッシュがあれば返し、無ければ空のエラーデータを返す
-          const fallback = await caches.match('./index.html') || await caches.match('./');
-          return cachedResponse || fallback || new Response('Offline', { status: 503, statusText: 'Offline' });
+        }).catch(() => {
+          return new Response('Offline', { status: 503, statusText: 'Offline' });
         });
-
-        // キャッシュがあれば待たずにすぐ画面を出す。無ければネットワークの完了を待つ。
-        return cachedResponse || fetchPromise;
       })
     );
     return;
@@ -156,27 +168,21 @@ self.addEventListener('fetch', event => {
   // ② 画像やその他のファイルは「キャッシュ優先 (Cache First)」
   event.respondWith(
     caches.match(event.request).then(response => {
-      // キャッシュがあればそれを返し、無ければネットワークへ取りにいく
       return response || fetch(event.request).then(fetchRes => {
-        // ★修正: 正常な通信(ステータス200)の時のみキャッシュに保存する。
-        // 動画や音声の分割ダウンロード(206)などはエラーになるためキャッシュしない。
         if (fetchRes && fetchRes.status === 200) {
-          const responseToCache = fetchRes.clone(); // ★使用される前にクローンを作る
+          const responseToCache = fetchRes.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
           });
         }
         return fetchRes;
       }).catch(() => {
-         // 通信エラー時（オフライン時で未キャッシュのメディアを読み込もうとした場合など）
          console.log('オフラインのため取得スキップ:', event.request.url);
-        // ★ 追加: 空のレスポンス（503エラー）を返すことで TypeError を防ぐ
          return new Response(null, { status: 503, statusText: 'Offline' });
       });
     })
   );
 });
-
 // =========================================================
 // ▼▼▼ 追加: 通知をタップしたときの処理（別のPWAが開くのを防ぐ） ▼▼▼
 // =========================================================
