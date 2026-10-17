@@ -14,6 +14,12 @@
     <meta name="theme-color" content="#1A1A1D" media="(prefers-color-scheme: dark)">
 
     <style>
+        /* ▼▼▼ 追加: PWA(アプリ)として起動した時はHTMLスプラッシュを非表示 ▼▼▼ */
+        @media (display-mode: standalone) {
+            #splash-screen {
+                display: none !important;
+            }
+        }
         /* 1. htmlとbodyに最初から背景色をつける */
         html, body {
             margin: 0;
@@ -8729,28 +8735,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     appContainer.classList.remove('hidden');
                     if(welcomeScreen) welcomeScreen.classList.add('hidden');
                     if(wizardScreen) wizardScreen.classList.add('hidden');
-                    
-                    // スプラッシュスクリーンを消す処理（既存の処理がある場合はそちらに任せる）
-                    const splash = document.getElementById('splash-screen');
-                    if (splash) {
-                        setTimeout(() => {
-                            splash.style.opacity = '0';
-                            setTimeout(() => splash.style.display = 'none', 500);
-                        }, 1000);
-                    }
                 } else {
                     // 未登録の場合: アプリ本体を隠し、ウェルカム画面を表示
                     appContainer.classList.add('hidden');
                     if(welcomeScreen) welcomeScreen.classList.remove('hidden');
-                    
-                    // スプラッシュスクリーンを消す
-                    const splash = document.getElementById('splash-screen');
-                    if (splash) {
-                        setTimeout(() => {
-                            splash.style.opacity = '0';
-                            setTimeout(() => splash.style.display = 'none', 500);
-                        }, 500);
-                    }
                 }
             };
 
@@ -9225,19 +9213,30 @@ const checkQuestResume = () => {
 
                 // 3. バックグラウンドでネット上の最新HTMLとキャッシュのHTMLを比較する関数
                 const checkHtmlUpdate = async () => {
-                    // オフラインならチェックせず終了（エラーも出さない）
+                    // オフラインならチェックせず終了
                     if (!navigator.onLine) return;
 
                     try {
                         const currentUrl = location.origin + location.pathname;
                         
+                        // ▼▼▼ 追加: 5秒で通信を強制終了(タイムアウト)させる設定 ▼▼▼
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => {
+                            controller.abort();
+                        }, 5000); // 5000ミリ秒 = 5秒
+                        // ▲▲▲ 追加ここまで ▲▲▲
+
                         // ① 現在端末に保存されている（キャッシュまたは表示元）HTMLを取得
                         const localRes = await fetch(currentUrl, { cache: 'only-if-cached', mode: 'same-origin' })
                             .catch(() => fetch(currentUrl));
                         const localHtml = await localRes.text();
 
-                        // ② ネット上の最新のHTMLを取得（クエリパラメータとno-storeでキャッシュを完全回避）
-                        const remoteRes = await fetch(`${currentUrl}?t=${Date.now()}`, { cache: 'no-store' });
+                        // ② ネット上の最新のHTMLを取得（5秒以内に返事がなければエラーになる）
+                        const remoteRes = await fetch(`${currentUrl}?t=${Date.now()}`, { 
+                            cache: 'no-store',
+                            signal: controller.signal // タイムアウト信号を紐付け
+                        }).finally(() => clearTimeout(timeoutId)); // 通信が終わればタイマー解除
+                        
                         if (!remoteRes.ok) return;
                         const remoteHtml = await remoteRes.text();
 
@@ -9245,23 +9244,22 @@ const checkQuestResume = () => {
                         const normalize = (str) => str.replace(/\r\n/g, '\n').trim();
                         
                         if (normalize(localHtml) !== normalize(remoteHtml)) {
-                            // 違いがあればポップアップを表示（スプラッシュ画面が消えた後に出すため少し待つ）
+                            // 違いがあればポップアップを表示
                             setTimeout(() => {
                                 openGeneralConfirm(
                                     'アップデートがあります',
                                     '最新バージョンにアプリをアップデートします\n※通信環境が良好な状態で行ってください',
-                                    'RefreshCw', // アイコン
+                                    'RefreshCw',
                                     'アップデートする',
                                     'primary-bg',
-                                    () => {
-                                        performAppUpdate();
-                                    },
+                                    () => { performAppUpdate(); },
                                     'あとで'
                                 );
                             }, 2000);
                         }
                     } catch (err) {
-                        console.log('アップデート確認スキップ（オフラインまたは通信不安定）:', err);
+                        // タイムアウトや通信エラー時は何もしない（そのままキャッシュで動作継続）
+                        console.log('アップデート確認スキップ（電波微弱またはオフライン）:', err.name);
                     }
                 };
 
@@ -9475,24 +9473,22 @@ const checkQuestResume = () => {
                 
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
+                    // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
+                const splash = document.getElementById('splash-screen');
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+                if (splash && !isStandalone) {
+                    // ブラウザ(Safari等)で開いている場合はHTML側のスプラッシュをフェードアウトさせる
+                    // ※ Standalone(PWA)時はCSSですでに消えているので何もしない
                     setTimeout(() => {
-                        // もし未登録なら、スプラッシュが消える直前に「ようこそ画面」を裏で表示状態にする
-                        if (!state.user.isRegistered) {
-                            $('#welcome-screen').classList.remove('hidden');
-                        }
-                    
-                        const splash = document.getElementById('splash-screen');
-                        if (splash) {
-                            // フェードアウト開始
-                            splash.style.opacity = '0';
-                            
-                            // アニメーション完了後に非表示
-                            setTimeout(() => {
-                                splash.style.display = 'none';
-                            }, 500);
-                        }
-                    }, 1500); // 1.5秒待ってからフェードアウト開始
-            };
+                        splash.style.opacity = '0';
+                        setTimeout(() => {
+                            splash.style.display = 'none';
+                        }, 500); // 0.5秒かけてフェードアウト
+                    }, 500); // 起動の0.5秒後に消し始める（キャッシュで爆速起動するため待機時間は短めでOK）
+                }
+                // ▲▲▲ 修正ここまで ▲▲▲
+            };
 
             // ▼▼▼ 修正: 第4引数に onSuccess (成功時の処理) を追加 ▼▼▼
             const purchaseItem = (id, type, cost, onSuccess) => {
