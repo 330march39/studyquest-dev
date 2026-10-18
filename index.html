@@ -2327,7 +2327,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
     <!-- ▼▼▼ 劇的刷新: ミニプレイヤー HTML ▼▼▼ -->
     <!-- 削除エリア（スワイプした時に画面下部に表示） -->
-    <div id="mini-timer-trash-area" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-16 h-16 bg-gray-800/80 dark:bg-gray-700/80 text-white rounded-full flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 z-[150] scale-50">
+    <div id="mini-timer-trash-area" class="fixed bottom-32 left-1/2 -translate-x-1/2 w-16 h-16 bg-gray-800/80 dark:bg-gray-700/80 text-white rounded-full flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 z-[150] scale-50">
         <i data-lucide="x" class="w-8 h-8"></i>
     </div>
 
@@ -5972,6 +5972,16 @@ const showItemPopup = (item, type) => {
                     return;
                 }
 
+                const focusPage = $('#focus-page');
+                // ▼▼▼ 変更: ページ遷移アニメーション中(page-enter)もアクティブと判定して非表示にする ▼▼▼
+                const isFocusActive = focusPage?.classList.contains('active') || focusPage?.classList.contains('page-enter');
+                const isRunning = focusTimer.isRunning || stopwatch.isRunning;
+
+                if (isRunning && !isFocusActive) {
+                    container.classList.add('visible');
+                    return;
+                }
+
                 const isFocusActive = $('#focus-page')?.classList.contains('active');
                 const isRunning = focusTimer.isRunning || stopwatch.isRunning;
 
@@ -6470,9 +6480,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     miniTimerContainer.style.right = 'auto';
                     miniTimerContainer.style.bottom = 'auto';
 
-                    // 削除用ゴミ箱アイコンを表示
-                    trashArea.classList.remove('opacity-0', 'scale-50');
-                    trashArea.classList.add('opacity-100', 'scale-100');
+                    // ▼ 修正: ここではまだゴミ箱を表示しない（タップしただけかもしれないため）
                     
                     window.addEventListener('touchmove', handleDragMove, { passive: false });
                     window.addEventListener('touchend', handleDragEnd);
@@ -6497,9 +6505,13 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     const diffX = clientX - miniTimerState.startX;
                     const diffY = clientY - miniTimerState.startY;
 
-                    // 一定以上（5px以上）動いたらドラッグとみなす（タップ誤爆防止）
-                    if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
+                    // 一定以上（10px以上）動いたらドラッグとみなす（タップの時はゴミ箱を出さない）
+                    if (!miniTimerState.dragged && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
                         miniTimerState.dragged = true;
+                        
+                        // ▼ 修正: ドラッグが確定した瞬間にゴミ箱を表示
+                        trashArea.classList.remove('opacity-0', 'scale-50');
+                        trashArea.classList.add('opacity-100', 'scale-100');
                     }
 
                     if (miniTimerState.dragged) {
@@ -6556,16 +6568,31 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     trashArea.classList.remove('opacity-100', 'scale-100', 'bg-red-500/80', 'scale-125');
                     trashArea.classList.add('bg-gray-800/80', 'dark:bg-gray-700/80');
 
-                    // ゴミ箱にドロップされた場合の処理
+                    // ▼ ゴミ箱にドロップされた場合の処理
                     if (miniTimerState.isHoveringTrash) {
                         miniTimerTemporarilyHidden = true;
+                        miniTimerContainer.classList.remove('visible'); // 即座に見えなくする
+                        
+                        // ▼ 修正: 非表示になった後、こっそりドラッグ開始位置に戻してから四隅にスナップさせておく
+                        // (これにより、次に再表示されたときにゴミ箱の位置から出現するのを防ぎます)
+                        setTimeout(() => {
+                            miniTimerContainer.style.transition = 'none';
+                            miniTimerContainer.style.left = `${miniTimerState.initialLeft}px`;
+                            miniTimerContainer.style.top = `${miniTimerState.initialTop}px`;
+                            snapToCorner();
+                        }, 300);
+                        
                         updateMiniTimer();
                         miniTimerState.isHoveringTrash = false;
                         return;
                     }
 
-                    // ドラッグされず（ただのタップ）だった場合の処理：集中タブへ即座に移動
+                    // ▼ ドラッグされず（ただのタップ）だった場合の処理：集中タブへ即座に移動
                     if (!miniTimerState.dragged) {
+                        // 修正: 即座に非表示にしてからタブクリック
+                        miniTimerContainer.style.transition = 'opacity 0.2s, transform 0.2s';
+                        miniTimerContainer.classList.remove('visible');
+                        
                         const focusTab = document.querySelector('.tab-btn[data-page="focus-page"]');
                         if (focusTab) focusTab.click();
                         return;
