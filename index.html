@@ -6162,6 +6162,16 @@ const showItemPopup = (item, type) => {
                 $('#focus-start-btn').classList.remove('hidden');
                 $('#focus-controls').classList.add('hidden');
                 $('#timer-settings-container').classList.remove('hidden');
+                
+                // ▼▼▼ 追加: プログレスバーのアニメーションを無効化して0%に戻す ▼▼▼
+                const progressBar = $('#mini-timer-progress-bar');
+                if (progressBar) {
+                    progressBar.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                    void progressBar.offsetWidth; // リフローを強制して即座に反映
+                    progressBar.style.transition = ''; // 元の設定に戻す
+                }
+                
                 updateMiniTimer();
             };
 
@@ -6222,6 +6232,16 @@ const showItemPopup = (item, type) => {
                     showToast('時間を設定してください');
                     return;
                 }
+                
+                // ▼▼▼ 追加: プログレスバーのアニメーションを無効化して0%に戻す ▼▼▼
+                const progressBar = $('#mini-timer-progress-bar');
+                if (progressBar) {
+                    progressBar.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                    void progressBar.offsetWidth; // リフローを強制
+                    progressBar.style.transition = '';
+                }
+
                 focusTimer.defaultTime = focusTimer.timeLeft;
                 focusTimer.isRunning = true;
                 focusTimer.isPaused = false;
@@ -6602,21 +6622,42 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     const screenW = window.innerWidth;
                     const screenH = window.innerHeight;
 
-                    // ヘッダーやボトムナビに被らないための余白
                     const safeTop = 80; 
                     const safeBottom = 100;
                     const paddingX = 16;
 
-                    // 画面の上下左右どちらに近いか判定
                     const isLeft = centerX < screenW / 2;
                     const isTop = centerY < screenH / 2;
 
-                    // CSSをリセットして再設定（transitionが効いてアニメーション移動する）
-                    miniTimerContainer.style.transition = 'top 0.3s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1), left 0.3s cubic-bezier(0.16, 1, 0.3, 1), right 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
-                    miniTimerContainer.style.left = isLeft ? `${paddingX}px` : 'auto';
-                    miniTimerContainer.style.right = !isLeft ? `${paddingX}px` : 'auto';
-                    miniTimerContainer.style.top = isTop ? `${safeTop}px` : 'auto';
-                    miniTimerContainer.style.bottom = !isTop ? `${safeBottom}px` : 'auto';
+                    // ▼ 修正: auto と px を同時にアニメーションさせると瞬間移動になるため、
+                    // スムーズに吸い込まれるように、まずは目標の left と top のピクセル座標を計算します
+                    const targetLeft = isLeft ? paddingX : screenW - rect.width - paddingX;
+                    const targetTop = isTop ? safeTop : screenH - rect.height - safeBottom;
+
+                    // 1. まずは left と top のピクセル値だけでアニメーションさせる (カクつきを完全に防止)
+                    miniTimerContainer.style.transition = 'top 0.3s cubic-bezier(0.16, 1, 0.3, 1), left 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
+                    miniTimerContainer.style.left = `${targetLeft}px`;
+                    miniTimerContainer.style.top = `${targetTop}px`;
+                    miniTimerContainer.style.right = 'auto';
+                    miniTimerContainer.style.bottom = 'auto';
+
+                    // 2. 移動完了後に、画面リサイズに対応できる柔軟な配置 (right, bottom等) にこっそり切り替える
+                    const onTransitionEnd = (e) => {
+                        if (e.propertyName !== 'top' && e.propertyName !== 'left') return;
+                        miniTimerContainer.removeEventListener('transitionend', onTransitionEnd);
+                        
+                        miniTimerContainer.style.transition = 'none'; // 切り替え時のチラつき防止
+                        miniTimerContainer.style.left = isLeft ? `${paddingX}px` : 'auto';
+                        miniTimerContainer.style.right = !isLeft ? `${paddingX}px` : 'auto';
+                        miniTimerContainer.style.top = isTop ? `${safeTop}px` : 'auto';
+                        miniTimerContainer.style.bottom = !isTop ? `${safeBottom}px` : 'auto';
+                        
+                        // 少し待ってからopacity用のtransitionだけを戻す
+                        requestAnimationFrame(() => {
+                            miniTimerContainer.style.transition = 'opacity 0.3s ease';
+                        });
+                    };
+                    miniTimerContainer.addEventListener('transitionend', onTransitionEnd);
                 };
 
                 // PC/スマホ両対応でイベント登録
@@ -6996,6 +7037,16 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
         // クエスト用のタイマーを開始する関数
         function startQuestTimer(duration, onTick, onEnd) {
             if (quest.timerInterval) clearInterval(quest.timerInterval);
+            
+            // ▼▼▼ 追加: プログレスバーのアニメーションを無効化して0%に戻す ▼▼▼
+            const progressBar = $('#mini-timer-progress-bar');
+            if (progressBar) {
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+                void progressBar.offsetWidth; // リフローを強制
+                progressBar.style.transition = '';
+            }
+            
             const endTime = Date.now() + duration * 1000;
             const initialTimeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
             onTick(initialTimeLeft);
