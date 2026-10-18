@@ -5979,14 +5979,6 @@ const showItemPopup = (item, type) => {
 
                 if (isRunning && !isFocusActive) {
                     container.classList.add('visible');
-                    return;
-                }
-
-                const isFocusActive = $('#focus-page')?.classList.contains('active');
-                const isRunning = focusTimer.isRunning || stopwatch.isRunning;
-
-                if (isRunning && !isFocusActive) {
-                    container.classList.add('visible');
                     
                     const progressWrap = $('#mini-timer-progress-wrap');
                     const progressBar = $('#mini-timer-progress-bar');
