@@ -14,12 +14,6 @@
     <meta name="theme-color" content="#1A1A1D" media="(prefers-color-scheme: dark)">
 
     <style>
-        /* ▼▼▼ 追加: PWA(アプリ)として起動した時はHTMLスプラッシュを非表示 ▼▼▼ */
-        @media (display-mode: standalone) {
-            #splash-screen {
-                display: none !important;
-            }
-        }
         /* 1. htmlとbodyに最初から背景色をつける */
         html, body {
             margin: 0;
@@ -41,7 +35,8 @@
             align-items: center;
             justify-content: center;
             background-color: #f3f4f6; /* 本体と同じ色 */
-            transition: opacity 0.5s ease;
+            /* ▼ 修正: 消えるときに少しズームさせるため transform を追加 */
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
         
         #splash-screen img {
@@ -49,6 +44,21 @@
             height: 16rem;
             object-fit: contain;
             margin-bottom: 1rem;
+            /* ▼ 追加: ロゴのフェードイン＆ズームアニメーション */
+            opacity: 0;
+            animation: splashLogoAnim 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* ▼ 追加: アニメーションキーフレーム */
+        @keyframes splashLogoAnim {
+            0% {
+                opacity: 0;
+                transform: scale(0.9); /* 少し小さめから */
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1); /* ふわっと元のサイズへ */
+            }
         }
 
         /* ロゴの出し分け */
@@ -9475,17 +9485,18 @@ const checkQuestResume = () => {
                 lucide.createIcons();
                     // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
                 const splash = document.getElementById('splash-screen');
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-                if (splash && !isStandalone) {
-                    // ブラウザ(Safari等)で開いている場合はHTML側のスプラッシュをフェードアウトさせる
-                    // ※ Standalone(PWA)時はCSSですでに消えているので何もしない
+                // PWA・ブラウザ問わず、常にアニメーションさせてから消す
+                if (splash) {
+                    // ロゴのフェードイン(1秒)をしっかり見せるため、1.2秒後にフェードアウト開始
                     setTimeout(() => {
                         splash.style.opacity = '0';
+                        splash.style.transform = 'scale(1.05)'; // 少し手前にズームしながら消えるリッチな演出
+                        
                         setTimeout(() => {
                             splash.style.display = 'none';
                         }, 500); // 0.5秒かけてフェードアウト
-                    }, 500); // 起動の0.5秒後に消し始める（キャッシュで爆速起動するため待機時間は短めでOK）
+                    }, 1200); 
                 }
                 // ▲▲▲ 修正ここまで ▲▲▲
             };
