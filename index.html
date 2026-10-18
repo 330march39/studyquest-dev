@@ -258,11 +258,8 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
 
         /* ▼▼▼ 劇的刷新: トップ・フローティング・ウィジェット ▼▼▼ */
         #mini-timer-container {
-            /* 画面上部、ヘッダー(3.5rem)のすぐ下に配置して操作の邪魔にならないようにする */
-            top: calc(4.5rem + env(safe-area-inset-top, 0px));
-            bottom: auto; /* 下部配置を解除 */
-            /* その場でフェードイン・フェードアウトするアニメーション */
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            /* 位置はJSとインラインスタイルで制御するため固定値は削除 */
+            transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1), left 0.3s cubic-bezier(0.16, 1, 0.3, 1), right 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
             transform: scale(0.9);
             opacity: 0;
             pointer-events: none;
@@ -272,6 +269,11 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
             transform: scale(1);
             opacity: 1;
             pointer-events: auto;
+        }
+        /* 指でドラッグしている最中はアニメーションを切って追従させる */
+        #mini-timer-container.is-dragging {
+            transition: none !important;
+            transform: scale(1.05); /* つかんでいる感を出すために少し拡大 */
         }
 
         /* 1秒の経過(時計のチック)と完全に同期するパルスアニメーション */
@@ -2324,14 +2326,20 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 </div>
 
     <!-- ▼▼▼ 劇的刷新: ミニプレイヤー HTML ▼▼▼ -->
-    <div id="mini-timer-container" class="fixed left-0 right-0 mx-auto w-max pointer-events-none flex justify-center">
+    <!-- 削除エリア（スワイプした時に画面下部に表示） -->
+    <div id="mini-timer-trash-area" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-16 h-16 bg-gray-800/80 dark:bg-gray-700/80 text-white rounded-full flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 z-[150] scale-50">
+        <i data-lucide="x" class="w-8 h-8"></i>
+    </div>
+
+    <!-- 初期位置を右上に指定（left-0 right-0 mx-auto を削除） -->
+    <div id="mini-timer-container" class="fixed w-max pointer-events-none flex justify-center" style="top: 80px; right: 16px;">
         <!-- ウィジェット風のモダンな角丸カード -->
-        <div id="mini-timer-bar" class="group relative flex items-center gap-4 pl-4 pr-3 py-2.5 rounded-2xl cursor-pointer select-none
+        <div id="mini-timer-bar" class="group relative flex items-center gap-4 pl-4 pr-4 py-2.5 rounded-2xl cursor-pointer select-none
                     bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
                     border border-gray-200/50 dark:border-gray-700/50
                     shadow-[0_8px_20px_-4px_rgba(0,0,0,0.15)]
                     dark:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.5)]
-                    transition-all duration-200 active:scale-95 pointer-events-none overflow-hidden">
+                    transition-all duration-200 pointer-events-none overflow-hidden touch-none">
             
             <!-- JSで1秒ごとに秒数と同期して鼓動するドット -->
             <div class="relative flex items-center justify-center w-3 h-3 flex-shrink-0">
@@ -2345,12 +2353,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                 <span id="mini-timer-text" class="font-black text-xl tracking-tight text-gray-900 dark:text-white tabular-nums leading-none">00:00</span>
             </div>
 
-            <!-- 閉じるボタン -->
-            <button id="close-mini-timer-btn" aria-label="非表示" class="p-2 ml-1 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center">
-                <i data-lucide="x" class="w-4 h-4 stroke-[2.5]"></i>
-            </button>
-
-            <!-- プログレスバー (カードの下辺に美しく這わせる) -->
+            <!-- プログレスバー -->
             <div id="mini-timer-progress-wrap" class="absolute bottom-0 left-0 right-0 h-1 bg-transparent hidden">
                 <div id="mini-timer-progress-bar" class="h-full transition-all duration-1000 ease-linear" style="background-color: var(--primary-color); width: 100%;"></div>
             </div>
@@ -6415,23 +6418,183 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
     }, { once: true });
 }));
 
-            // ▼▼▼ 修正版: 要素が存在するか確認してからイベントを設定する ▼▼▼
+            // ▼▼▼ 修正版: ミニプレイヤーのドラッグ移動・削除・タップ遷移機能 ▼▼▼
             const miniTimerBar = $('#mini-timer-bar');
-            if (miniTimerBar) {
-                miniTimerBar.addEventListener('click', (e) => {
-                    if (e.target.closest('#close-mini-timer-btn')) return;
-                    const focusTab = document.querySelector('.tab-btn[data-page="focus-page"]');
-                    if (focusTab) focusTab.click();
-                });
-            }
+            const miniTimerContainer = $('#mini-timer-container');
+            const trashArea = $('#mini-timer-trash-area');
             
-            const closeMiniTimerBtn = $('#close-mini-timer-btn');
-            if (closeMiniTimerBtn) {
-                closeMiniTimerBtn.addEventListener('click', () => {
-                    miniTimerTemporarilyHidden = true;
-                    const container = $('#mini-timer-container');
-                    if (container) container.classList.remove('visible');
-                });
+            const miniTimerState = {
+                isDragging: false,
+                dragged: false, // ドラッグと単なるタップを判別するため
+                startX: 0, startY: 0,
+                initialLeft: 0, initialTop: 0,
+                touchId: null,
+                isHoveringTrash: false
+            };
+
+            if (miniTimerBar && miniTimerContainer && trashArea) {
+                const handleDragStart = (e) => {
+                    if (e.type === 'touchstart') {
+                        const touch = e.changedTouches[0];
+                        miniTimerState.touchId = touch.identifier;
+                        miniTimerState.startX = touch.clientX;
+                        miniTimerState.startY = touch.clientY;
+                    } else {
+                        miniTimerState.startX = e.clientX;
+                        miniTimerState.startY = e.clientY;
+                    }
+                    
+                    const rect = miniTimerContainer.getBoundingClientRect();
+                    miniTimerState.initialLeft = rect.left;
+                    miniTimerState.initialTop = rect.top;
+                    
+                    miniTimerState.isDragging = true;
+                    miniTimerState.dragged = false; // まだ移動していない
+                    miniTimerState.isHoveringTrash = false;
+                    
+                    // アニメーション無効化とスタイル更新
+                    miniTimerContainer.classList.add('is-dragging');
+                    miniTimerContainer.style.left = `${miniTimerState.initialLeft}px`;
+                    miniTimerContainer.style.top = `${miniTimerState.initialTop}px`;
+                    miniTimerContainer.style.right = 'auto';
+                    miniTimerContainer.style.bottom = 'auto';
+
+                    // 削除用ゴミ箱アイコンを表示
+                    trashArea.classList.remove('opacity-0', 'scale-50');
+                    trashArea.classList.add('opacity-100', 'scale-100');
+                    
+                    window.addEventListener('touchmove', handleDragMove, { passive: false });
+                    window.addEventListener('touchend', handleDragEnd);
+                    window.addEventListener('mousemove', handleDragMove, { passive: false });
+                    window.addEventListener('window', handleDragEnd);
+                };
+
+                const handleDragMove = (e) => {
+                    if (!miniTimerState.isDragging) return;
+                    
+                    let clientX, clientY;
+                    if (e.type === 'touchmove') {
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === miniTimerState.touchId);
+                        if (!touch) return;
+                        clientX = touch.clientX;
+                        clientY = touch.clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+
+                    const diffX = clientX - miniTimerState.startX;
+                    const diffY = clientY - miniTimerState.startY;
+
+                    // 一定以上（5px以上）動いたらドラッグとみなす（タップ誤爆防止）
+                    if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
+                        miniTimerState.dragged = true;
+                    }
+
+                    if (miniTimerState.dragged) {
+                        e.preventDefault(); // 画面スクロール防止
+                        
+                        let newLeft = miniTimerState.initialLeft + diffX;
+                        let newTop = miniTimerState.initialTop + diffY;
+
+                        miniTimerContainer.style.left = `${newLeft}px`;
+                        miniTimerContainer.style.top = `${newTop}px`;
+
+                        // ゴミ箱との当たり判定 (中心間の距離で判定)
+                        const trashRect = trashArea.getBoundingClientRect();
+                        const timerRect = miniTimerContainer.getBoundingClientRect();
+                        
+                        const timerCenterX = timerRect.left + timerRect.width / 2;
+                        const timerCenterY = timerRect.top + timerRect.height / 2;
+                        const trashCenterX = trashRect.left + trashRect.width / 2;
+                        const trashCenterY = trashRect.top + trashRect.height / 2;
+
+                        const distance = Math.hypot(timerCenterX - trashCenterX, timerCenterY - trashCenterY);
+                        
+                        if (distance < 70) {
+                            trashArea.classList.add('bg-red-500/80', 'scale-125');
+                            trashArea.classList.remove('bg-gray-800/80', 'dark:bg-gray-700/80', 'scale-100');
+                            miniTimerContainer.style.opacity = '0.4';
+                            miniTimerContainer.style.transform = 'scale(0.5)'; // 吸い込まれる演出
+                            miniTimerState.isHoveringTrash = true;
+                        } else {
+                            trashArea.classList.remove('bg-red-500/80', 'scale-125');
+                            trashArea.classList.add('bg-gray-800/80', 'dark:bg-gray-700/80', 'scale-100');
+                            miniTimerContainer.style.opacity = '1';
+                            miniTimerContainer.style.transform = 'scale(1.05)';
+                            miniTimerState.isHoveringTrash = false;
+                        }
+                    }
+                };
+
+                const handleDragEnd = (e) => {
+                    if (!miniTimerState.isDragging) return;
+                    miniTimerState.isDragging = false;
+                    
+                    window.removeEventListener('touchmove', handleDragMove);
+                    window.removeEventListener('touchend', handleDragEnd);
+                    window.removeEventListener('mousemove', handleDragMove);
+                    window.removeEventListener('mouseup', handleDragEnd);
+
+                    miniTimerContainer.classList.remove('is-dragging');
+                    miniTimerContainer.style.opacity = '';
+                    miniTimerContainer.style.transform = '';
+
+                    // ゴミ箱非表示
+                    trashArea.classList.add('opacity-0', 'scale-50');
+                    trashArea.classList.remove('opacity-100', 'scale-100', 'bg-red-500/80', 'scale-125');
+                    trashArea.classList.add('bg-gray-800/80', 'dark:bg-gray-700/80');
+
+                    // ゴミ箱にドロップされた場合の処理
+                    if (miniTimerState.isHoveringTrash) {
+                        miniTimerTemporarilyHidden = true;
+                        updateMiniTimer();
+                        miniTimerState.isHoveringTrash = false;
+                        return;
+                    }
+
+                    // ドラッグされず（ただのタップ）だった場合の処理：集中タブへ即座に移動
+                    if (!miniTimerState.dragged) {
+                        const focusTab = document.querySelector('.tab-btn[data-page="focus-page"]');
+                        if (focusTab) focusTab.click();
+                        
+                        // 移動後はミニプレイヤーを消す
+                        miniTimerTemporarilyHidden = true;
+                        updateMiniTimer();
+                        return;
+                    }
+
+                    // ドラッグ終了後：四隅の最も近い位置へスナップさせる
+                    snapToCorner();
+                };
+
+                const snapToCorner = () => {
+                    const rect = miniTimerContainer.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+
+                    // ヘッダーやボトムナビに被らないための余白
+                    const safeTop = 80; 
+                    const safeBottom = 100;
+                    const paddingX = 16;
+
+                    // 画面の上下左右どちらに近いか判定
+                    const isLeft = centerX < screenW / 2;
+                    const isTop = centerY < screenH / 2;
+
+                    // CSSをリセットして再設定（transitionが効いてアニメーション移動する）
+                    miniTimerContainer.style.left = isLeft ? `${paddingX}px` : 'auto';
+                    miniTimerContainer.style.right = !isLeft ? `${paddingX}px` : 'auto';
+                    miniTimerContainer.style.top = isTop ? `${safeTop}px` : 'auto';
+                    miniTimerContainer.style.bottom = !isTop ? `${safeBottom}px` : 'auto';
+                };
+
+                // PC/スマホ両対応でイベント登録
+                miniTimerBar.addEventListener('touchstart', handleDragStart, { passive: false });
+                miniTimerBar.addEventListener('mousedown', handleDragStart);
             }
             // ▲▲▲ 修正ここまで ▲▲▲
 
