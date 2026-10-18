@@ -9377,6 +9377,7 @@ const checkQuestResume = () => {
 
             // ▼ 修正: async を追加します
             const init = async () => {
+            try {
                 // ▼▼▼ 追加: 起動時にクラッシュ復帰かどうかを判定 ▼▼▼
                 if (localStorage.getItem('SQ_IsVideoPreviewing') === 'true') {
                     localStorage.setItem('SQ_IsVideoPreviewing', 'false');
@@ -9779,6 +9780,46 @@ const checkQuestResume = () => {
                     }, 2100); // 👈 修正: アニメーションを延ばした分、1800 から 2100 に変更
                 }
                 // ▲▲▲ 修正ここまで ▲▲▲
+                } catch (error) {
+                    // ▼▼▼ 追加: 起動時に致命的なエラーが起きた場合の強制復帰ロジック ▼▼▼
+                    console.error("起動処理中に致命的なエラーが発生しました:", error);
+                    
+                    // エラーの内容をローカルストレージに記録（無限ループ防止用）
+                    const crashCount = parseInt(localStorage.getItem('SQ_CrashCount') || '0', 10);
+                    
+                    if (crashCount < 2) {
+                        // 2回までは強制キャッシュクリアを試みる
+                        localStorage.setItem('SQ_CrashCount', (crashCount + 1).toString());
+                        
+                        // Service Workerの解除
+                        if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (let reg of registrations) {
+                                await reg.unregister();
+                            }
+                        }
+                        
+                        // キャッシュストレージの全削除
+                        if ('caches' in window) {
+                            const cacheNames = await caches.keys();
+                            await Promise.all(cacheNames.map(name => caches.delete(name)));
+                        }
+                        
+                        // 1秒後に強制リロード
+                        setTimeout(() => {
+                            location.reload(true);
+                        }, 1000);
+                        
+                    } else {
+                        // 3回連続で失敗した場合は、ローカルデータを初期化（究極の最終手段）
+                        // ※これをしないと永遠にフリーズ画面を見続けることになるため
+                        localStorage.removeItem('quizAppUltimateV8'); // アプリのデータを削除
+                        localStorage.removeItem('SQ_CrashCount');     // クラッシュカウントをリセット
+                        alert("致命的なエラーが継続したため、アプリのデータを初期化して復旧しました。");
+                        location.reload(true);
+                    }
+                    // ▲▲▲ 追加ここまで ▲▲▲
+                }
             };
 
             // ▼▼▼ 修正: 第4引数に onSuccess (成功時の処理) を追加 ▼▼▼
