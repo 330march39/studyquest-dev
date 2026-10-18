@@ -50,15 +50,15 @@
             animation: splashLogoAnim 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
         }
 
-        /* 👇修正: 少し下からフワッと浮き上がりながらズームする高級感のある動き */
+        /* 👇修正: 上下の移動をなくし、奥からふわりと浮かび上がる動き */
         @keyframes splashLogoAnim {
             0% {
                 opacity: 0;
-                transform: translateY(15px) scale(0.95); 
+                transform: scale(0.9); /* translateYを削除しました */
             }
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: scale(1);
             }
         }
 
@@ -101,32 +101,46 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     </style>
 
     <script>
-        // 修正箇所: 登録済みかチェックし、未登録なら強制ライトモードにする
+        // 修正箇所: 起動時の「一瞬白くなる」チラつきを完全に防止するロジック
         (function() {
-            let isRegistered = false;
+            let effectiveMode = 'light';
+            
+            // 1. まずOSの設定（ネイティブスプラッシュの色）を確認
+            const osPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (osPrefersDark) {
+                effectiveMode = 'dark';
+            }
+
+            // 2. ユーザーの保存データがあれば確認
             try {
                 const saved = localStorage.getItem('quizAppUltimateV8');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    // ユーザー登録済みフラグを確認
                     if (parsed.user && parsed.user.isRegistered) {
-                        isRegistered = true;
+                        const themeMode = parsed.settings?.themeMode || 'system';
+                        if (themeMode === 'dark') {
+                            effectiveMode = 'dark';
+                        } else if (themeMode === 'light') {
+                            effectiveMode = 'light';
+                        }
                     }
                 }
-            } catch (e) {
-                // エラー時は未登録扱い（ライトモード）
-            }
+            } catch (e) {}
 
-            // 登録済み かつ OSがダークモードの場合のみ dark クラスを付与
-            if (isRegistered && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // 3. 確定したモードに合わせて、画面が描画される前に強制的に背景色を固定
+            const style = document.createElement('style');
+            if (effectiveMode === 'dark') {
                 document.documentElement.classList.add('dark');
+                // ダーク時はネイティブと同じ「真っ黒」に固定
+                style.innerHTML = '#splash-screen, html, body { background-color: #000000 !important; }';
             } else {
-                // それ以外（初回起動含む）はクラスを削除（ライトモード）
                 document.documentElement.classList.remove('dark');
+                // ライト時はネイティブと同じ「真っ白」に固定
+                style.innerHTML = '#splash-screen, html, body { background-color: #ffffff !important; }';
             }
+            document.head.appendChild(style);
         })();
     </script>
-
     <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta id="meta-status-bar" name="apple-mobile-web-app-status-bar-style" content="default">
