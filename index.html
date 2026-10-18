@@ -43,8 +43,8 @@
             width: 16rem;
             height: 16rem;
             object-fit: contain;
-            /* 👇修正: 下に余白を作ることで、ロゴ全体を少し上に押し上げる */
-            margin-bottom: 2rem; 
+            /* 👇修正: 端末の下部セーフエリア(ホームバー)の有無を自動検知して余白を作る */
+            margin-bottom: env(safe-area-inset-bottom, 0px); 
             opacity: 0; 
             animation: splashLogoAnim 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
         }
