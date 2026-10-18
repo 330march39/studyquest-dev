@@ -44,10 +44,9 @@
             height: 16rem;
             object-fit: contain;
             margin-bottom: 1rem;
-            /* 最初は完全に透明にしておく */
             opacity: 0; 
-            /* 👇修正: 0.5秒(0.5s)遅らせてから、1.2秒かけてアニメーションさせる */
-            animation: splashLogoAnim 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
+            /* 👇修正: 1.2s を 1.5s に変更して、ほんの少しゆっくりフェードインさせる */
+            animation: splashLogoAnim 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
         }
 
         /* 👇修正: 上下の移動をなくし、奥からふわりと浮かび上がる動き */
@@ -9507,12 +9506,12 @@ const checkQuestResume = () => {
                 
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
-                 // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
+                // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
                 const splash = document.getElementById('splash-screen');
 
                 // PWA・ブラウザ問わず、常にアニメーションさせてから消す
                 if (splash) {
-                    // ロゴのアニメーション完了(待機0.5秒 + 描画1.2秒)を待ってからフェードアウト開始
+                    // ロゴのアニメーション完了(待機0.5秒 + 描画1.5秒)を待ってからフェードアウト開始
                     setTimeout(() => {
                         splash.style.opacity = '0';
                         splash.style.transform = 'scale(1.05)'; // 少し手前にズームしながら消えるリッチな演出
@@ -9520,7 +9519,7 @@ const checkQuestResume = () => {
                         setTimeout(() => {
                             splash.style.display = 'none';
                         }, 500); // 0.5秒かけてフェードアウト
-                    }, 1800); // 👈 修正: 1200 から 1800 に変更して、ロゴをしっかり見せる
+                    }, 2100); // 👈 修正: アニメーションを延ばした分、1800 から 2100 に変更
                 }
                 // ▲▲▲ 修正ここまで ▲▲▲
             };
