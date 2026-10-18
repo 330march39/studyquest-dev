@@ -43,8 +43,8 @@
             width: 16rem;
             height: 16rem;
             object-fit: contain;
-            /* 👇修正: 以前の margin-bottom: 1rem; を削除し、純粋な「完全な中央」に配置する */
-            margin: 0;
+            /* 👇修正: 下に余白を作ることで、ロゴ全体を少し上に押し上げる */
+            margin-bottom: 2rem; 
             opacity: 0; 
             animation: splashLogoAnim 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
         }
