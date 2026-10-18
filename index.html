@@ -44,20 +44,21 @@
             height: 16rem;
             object-fit: contain;
             margin-bottom: 1rem;
-            /* ▼ 追加: ロゴのフェードイン＆ズームアニメーション */
-            opacity: 0;
-            animation: splashLogoAnim 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            /* 最初は完全に透明にしておく */
+            opacity: 0; 
+            /* 👇修正: 0.5秒(0.5s)遅らせてから、1.2秒かけてアニメーションさせる */
+            animation: splashLogoAnim 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
         }
 
-        /* ▼ 追加: アニメーションキーフレーム */
+        /* 👇修正: 少し下からフワッと浮き上がりながらズームする高級感のある動き */
         @keyframes splashLogoAnim {
             0% {
                 opacity: 0;
-                transform: scale(0.9); /* 少し小さめから */
+                transform: translateY(15px) scale(0.95); 
             }
             100% {
                 opacity: 1;
-                transform: scale(1); /* ふわっと元のサイズへ */
+                transform: translateY(0) scale(1);
             }
         }
 
@@ -9483,12 +9484,12 @@ const checkQuestResume = () => {
                 
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
-                    // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
+                 // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
                 const splash = document.getElementById('splash-screen');
 
                 // PWA・ブラウザ問わず、常にアニメーションさせてから消す
                 if (splash) {
-                    // ロゴのフェードイン(1秒)をしっかり見せるため、1.2秒後にフェードアウト開始
+                    // ロゴのアニメーション完了(待機0.5秒 + 描画1.2秒)を待ってからフェードアウト開始
                     setTimeout(() => {
                         splash.style.opacity = '0';
                         splash.style.transform = 'scale(1.05)'; // 少し手前にズームしながら消えるリッチな演出
@@ -9496,7 +9497,7 @@ const checkQuestResume = () => {
                         setTimeout(() => {
                             splash.style.display = 'none';
                         }, 500); // 0.5秒かけてフェードアウト
-                    }, 1200); 
+                    }, 1800); // 👈 修正: 1200 から 1800 に変更して、ロゴをしっかり見せる
                 }
                 // ▲▲▲ 修正ここまで ▲▲▲
             };
