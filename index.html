@@ -256,32 +256,35 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
         .toggle-checkbox:checked:before { transform: translateX(20px); }
         #theme-purchase-modal, #background-purchase-modal { z-index: 60; }
 
-        /* ▼▼▼ 刷新: ミニタイマー (Live Activity風 カプセルデザイン) ▼▼▼ */
+        /* ▼▼▼ 劇的刷新: トップ・フローティング・ウィジェット ▼▼▼ */
         #mini-timer-container {
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-            transform: translateY(120%) scale(0.92);
+            /* 画面上部、ヘッダー(3.5rem)のすぐ下に配置して操作の邪魔にならないようにする */
+            top: calc(4.5rem + env(safe-area-inset-top, 0px));
+            bottom: auto; /* 下部配置を解除 */
+            /* その場でフェードイン・フェードアウトするアニメーション */
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            transform: scale(0.9);
             opacity: 0;
             pointer-events: none;
-            bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)); /* タブバーのすぐ上に綺麗に浮遊 */
+            z-index: 100;
         }
         #mini-timer-container.visible {
-            transform: translateY(0) scale(1);
+            transform: scale(1);
             opacity: 1;
             pointer-events: auto;
         }
-        #mini-timer-container.visible #mini-timer-bar {
-            pointer-events: auto !important;
-        }
 
-        /* 動作中の呼吸パルスアニメーション */
-        @keyframes timerPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.85); }
+        /* 1秒の経過(時計のチック)と完全に同期するパルスアニメーション */
+        @keyframes exactTickPulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            40% { transform: scale(2.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
         }
-        .animate-timer-pulse {
-            animation: timerPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .animate-tick {
+            /* JSからクラスを付け外しして1秒ごとに発動させる */
+            animation: exactTickPulse 1s ease-out;
         }
-        /* ▲▲▲ 刷新ここまで ▲▲▲ */
+        /* ▲▲▲ 劇的刷新ここまで ▲▲▲ */
         
         /* 集中モード背景 */
         .focus-view-bg {
@@ -2320,36 +2323,40 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
     </div>
 </div>
 
-    <!-- ▼▼▼ 刷新: ミニプレイヤー HTML ▼▼▼ -->
-    <div id="mini-timer-container" class="fixed left-0 right-0 mx-auto w-max z-40 pointer-events-none flex justify-center">
-        <div id="mini-timer-bar" class="group relative flex items-center gap-3 pl-3.5 pr-2.5 py-2 rounded-full cursor-pointer select-none
-                    bg-white/85 dark:bg-[#1A1A1D]/85 backdrop-blur-xl
-                    border border-black/[0.06] dark:border-white/[0.12]
-                    shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.06)]
-                    dark:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.6)]
-                    transition-all duration-200 active:scale-95 pointer-events-none">
+    <!-- ▼▼▼ 劇的刷新: ミニプレイヤー HTML ▼▼▼ -->
+    <div id="mini-timer-container" class="fixed left-0 right-0 mx-auto w-max pointer-events-none flex justify-center">
+        <!-- ウィジェット風のモダンな角丸カード -->
+        <div id="mini-timer-bar" class="group relative flex items-center gap-4 pl-4 pr-3 py-2.5 rounded-2xl cursor-pointer select-none
+                    bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
+                    border border-gray-200/50 dark:border-gray-700/50
+                    shadow-[0_8px_20px_-4px_rgba(0,0,0,0.15)]
+                    dark:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.5)]
+                    transition-all duration-200 active:scale-95 pointer-events-none overflow-hidden">
             
-            <!-- 動作中を示すパルスドット -->
-            <div class="relative flex items-center justify-center w-2.5 h-2.5 flex-shrink-0">
-                <span class="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style="background-color: var(--primary-color);"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2" style="background-color: var(--primary-color);"></span>
+            <!-- JSで1秒ごとに秒数と同期して鼓動するドット -->
+            <div class="relative flex items-center justify-center w-3 h-3 flex-shrink-0">
+                <span id="mini-timer-dot" class="absolute inline-flex h-full w-full rounded-full opacity-0" style="background-color: var(--primary-color);"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5" style="background-color: var(--primary-color);"></span>
             </div>
 
-            <!-- 計測時間表示 -->
-            <span id="mini-timer-text" class="font-bold text-sm tracking-tight text-gray-900 dark:text-white tabular-nums leading-none">00:00</span>
-
-            <!-- プログレスバー (タイマー時のみ伸縮 / テーマカラー連動) -->
-            <div id="mini-timer-progress-wrap" class="w-16 h-1.5 bg-gray-200/80 dark:bg-white/10 rounded-full overflow-hidden flex-shrink-0">
-                <div id="mini-timer-progress-bar" class="h-full rounded-full transition-all duration-500 ease-linear" style="background-color: var(--primary-color); width: 100%;"></div>
+            <!-- 時間とモード表示 -->
+            <div class="flex flex-col justify-center min-w-[60px]">
+                <span id="mini-timer-mode-label" class="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none mb-1">Timer</span>
+                <span id="mini-timer-text" class="font-black text-xl tracking-tight text-gray-900 dark:text-white tabular-nums leading-none">00:00</span>
             </div>
 
-            <!-- 一時的に隠すボタン -->
-            <button id="close-mini-timer-btn" aria-label="非表示" class="p-1 -mr-0.5 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center">
-                <i data-lucide="x" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+            <!-- 閉じるボタン -->
+            <button id="close-mini-timer-btn" aria-label="非表示" class="p-2 ml-1 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center">
+                <i data-lucide="x" class="w-4 h-4 stroke-[2.5]"></i>
             </button>
+
+            <!-- プログレスバー (カードの下辺に美しく這わせる) -->
+            <div id="mini-timer-progress-wrap" class="absolute bottom-0 left-0 right-0 h-1 bg-transparent hidden">
+                <div id="mini-timer-progress-bar" class="h-full transition-all duration-1000 ease-linear" style="background-color: var(--primary-color); width: 100%;"></div>
+            </div>
         </div>
     </div>
-    <!-- ▲▲▲ 刷新ここまで ▲▲▲ -->
+    <!-- ▲▲▲ 劇的刷新ここまで ▲▲▲ -->
 
     <!-- ===== モーダル ===== -->
 
@@ -5940,7 +5947,19 @@ const showItemPopup = (item, type) => {
                 });
             }
             
-            // ▼▼▼ 刷新: ミニタイマー更新ロジック ▼▼▼
+            // ▼▼▼ 劇的刷新: ミニタイマー同期ロジック ▼▼▼
+            
+            // 1秒ごとに鼓動(パルス)を発動させる関数
+            const triggerMiniTimerPulse = () => {
+                const dot = document.getElementById('mini-timer-dot');
+                if (dot) {
+                    // アニメーションを一度リセットして再度付与することで確実に1秒ごとに再発動する
+                    dot.classList.remove('animate-tick');
+                    void dot.offsetWidth; // リフロー(再描画)強制
+                    dot.classList.add('animate-tick');
+                }
+            };
+
             const updateMiniTimer = () => {
                 const container = $('#mini-timer-container');
                 if (!container) return;
@@ -5953,32 +5972,78 @@ const showItemPopup = (item, type) => {
                 const isFocusActive = $('#focus-page')?.classList.contains('active');
                 const isRunning = focusTimer.isRunning || stopwatch.isRunning;
 
-                // 集中画面以外のページにいて、かつタイマー/SWが動いている時だけ表示
                 if (isRunning && !isFocusActive) {
                     container.classList.add('visible');
                     
                     const progressWrap = $('#mini-timer-progress-wrap');
                     const progressBar = $('#mini-timer-progress-bar');
                     const textEl = $('#mini-timer-text');
+                    const modeLabel = $('#mini-timer-mode-label');
 
                     if (focusTimer.isRunning) {
-                        // タイマー時: 残り時間とプログレスバーを連動
-                        if (progressWrap) progressWrap.style.display = 'block';
+                        if (modeLabel) modeLabel.textContent = 'TIMER';
+                        if (progressWrap) progressWrap.classList.remove('hidden');
+                        
                         const progress = focusTimer.defaultTime > 0 
                             ? ((focusTimer.defaultTime - focusTimer.timeLeft) / focusTimer.defaultTime) * 100 
                             : 0;
                         if (textEl) textEl.textContent = formatTime(focusTimer.timeLeft);
                         if (progressBar) progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
                     } else {
-                        // ストップウォッチ時: 時間のみスマートに表示し、バーは非表示にしてよりコンパクトに
-                        if (progressWrap) progressWrap.style.display = 'none';
+                        if (modeLabel) modeLabel.textContent = 'STOPWATCH';
+                        if (progressWrap) progressWrap.classList.add('hidden');
                         if (textEl) textEl.textContent = formatStopwatchTime(Math.floor(stopwatch.elapsedTime));
                     }
                 } else {
                     container.classList.remove('visible');
                 }
             };
-            // ▲▲▲ 刷新ここまで ▲▲▲
+            
+            const timerTick = () => {
+                focusTimer.timeLeft--;
+                $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
+                
+                // 1秒ごとに正確に鼓動させる
+                triggerMiniTimerPulse();
+                updateMiniTimer();
+                
+                if (focusTimer.timeLeft <= 0) {
+                    clearInterval(focusTimer.interval);
+                    const elapsed = focusTimer.defaultTime;
+                    const sId = recordSession('タイマー', elapsed);
+                    addLP(Math.floor(elapsed/60) * 10, 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
+                    state.focus.totalTime += elapsed;
+                    state.focus.isRunning = false;
+                    state.focus.startTime = null;
+                    saveState();
+                    resetTimerUI();
+                }
+            };
+            
+            // ストップウォッチは0.1秒ごとの処理なので、1秒(整数)が切り替わった時だけ鼓動させる
+            let lastPulseSecond = -1;
+            const stopwatchTick = () => {
+                stopwatch.elapsedTime = (Date.now() - stopwatch.startTime) / 1000;
+                
+                // 秒数が切り替わった時だけパルスを発動
+                const currentSec = Math.floor(stopwatch.elapsedTime);
+                if (currentSec !== lastPulseSecond) {
+                    triggerMiniTimerPulse();
+                    lastPulseSecond = currentSec;
+                }
+
+                if (stopwatch.elapsedTime >= 43200) {
+                    stopwatch.elapsedTime = 43200;
+                    $('#stopwatch-display').textContent = formatStopwatchTime(43200);
+                    updateMiniTimer();
+                    endStopwatch();
+                    showToast('12時間を経過したため終了しました');
+                    return;
+                }
+                $('#stopwatch-display').textContent = formatStopwatchTime(stopwatch.elapsedTime);
+                updateMiniTimer();
+            };
+            // ▲▲▲ 劇的刷新ここまで ▲▲▲
             
             const timerTick = () => {
                 focusTimer.timeLeft--;
