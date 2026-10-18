@@ -6044,20 +6044,6 @@ const showItemPopup = (item, type) => {
                 updateMiniTimer();
             };
             // ▲▲▲ 劇的刷新ここまで ▲▲▲
-            
-            const stopwatchTick = () => {
-                stopwatch.elapsedTime = (Date.now() - stopwatch.startTime) / 1000;
-                if (stopwatch.elapsedTime >= 43200) {
-                    stopwatch.elapsedTime = 43200; // 時間を固定
-                    $('#stopwatch-display').textContent = formatStopwatchTime(43200);
-                    updateMiniTimer();
-                    endStopwatch(); // 強制終了
-                    showToast('12時間を経過したため終了しました');
-                    return; // ここで処理を抜ける
-                }
-                $('#stopwatch-display').textContent = formatStopwatchTime(stopwatch.elapsedTime);
-                updateMiniTimer();
-            };
 
             const pauseFocusTimer = () => {
                 if (!focusTimer.isRunning || focusTimer.isPaused) return;
