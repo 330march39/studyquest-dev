@@ -28,8 +28,8 @@
         /* 2. スプラッシュスクリーンの設定 */
         #splash-screen {
             position: fixed;
-            /* 👇修正: 100% ではなく 100vh を使い、端末の物理画面全体の高さを基準にする */
-            top: 0; left: 0; width: 100%; height: 100vh;
+            /* 👇修正: 安定していた 100% に戻し、余計な計算式を削除 */
+            top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -37,17 +37,14 @@
             justify-content: center;
             background-color: #ffffff; 
             transition: opacity 0.5s ease, transform 0.5s ease;
-            
-            /* 👇追加: ノッチ(上)とホームバー(下)の領域の差分を計算し、下側に余白を足して「端末の完全な中央」に押し上げる */
-            padding-bottom: calc(env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         }
         
         #splash-screen img {
             width: 16rem;
             height: 16rem;
             object-fit: contain;
-            /* 👇修正: 人間の目の錯覚（真ん中に置くと少し下に見える現象）を補正するためのわずかな上ズラし */
-            margin-bottom: 1rem;
+            /* 👇修正: 以前の margin-bottom: 1rem; を削除し、純粋な「完全な中央」に配置する */
+            margin: 0;
             opacity: 0; 
             animation: splashLogoAnim 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
         }
