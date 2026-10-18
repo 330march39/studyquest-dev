@@ -101,7 +101,7 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
     </style>
 
     <script>
-        // 修正箇所: 起動時の「一瞬白くなる」チラつきを完全に防止するロジック
+        // 修正箇所: 起動時のチラつき防止と、ロゴの色をアプリの真の背景色に確実に合わせるロジック
         (function() {
             let effectiveMode = 'light';
             
@@ -127,20 +127,29 @@ html.dark .text-xs.font-bold.uppercase.tracking-wider {
                 }
             } catch (e) {}
 
-            // 3. 確定したモードに合わせて、画面が描画される前に強制的に背景色を固定
+            // 3. 確定したモードに合わせて、画面が描画される前に背景色とロゴ画像を完全に固定する
             const style = document.createElement('style');
             if (effectiveMode === 'dark') {
                 document.documentElement.classList.add('dark');
-                // ダーク時はネイティブと同じ「真っ黒」に固定
-                style.innerHTML = '#splash-screen, html, body { background-color: #000000 !important; }';
+                // ダーク時は背景を真っ黒にし、ダーク用ロゴを強制表示
+                style.innerHTML = `
+                    #splash-screen, html, body { background-color: #000000 !important; }
+                    #splash-logo-light { display: none !important; }
+                    #splash-logo-dark { display: block !important; }
+                `;
             } else {
                 document.documentElement.classList.remove('dark');
-                // ライト時はネイティブと同じ「真っ白」に固定
-                style.innerHTML = '#splash-screen, html, body { background-color: #ffffff !important; }';
+                // ライト時は背景を真っ白にし、ライト用ロゴを強制表示
+                style.innerHTML = `
+                    #splash-screen, html, body { background-color: #ffffff !important; }
+                    #splash-logo-dark { display: none !important; }
+                    #splash-logo-light { display: block !important; }
+                `;
             }
             document.head.appendChild(style);
         })();
     </script>
+    
     <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta id="meta-status-bar" name="apple-mobile-web-app-status-bar-style" content="default">
