@@ -6045,30 +6045,6 @@ const showItemPopup = (item, type) => {
             };
             // ▲▲▲ 劇的刷新ここまで ▲▲▲
             
-            const timerTick = () => {
-                focusTimer.timeLeft--;
-                $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
-                updateMiniTimer();
-                
-                if (focusTimer.timeLeft <= 0) {
-                    clearInterval(focusTimer.interval);
-            
-                    const elapsed = focusTimer.defaultTime;
-                    
-                    // ▼▼▼ 修正: セッション記録と詳細データの引き渡し ▼▼▼
-                    const sId = recordSession('タイマー', elapsed);
-                    addLP(Math.floor(elapsed/60) * 10, 'タイマー', true, { title: 'タイマー', duration: elapsed, sessionId: sId });
-                    state.focus.totalTime += elapsed;
-                    
-                    // ▼▼▼ 重要: 実行中フラグをオフにして二重付与を防ぐ ▼▼▼
-                    state.focus.isRunning = false;
-                    state.focus.startTime = null;
-                    
-                    saveState();
-                    resetTimerUI();
-                }
-            };
-            
             const stopwatchTick = () => {
                 stopwatch.elapsedTime = (Date.now() - stopwatch.startTime) / 1000;
                 if (stopwatch.elapsedTime >= 43200) {
