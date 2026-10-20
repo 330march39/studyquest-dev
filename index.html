@@ -35,8 +35,8 @@
             align-items: center;
             justify-content: center;
             background-color: #ffffff; 
-            /* ▼ 変更: transformの動きを「ease-in(徐々に加速)」にすると、没入感が強くなります */
-            transition: opacity 0.5s ease, transform 0.5s ease-in;
+            /* ▼ 変更: filter（ぼかし）も一緒にアニメーションさせるように追加 */
+            transition: opacity 0.5s ease, transform 0.5s ease-in, filter 0.5s ease-in;
         }
         
         #splash-screen img {
@@ -9815,6 +9815,7 @@ const checkQuestResume = () => {
                 
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
+                
                 // ▼▼▼ 修正: スプラッシュ画面の消去ロジック ▼▼▼
                 const splash = document.getElementById('splash-screen');
 
@@ -9823,9 +9824,10 @@ const checkQuestResume = () => {
                     // ロゴのアニメーション完了(待機0.5秒 + 描画1.5秒)を待ってからフェードアウト開始
                     setTimeout(() => {
                         splash.style.opacity = '0';
-                        // ▼ 変更: 1.05から4に増やし、ロゴにぐっと没入するイメージにする
-                        // (もっと大きくしたい場合は 5 や 6 に変更してください)
                         splash.style.transform = 'scale(4)'; 
+                        
+                        // ▼ 追加: 画像が手前に迫ってくる際に、ピントが外れるようにぼかしをかける
+                        splash.style.filter = 'blur(15px)'; 
                         
                         setTimeout(() => {
                             splash.style.display = 'none';
