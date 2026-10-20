@@ -28,7 +28,6 @@
         /* 2. スプラッシュスクリーンの設定 */
         #splash-screen {
             position: fixed;
-            /* 👇修正: 安定していた 100% に戻し、余計な計算式を削除 */
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999;
             display: flex;
@@ -36,7 +35,8 @@
             align-items: center;
             justify-content: center;
             background-color: #ffffff; 
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            /* ▼ 変更: transformの動きを「ease-in(徐々に加速)」にすると、没入感が強くなります */
+            transition: opacity 0.5s ease, transform 0.5s ease-in;
         }
         
         #splash-screen img {
@@ -9823,14 +9823,15 @@ const checkQuestResume = () => {
                     // ロゴのアニメーション完了(待機0.5秒 + 描画1.5秒)を待ってからフェードアウト開始
                     setTimeout(() => {
                         splash.style.opacity = '0';
-                        splash.style.transform = 'scale(1.05)'; // 少し手前にズームしながら消えるリッチな演出
+                        // ▼ 変更: 1.05から4に増やし、ロゴにぐっと没入するイメージにする
+                        // (もっと大きくしたい場合は 5 や 6 に変更してください)
+                        splash.style.transform = 'scale(4)'; 
                         
                         setTimeout(() => {
                             splash.style.display = 'none';
                         }, 500); // 0.5秒かけてフェードアウト
-                    }, 2100); // 👈 修正: アニメーションを延ばした分、1800 から 2100 に変更
+                    }, 2100); 
                 }
-                // ▲▲▲ 修正ここまで ▲▲▲
                 } catch (error) {
                     // ▼▼▼ 追加: 起動時に致命的なエラーが起きた場合の強制復帰ロジック ▼▼▼
                     console.error("起動処理中に致命的なエラーが発生しました:", error);
