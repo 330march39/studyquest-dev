@@ -2649,69 +2649,80 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                 </div>
 
-                <div id="quest-transition-view" class="hidden fixed inset-0 w-full h-full z-[60] bg-gray-900/90 overflow-y-auto backdrop-blur-lg">
-                    <div class="min-h-full flex flex-col landscape:flex-row items-center justify-center p-6 gap-8 landscape:gap-16 max-w-5xl mx-auto animate-enter-active">
-                        
-                        <!-- 左側：メッセージと現在の状況 -->
-                        <div class="flex flex-col items-center text-center landscape:w-1/2 landscape:items-end landscape:text-right space-y-6">
+                <div id="quest-transition-view" class="hidden absolute inset-0 w-full h-full z-[60] bg-black/40 backdrop-blur-xl overflow-y-auto">
+                    <div class="min-h-full flex items-center justify-center p-4 sm:p-6 animate-enter-active">
+                        <div class="relative w-full max-w-4xl bg-white/10 dark:bg-gray-900/50 backdrop-blur-3xl border border-white/20 dark:border-white/10 rounded-[2rem] shadow-[0_16px_40px_rgba(0,0,0,0.5)] p-6 sm:p-8 flex flex-col mt-4">
                             
-                            <!-- ▼ 刷新：獲得LP表示（グラスモーフィズム） -->
-                            <div class="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-4 rounded-3xl shadow-2xl flex flex-col items-center landscape:items-end w-full max-w-sm">
-                                <p class="text-xs font-bold text-yellow-300 uppercase tracking-widest mb-1">現在の獲得LP</p>
-                                <div class="flex items-center space-x-2">
-                                    <img src="coin.png" alt="Coin" class="w-8 h-8 object-contain drop-shadow-md">
-                                    <p class="text-4xl font-black text-white tabular-nums drop-shadow-lg" id="transition-earned-lp">0</p>
-                                    <span class="text-sm text-yellow-400 font-bold mt-2">LP</span>
-                                </div>
+                            <!-- 上部：LP表示 -->
+                            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full py-1.5 px-6 flex items-center shadow-lg border border-yellow-200/50 whitespace-nowrap z-10">
+                                <img src="coin.png" alt="Coin" class="w-6 h-6 mr-2 drop-shadow">
+                                <span class="text-white font-black text-xl tabular-nums tracking-tight" id="transition-earned-lp">0</span>
+                                <span class="text-yellow-100 font-bold text-xs ml-1">LP GET!</span>
                             </div>
-                            
-                            <i id="transition-icon" data-lucide="arrow-right-circle" class="w-24 h-24 text-white opacity-80 drop-shadow-lg"></i>
-                            <div>
-                                <h2 id="transition-title" class="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-md"></h2>
-                                <p id="transition-message" class="text-lg text-gray-300"></p>
+
+                            <!-- タイトルエリア -->
+                            <div class="text-center mb-6 mt-4">
+                                <h2 id="transition-title" class="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 drop-shadow-md tracking-tight">学習を始めますか？</h2>
+                                <p id="transition-message" class="text-gray-200 text-xs sm:text-sm font-bold opacity-90"></p>
                             </div>
-                        </div>
-                        
-                        <!-- 右側：ネクストステップとアクション -->
-                        <div class="flex flex-col items-center landscape:items-start landscape:w-1/2 w-full max-w-sm">
-                            <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-6 w-full border border-white/20 mb-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-                                <div class="flex justify-between items-center mb-4">
-                                    <p class="text-xs text-gray-400 font-bold tracking-widest border-l-4 pl-2" style="border-color: var(--primary-color);">NEXT STEP</p>
-                                    <span class="bg-white/20 text-white text-[10px] px-2 py-1 rounded-full font-bold">待機中</span>
-                                </div>
+
+                            <!-- メインコンテンツ（縦画面：縦並び、横画面：横並び） -->
+                            <div class="flex flex-col landscape:flex-row gap-4 sm:gap-6 w-full">
                                 
-                                <p id="transition-next-text" class="text-2xl font-bold text-white truncate mb-4 leading-tight"></p>
-                                
-                                <!-- ▼ 刷新：時間調整付きのUI -->
-                                <div class="bg-black/20 rounded-2xl p-4 flex items-center justify-between border border-white/5">
-                                    <div class="flex flex-col">
-                                        <span class="text-xs text-gray-400 font-bold mb-1">予定時間</span>
-                                        <div class="flex items-center text-white">
-                                            <i data-lucide="clock" class="w-5 h-5 mr-2" id="transition-time-icon"></i>
-                                            <span id="transition-next-duration" class="text-3xl font-black tabular-nums"></span>
-                                            <span class="text-sm font-bold ml-1 text-gray-400">分</span>
-                                        </div>
+                                <!-- 左側：今のセクション延長エリア (前のセクションが学習の場合のみ表示) -->
+                                <div id="transition-extend-area" class="flex-1 bg-black/30 dark:bg-black/50 rounded-3xl p-6 border border-white/10 flex flex-col justify-between hidden shadow-inner relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent pointer-events-none"></div>
+                                    <div class="text-center mb-4 relative z-10">
+                                        <span class="inline-block bg-indigo-500/30 text-indigo-100 text-[10px] font-bold px-3 py-1 rounded-full mb-2 border border-indigo-400/30 backdrop-blur-sm">学習が終わっていない場合</span>
+                                        <h3 class="text-white font-bold text-lg sm:text-xl">今のセクションを延長する</h3>
                                     </div>
                                     
-                                    <!-- 時間調整ボタン群 -->
-                                    <div class="flex flex-col gap-2">
-                                        <button id="transition-add-time-btn" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-transform active:scale-90 border border-white/10">
-                                            <i data-lucide="plus" class="w-5 h-5"></i>
+                                    <div class="flex items-center justify-center gap-6 mb-6 relative z-10">
+                                        <button id="extend-sub-btn" class="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-90 border border-white/10 shadow-sm backdrop-blur-md">
+                                            <i data-lucide="minus" class="w-6 h-6"></i>
                                         </button>
-                                        <button id="transition-sub-time-btn" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-transform active:scale-90 border border-white/10">
-                                            <i data-lucide="minus" class="w-5 h-5"></i>
+                                        <div class="text-center min-w-[5rem]">
+                                            <span id="extend-time-display" class="text-5xl font-black text-white tabular-nums drop-shadow-md">5</span>
+                                            <span class="text-sm text-gray-300 font-bold">分</span>
+                                        </div>
+                                        <button id="extend-add-btn" class="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-90 border border-white/10 shadow-sm backdrop-blur-md">
+                                            <i data-lucide="plus" class="w-6 h-6"></i>
                                         </button>
                                     </div>
+
+                                    <button id="extend-start-btn" class="relative z-10 w-full py-4 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center border border-indigo-400/50 backdrop-blur-sm">
+                                        <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> 延長して再開
+                                    </button>
                                 </div>
+
+                                <!-- 右側：NEXT STEPエリア -->
+                                <div class="flex-1 bg-white/10 dark:bg-white/5 rounded-3xl p-6 border border-white/20 shadow-inner flex flex-col justify-between relative overflow-hidden backdrop-blur-md">
+                                    <i id="transition-bg-icon" class="absolute -right-6 -bottom-6 w-40 h-40 text-white/5 transform -rotate-12 pointer-events-none"></i>
+                                    
+                                    <div class="relative z-10 mb-6">
+                                        <div class="flex items-center mb-3">
+                                            <span class="w-1 h-4 bg-white rounded-full mr-2"></span>
+                                            <span class="text-[10px] text-white font-bold tracking-widest bg-white/20 px-2 py-0.5 rounded-sm">NEXT STEP</span>
+                                        </div>
+                                        <div class="flex items-start justify-between">
+                                            <h3 id="transition-next-text" class="text-2xl sm:text-3xl font-bold text-white leading-tight pr-2 drop-shadow-sm"></h3>
+                                            <i id="transition-icon" class="w-10 h-10 text-white/80 flex-shrink-0 drop-shadow-sm"></i>
+                                        </div>
+                                        <div class="mt-5 inline-flex items-center bg-black/40 dark:bg-black/60 rounded-xl px-4 py-2.5 border border-white/10 shadow-inner">
+                                            <i data-lucide="clock" class="w-4 h-4 mr-2 text-white/80"></i>
+                                            <span class="text-xs text-white/80 font-bold mr-3">予定時間</span>
+                                            <span id="transition-next-duration" class="text-2xl font-black text-white tabular-nums drop-shadow-sm"></span>
+                                            <span class="text-xs text-white/80 font-bold ml-1">分</span>
+                                        </div>
+                                    </div>
+
+                                    <button id="transition-start-btn" class="relative z-10 w-full py-4 rounded-full primary-bg text-white font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/20">
+                                        <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> 次へ進む
+                                    </button>
+                                </div>
+
                             </div>
-
-                            <button id="transition-start-btn" class="group relative overflow-hidden text-white text-xl font-bold py-5 px-12 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center w-full landscape:w-auto">
-                                <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-shine z-0"></div>
-                                <i data-lucide="play" class="w-6 h-6 mr-2 fill-current z-10 relative"></i>
-                                <span class="z-10 relative">始める</span>
-                            </button>
                         </div>
-
                     </div>
                 </div>
 
@@ -7170,66 +7181,111 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
 
             // トランジション（待機）画面を表示
             function showTransitionScreen(step) {
-                questSectionView.style.display = 'none';
-                questBreakView.style.display = 'none';
-                questTransitionView.style.display = 'flex';
+                // ▼ 修正: 背景のタイマー画面（ぼやけた状態）を見せるため非表示にしない
+                // questSectionView.style.display = 'none';
+                // questBreakView.style.display = 'none';
+                questTransitionView.style.display = 'block'; // flex だと absolute が効きづらいため
                 
                 // 放置監視のリセット
                 if (transitionTimerId) clearInterval(transitionTimerId);
                 transitionStartTime = Date.now();
                 lastNotifiedMinutes = 0;
 
-                // ▼▼▼ 新規追加: LP表示と時間延長の処理 ▼▼▼
+                // 獲得LP表示
                 const earnedLpEl = $('#transition-earned-lp');
                 if (earnedLpEl) {
                     earnedLpEl.textContent = (quest.accumulatedLp || 0).toLocaleString();
                 }
 
-                // 時間表示の更新関数
-                const updateDurationDisplay = () => {
-                    $('#transition-next-duration').textContent = Math.floor(step.duration / 60);
-                };
-                
-                const addTimeBtn = $('#transition-add-time-btn');
-                const subTimeBtn = $('#transition-sub-time-btn');
-                
-                // 重複イベントを防ぐためにクローンして入れ替え
-                const newAddBtn = addTimeBtn.cloneNode(true);
-                const newSubBtn = subTimeBtn.cloneNode(true);
-                addTimeBtn.parentNode.replaceChild(newAddBtn, addTimeBtn);
-                subTimeBtn.parentNode.replaceChild(newSubBtn, subTimeBtn);
+                // --- 前のステップ（今のセクション）延長機能 ---
+                const prevStepIndex = quest.currentIndex - 1;
+                const prevStep = prevStepIndex >= 0 ? quest.plan[prevStepIndex] : null;
+                const extendArea = $('#transition-extend-area');
 
-                // プラス・マイナスボタンの挙動
-                newAddBtn.addEventListener('click', () => {
-                    step.duration += 5 * 60; // 5分追加
-                    if (step.duration > 720 * 60) step.duration = 720 * 60; // 12時間上限
-                    updateDurationDisplay();
-                    saveState();
-                });
-                
-                newSubBtn.addEventListener('click', () => {
-                    step.duration -= 5 * 60; // 5分減らす
-                    if (step.duration < 1 * 60) step.duration = 1 * 60; // 最低1分
-                    updateDurationDisplay();
-                    saveState();
-                });
-                // ▲▲▲ 新規追加ここまで ▲▲▲
+                // 「前がセクション（学習）」の場合のみ延長を許可（休憩の延長は不可）
+                if (prevStep && prevStep.type === 'section') {
+                    extendArea.classList.remove('hidden');
+                    
+                    let extendMinutes = 5; // デフォルト5分
+                    const extendDisplay = $('#extend-time-display');
+                    
+                    const updateExtendDisplay = () => {
+                        extendDisplay.textContent = extendMinutes;
+                    };
+                    updateExtendDisplay();
 
-                const timeIcon = $('#transition-time-icon');
+                    // ボタンのイベントリスナーを再設定（クローンしてリセット）
+                    const addBtn = $('#extend-add-btn');
+                    const subBtn = $('#extend-sub-btn');
+                    const newAddBtn = addBtn.cloneNode(true);
+                    const newSubBtn = subBtn.cloneNode(true);
+                    addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+                    subBtn.parentNode.replaceChild(newSubBtn, subBtn);
+
+                    newAddBtn.addEventListener('click', () => {
+                        extendMinutes += 5;
+                        if (extendMinutes > 120) extendMinutes = 120; // 最大120分
+                        updateExtendDisplay();
+                    });
+                    
+                    newSubBtn.addEventListener('click', () => {
+                        extendMinutes -= 5;
+                        if (extendMinutes < 1) extendMinutes = 1; // 最小1分
+                        updateExtendDisplay();
+                    });
+
+                    const extendStartBtn = $('#extend-start-btn');
+                    const newExtendStartBtn = extendStartBtn.cloneNode(true);
+                    extendStartBtn.parentNode.replaceChild(newExtendStartBtn, extendStartBtn);
+
+                    newExtendStartBtn.addEventListener('click', () => {
+                        if (transitionTimerId) {
+                            clearInterval(transitionTimerId);
+                            transitionTimerId = null;
+                        }
+                        
+                        // currentIndexを前に戻す
+                        quest.currentIndex--;
+                        
+                        // 前のステップの時間を延長時間にセット（※新しい時間として開始する）
+                        prevStep.duration = extendMinutes * 60;
+                        saveState();
+
+                        // トランジション画面を隠す
+                        questTransitionView.style.display = 'none';
+                        
+                        // 前のステップを再実行
+                        executeQuestStep(prevStep);
+                    });
+
+                } else {
+                    // 前が休憩、または最初のステップの場合は非表示
+                    extendArea.classList.add('hidden');
+                }
+
+                // --- NEXT STEP の表示設定 ---
+                const titleEl = $('#transition-title');
+                const msgEl = $('#transition-message');
+                const iconEl = $('#transition-icon');
+                const bgIconEl = $('#transition-bg-icon');
+                const nextTextEl = $('#transition-next-text');
+                const nextDurationEl = $('#transition-next-duration');
+                const startBtn = $('#transition-start-btn');
+
+                // リスナーリセット用クローン
+                const newStartBtn = startBtn.cloneNode(true);
+                startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+
+                nextDurationEl.textContent = Math.floor(step.duration / 60);
 
                 if (step.type === 'section') {
-                    transitionTitle.textContent = "学習を始めますか？";
-                    transitionMessage.textContent = "準備ができたらスタートボタンを押してください";
-                    transitionIcon.setAttribute('data-lucide', 'book-open');
+                    titleEl.textContent = "学習を始めますか？";
+                    msgEl.textContent = "準備ができたら次へ進むボタンを押してください";
+                    iconEl.setAttribute('data-lucide', 'book-open');
+                    bgIconEl.setAttribute('data-lucide', 'book-open');
+                    nextTextEl.textContent = step.text;
                     
-                    if(timeIcon) {
-                        timeIcon.setAttribute('data-lucide', 'book-open');
-                        timeIcon.className = "w-5 h-5 mr-2 text-indigo-400";
-                    }
-                    
-                    transitionNextText.textContent = step.text;
-                    updateDurationDisplay();
-                    transitionStartBtn.className = "group relative overflow-hidden primary-bg text-white text-xl font-bold py-5 px-12 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center w-full landscape:w-auto";
+                    newStartBtn.className = "relative z-10 w-full py-4 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/20";
 
                     // 放置監視
                     transitionTimerId = setInterval(() => {
@@ -7237,10 +7293,10 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                         const overMinutes = Math.floor(elapsed / 60);
 
                         if (overMinutes > lastNotifiedMinutes && overMinutes >= 1) {
-                        lastNotifiedMinutes = overMinutes;
+                            lastNotifiedMinutes = overMinutes;
                         
-                        const effectiveOverMinutes = Math.min(overMinutes, 30);
-                        const penalty = Math.min(effectiveOverMinutes * 100, state.profile.lp);
+                            const effectiveOverMinutes = Math.min(overMinutes, 30);
+                            const penalty = Math.min(effectiveOverMinutes * 100, state.profile.lp);
                             
                             if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
                                 navigator.serviceWorker.controller.postMessage({
@@ -7253,23 +7309,19 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     }, 10000); 
 
                 } else {
-                    transitionTitle.textContent = "休憩タイム";
-                    transitionMessage.textContent = "お疲れ様でした！少し頭を休めましょう。";
-                    transitionIcon.setAttribute('data-lucide', 'coffee');
+                    titleEl.textContent = "休憩タイム";
+                    msgEl.textContent = "お疲れ様でした！少し頭を休めましょう。";
+                    iconEl.setAttribute('data-lucide', 'coffee');
+                    bgIconEl.setAttribute('data-lucide', 'coffee');
+                    nextTextEl.textContent = "ブレイクタイム";
                     
-                    if(timeIcon) {
-                        timeIcon.setAttribute('data-lucide', 'coffee');
-                        timeIcon.className = "w-5 h-5 mr-2 text-green-400";
-                    }
-                    
-                    transitionNextText.textContent = "ブレイクタイム";
-                    updateDurationDisplay();
-                    transitionStartBtn.className = "group relative overflow-hidden bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-5 px-12 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center w-full landscape:w-auto";
+                    newStartBtn.className = "relative z-10 w-full py-4 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/20";
                 }
 
                 lucide.createIcons({ root: questTransitionView });
 
-                transitionStartBtn.onclick = () => {
+                // 「次へ進む」ボタン処理
+                newStartBtn.addEventListener('click', () => {
                     if (transitionTimerId) {
                         clearInterval(transitionTimerId);
                         transitionTimerId = null;
@@ -7278,6 +7330,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     const elapsed = Math.floor((Date.now() - transitionStartTime) / 1000);
                     const overMinutes = Math.floor(elapsed / 60);
 
+                    // セクション開始時の遅刻ペナルティ
                     if (step.type === 'section' && overMinutes >= 1) {
                         const effectiveOverMinutes = Math.min(overMinutes, 30);
                         let penaltyLp = effectiveOverMinutes * 100;
@@ -7305,7 +7358,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                         questTransitionView.style.display = 'none';
                         executeQuestStep(step);
                     }
-                };
+                });
             }
 
             // タイトルをパースして表示するヘルパー関数（修正版）
