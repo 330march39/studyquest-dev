@@ -2722,7 +2722,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                                 <div class="relative z-10 flex items-center justify-between">
                                     <div class="flex-grow pr-4 min-w-0">
                                         <div class="flex items-center mb-1.5">
-                                            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span>
+                                            <span class="w-2 h-2 rounded-full animate-pulse mr-2" style="background-color: var(--primary-color); box-shadow: 0 0 8px var(--primary-color);"></span>
                                             <span class="text-[10px] text-white/80 font-bold tracking-widest uppercase">Next Step</span>
                                         </div>
                                         <h3 id="transition-next-text" class="text-lg font-bold text-white leading-tight truncate"></h3>
@@ -7299,7 +7299,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     bgIconEl.setAttribute('data-lucide', 'book-open');
                     nextTextEl.textContent = step.text;
                     
-                    newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
+                    newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
 
                     // 放置監視（学習の待機中のみ）
                     transitionTimerId = setInterval(() => {
@@ -7336,7 +7336,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     bgIconEl.setAttribute('data-lucide', 'coffee');
                     nextTextEl.textContent = "ブレイクタイム";
                     
-                    newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg shadow-[0_10px_40px_rgba(34,197,94,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
+                    newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
                 }
 
                 if (prevStep && prevStep.type === 'section') {
