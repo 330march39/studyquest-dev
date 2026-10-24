@@ -2650,85 +2650,90 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                 </div>
 
                 <!-- ▼ 刷新: クエスト待機（トランジション）画面 -->
-                <div id="quest-transition-view" class="hidden fixed inset-0 w-full h-full z-[60] bg-black/40 backdrop-blur-xl overflow-hidden flex items-center justify-center p-4">
+                <div id="quest-transition-view" class="hidden fixed inset-0 w-full h-full z-[60] bg-black/40 backdrop-blur-xl overflow-y-auto">
                     
-                    <div class="relative w-full max-w-sm sm:max-w-md bg-white/10 dark:bg-gray-900/50 backdrop-blur-3xl border border-white/20 rounded-[2rem] shadow-[0_16px_40px_rgba(0,0,0,0.4)] p-6 sm:p-8 flex flex-col items-center animate-enter-active">
+                    <!-- 横画面でも見切れないように上下に十分な余白(py-12)を確保 -->
+                    <div class="min-h-full flex items-center justify-center p-4 py-12">
                         
-                        <!-- LP表示 -->
-                        <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full py-1 px-5 flex items-center shadow-lg border border-yellow-200/50 whitespace-nowrap z-10">
-                            <img src="coin.png" alt="Coin" class="w-5 h-5 mr-1.5 drop-shadow">
-                            <span class="text-white font-black text-lg tabular-nums tracking-tight" id="transition-earned-lp">0</span>
-                            <span class="text-yellow-100 font-bold text-[10px] ml-1">LP GET!</span>
-                        </div>
-
-                        <!-- タイトル -->
-                        <div class="text-center mt-3 mb-6 w-full">
-                            <h2 id="transition-title" class="text-2xl sm:text-3xl font-black text-white mb-1.5 drop-shadow-md tracking-tight"></h2>
-                            <p id="transition-message" class="text-white/80 text-xs sm:text-sm font-bold"></p>
-                        </div>
-
-                        <!-- NEXT STEP カード -->
-                        <div class="w-full bg-black/20 dark:bg-black/40 rounded-2xl p-4 sm:p-5 border border-white/10 shadow-inner mb-6 relative overflow-hidden flex items-center">
-                            <i id="transition-bg-icon" class="absolute -right-4 -bottom-4 w-24 h-24 text-white/5 transform -rotate-12 pointer-events-none"></i>
+                        <!-- カード本体に mt-6 を付け、上に飛び出すLPバッジのスペースを確保 -->
+                        <div class="relative w-full max-w-sm sm:max-w-md bg-white/10 dark:bg-gray-900/50 backdrop-blur-3xl border border-white/20 rounded-[2rem] shadow-[0_16px_40px_rgba(0,0,0,0.4)] p-6 sm:p-8 flex flex-col items-center animate-enter-active mt-6">
                             
-                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mr-4 relative z-10 border border-white/10 shadow-sm">
-                                <i id="transition-icon" class="w-6 h-6 text-white drop-shadow-sm"></i>
+                            <!-- LP表示（上に飛び出すデザイン。親の余白により見切れ防止） -->
+                            <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full py-1.5 px-6 flex items-center shadow-lg border border-yellow-200/50 whitespace-nowrap z-10">
+                                <img src="coin.png" alt="Coin" class="w-5 h-5 mr-1.5 drop-shadow">
+                                <span class="text-white font-black text-xl tabular-nums tracking-tight" id="transition-earned-lp">0</span>
+                                <span class="text-yellow-100 font-bold text-[10px] ml-1.5">LP GET!</span>
                             </div>
-                            
-                            <div class="flex-grow min-w-0 relative z-10">
-                                <p class="text-[10px] text-white/60 font-bold tracking-widest mb-0.5 uppercase">Next Step</p>
-                                <h3 id="transition-next-text" class="text-lg sm:text-xl font-bold text-white leading-tight truncate"></h3>
+
+                            <!-- タイトル -->
+                            <div class="text-center mt-3 mb-6 w-full">
+                                <h2 id="transition-title" class="text-2xl sm:text-3xl font-black text-white mb-1.5 drop-shadow-md tracking-tight"></h2>
+                                <p id="transition-message" class="text-white/80 text-xs sm:text-sm font-bold"></p>
                             </div>
-                            
-                            <div class="flex-shrink-0 ml-3 text-right relative z-10 border-l border-white/10 pl-4">
-                                <p class="text-[10px] text-white/60 font-bold mb-0.5">予定時間</p>
-                                <div class="flex items-baseline justify-end">
-                                    <span id="transition-next-duration" class="text-2xl sm:text-3xl font-black text-white tabular-nums drop-shadow-sm"></span>
-                                    <span class="text-[10px] sm:text-xs text-white/80 font-bold ml-0.5">分</span>
+
+                            <!-- NEXT STEP カード -->
+                            <div class="w-full bg-black/20 dark:bg-black/40 rounded-2xl p-4 sm:p-5 border border-white/10 shadow-inner mb-6 relative overflow-hidden flex items-center">
+                                <i id="transition-bg-icon" class="absolute -right-4 -bottom-4 w-24 h-24 text-white/5 transform -rotate-12 pointer-events-none"></i>
+                                
+                                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mr-4 relative z-10 border border-white/10 shadow-sm">
+                                    <i id="transition-icon" class="w-6 h-6 text-white drop-shadow-sm"></i>
+                                </div>
+                                
+                                <div class="flex-grow min-w-0 relative z-10">
+                                    <p class="text-[10px] text-white/60 font-bold tracking-widest mb-0.5 uppercase">Next Step</p>
+                                    <h3 id="transition-next-text" class="text-lg sm:text-xl font-bold text-white leading-tight truncate"></h3>
+                                </div>
+                                
+                                <div class="flex-shrink-0 ml-3 text-right relative z-10 border-l border-white/10 pl-4">
+                                    <p class="text-[10px] text-white/60 font-bold mb-0.5">予定時間</p>
+                                    <div class="flex items-baseline justify-end">
+                                        <span id="transition-next-duration" class="text-2xl sm:text-3xl font-black text-white tabular-nums drop-shadow-sm"></span>
+                                        <span class="text-[10px] sm:text-xs text-white/80 font-bold ml-0.5">分</span>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- メインアクション -->
+                            <button id="transition-start-btn" class="relative z-10 w-full py-4 rounded-full text-white font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/20 mb-4 sm:mb-5">
+                                <i data-lucide="play" class="w-5 h-5 mr-2 fill-current"></i> <span>次へ進む</span>
+                            </button>
+
+                            <!-- サブ機能：延長ボタン -->
+                            <button id="transition-open-extend-btn" class="hidden text-xs sm:text-sm text-gray-300 font-bold hover:text-white transition-colors flex items-center px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1.5"></i> 前のセクションを延長する
+                            </button>
+
                         </div>
-
-                        <!-- メインアクション -->
-                        <button id="transition-start-btn" class="relative z-10 w-full py-4 rounded-full text-white font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/20 mb-4 sm:mb-5">
-                            <i data-lucide="play" class="w-5 h-5 mr-2 fill-current"></i> <span>次へ進む</span>
-                        </button>
-
-                        <!-- サブ機能：延長ボタン -->
-                        <button id="transition-open-extend-btn" class="hidden text-xs sm:text-sm text-gray-300 font-bold hover:text-white transition-colors flex items-center px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full">
-                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1.5"></i> 前のセクションを延長する
-                        </button>
-
                     </div>
                 </div>
 
                 <!-- ▼ 追加: 延長機能用ポップアップモーダル -->
-                <div id="extend-popup-modal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-                    <div id="extend-popup-content" class="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-xs text-center shadow-2xl transform scale-95 transition-transform duration-300 border border-gray-100 dark:border-gray-700">
-                        <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i data-lucide="clock" class="w-6 h-6"></i>
+                <div id="extend-popup-modal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+                    <div id="extend-popup-content" class="bg-white dark:bg-gray-800 rounded-[2rem] p-8 w-full max-w-sm text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform scale-95 transition-transform duration-300 border border-gray-100 dark:border-gray-700">
+                        <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                            <i data-lucide="clock" class="w-7 h-7"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">学習時間を延長</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">時間を追加して、今の学習を再開します。</p>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">学習時間を延長</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 font-bold">時間を追加して、今の学習を再開します。</p>
                         
-                        <div class="flex items-center justify-center gap-4 mb-6">
-                            <button id="extend-sub-btn" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-all active:scale-90 text-gray-700 dark:text-gray-300">
-                                <i data-lucide="minus" class="w-5 h-5"></i>
+                        <div class="flex items-center justify-center gap-6 mb-8">
+                            <button id="extend-sub-btn" class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-all active:scale-90 text-gray-700 dark:text-gray-300 shadow-inner">
+                                <i data-lucide="minus" class="w-6 h-6"></i>
                             </button>
-                            <div class="text-center min-w-[5rem]">
-                                <span id="extend-time-display" class="text-5xl font-black tabular-nums text-gray-900 dark:text-white tracking-tighter">5</span>
-                                <span class="text-sm font-bold text-gray-500 ml-0.5">分</span>
+                            <div class="text-center min-w-[6rem]">
+                                <span id="extend-time-display" class="text-6xl font-black tabular-nums text-gray-900 dark:text-white tracking-tighter">5</span>
+                                <span class="text-lg font-bold text-gray-500 ml-1">分</span>
                             </div>
-                            <button id="extend-add-btn" class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-all active:scale-90 text-gray-700 dark:text-gray-300">
-                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            <button id="extend-add-btn" class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-all active:scale-90 text-gray-700 dark:text-gray-300 shadow-inner">
+                                <i data-lucide="plus" class="w-6 h-6"></i>
                             </button>
                         </div>
 
-                        <div class="flex flex-col gap-2">
-                            <button id="extend-start-btn" class="w-full py-3.5 rounded-full primary-bg text-white font-bold shadow-lg transition-transform active:scale-95 flex items-center justify-center">
+                        <div class="flex flex-col gap-3">
+                            <button id="extend-start-btn" class="w-full py-4 rounded-full primary-bg text-white font-bold text-lg shadow-lg transition-transform active:scale-95 flex items-center justify-center">
                                 延長して再開
                             </button>
-                            <button id="extend-cancel-btn" class="w-full py-3.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold transition-colors">
+                            <button id="extend-cancel-btn" class="w-full py-4 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 font-bold text-lg transition-colors">
                                 キャンセル
                             </button>
                         </div>
@@ -7354,7 +7359,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 
                 newSubBtn.addEventListener('click', () => {
                     extendMinutes -= 5;
-                    if (extendMinutes < 1) extendMinutes = 1; 
+                    if (extendMinutes < 5) extendMinutes = 5; // ★最小値を5分に修正
                     updateExtendDisplay();
                 });
 
