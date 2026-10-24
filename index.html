@@ -1556,13 +1556,27 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%234b5563" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline><line x1="3" y1="3" x2="21" y2="21"></line></svg>') !important;
         }
         /* ▲▲▲ 追加ここまで ▲▲▲ */
-        /* ▼▼▼ 追加: トランジション画面専用の通過・ぼかしアニメーション ▼▼▼ */
-        @keyframes passThroughEnter {
-            0% { opacity: 0; transform: scale(0.95) translateY(20px); filter: blur(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        /* ▼▼▼ 新トランジション画面用アニメーション ▼▼▼ */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
         }
-        .animate-pass-through {
-            animation: passThroughEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .animate-blob {
+            animation: blob 10s infinite alternate ease-in-out;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+
+        /* 登場時のスタッガー（時間差）アニメーション用クラス */
+        .show-transition-item {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
         }
     </style>
 </head>
@@ -2657,62 +2671,80 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                 </div>
 
-                <!-- ▼ 刷新: クエスト待機（トランジション）画面 -->
-                <div id="quest-transition-view" class="hidden fixed inset-0 w-full h-full z-[60] bg-black/60 backdrop-blur-2xl overflow-y-auto transition-opacity duration-500">
-                    <div class="min-h-full flex items-center justify-center p-6 py-12">
+                <!-- ▼ 刷新: 新世代フルスクリーン・トランジション画面 -->
+                <div id="quest-transition-view" class="hidden fixed inset-0 w-full h-full z-[60] bg-gray-900 overflow-hidden flex-col transition-opacity duration-500 opacity-0">
+                    
+                    <!-- 幻想的な背景アニメーション（光のオーブ） -->
+                    <div class="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[80px] opacity-50 animate-blob" style="background-color: var(--primary-color);"></div>
+                    <div class="absolute bottom-[-10%] right-[-10%] w-[80vw] h-[80vw] rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-2000" style="background-color: var(--primary-color);"></div>
+                    <div class="absolute top-[40%] left-[20%] w-[50vw] h-[50vw] rounded-full bg-indigo-500 mix-blend-screen filter blur-[80px] opacity-30 animate-blob animation-delay-4000"></div>
+                    
+                    <!-- グラスモーフィズムのレイヤーで全体を覆う -->
+                    <div class="absolute inset-0 backdrop-blur-[30px] bg-black/30"></div>
+
+                    <!-- コンテンツエリア (全画面を Flexbox で配置) -->
+                    <div class="relative z-10 flex flex-col h-full w-full max-w-lg mx-auto p-6 pt-12 pb-10">
                         
-                        <!-- コンテナ：常に中央揃えのグラスモーフィズムカード -->
-                        <div class="animate-pass-through relative w-full max-w-sm bg-white/10 dark:bg-black/40 backdrop-blur-3xl border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-8 flex flex-col items-center text-center transition-all duration-500">
+                        <!-- 上部：LP獲得表示 -->
+                        <div id="transition-lp-container" class="flex flex-col items-center justify-center transform transition-all duration-700 translate-y-8 opacity-0">
+                            <span class="text-yellow-400 font-bold text-xs tracking-widest uppercase mb-1 drop-shadow-md">Reward</span>
+                            <div class="flex items-center justify-center space-x-2">
+                                <img src="coin.png" alt="Coin" class="w-7 h-7 drop-shadow-lg">
+                                <span class="text-white font-black text-4xl tabular-nums tracking-tighter drop-shadow-md flex items-baseline" id="transition-earned-lp">0</span>
+                                <span class="text-yellow-100 font-bold text-sm ml-1 self-end mb-1">LP</span>
+                            </div>
+                        </div>
+
+                        <!-- 中央：メインメッセージとアイコン -->
+                        <div class="flex-grow flex flex-col items-center justify-center text-center transform transition-all duration-700 translate-y-8 opacity-0" id="transition-main-content">
+                            <div class="relative w-28 h-28 sm:w-32 sm:h-32 mb-8">
+                                <!-- アイコンの背景の輪郭線アニメーション -->
+                                <div class="absolute inset-0 rounded-full border border-white/30 animate-[spin_10s_linear_infinite]"></div>
+                                <div class="absolute inset-2 rounded-full border border-white/20 animate-[spin_7s_linear_infinite_reverse]"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i id="transition-icon" class="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]"></i>
+                                </div>
+                            </div>
+                            <h2 id="transition-title" class="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tight drop-shadow-lg leading-tight"></h2>
+                            <p id="transition-message" class="text-white/70 text-sm font-bold leading-relaxed max-w-[280px] mx-auto"></p>
+                        </div>
+
+                        <!-- 下部：Next Step & ボタン -->
+                        <div class="flex-shrink-0 w-full transform transition-all duration-700 translate-y-8 opacity-0" id="transition-bottom-content">
                             
-                            <!-- LP表示 (absoluteを外し、コンテナ内に配置して見切れを防ぐ) -->
-                            <div id="transition-lp-badge" class="mb-5 inline-flex items-center bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full py-1.5 px-6 shadow-lg border border-yellow-200/50 whitespace-nowrap">
-                                <img src="coin.png" alt="Coin" class="w-5 h-5 mr-1.5 drop-shadow">
-                                <span class="text-white font-black text-xl tabular-nums tracking-tight" id="transition-earned-lp">0</span>
-                                <span class="text-yellow-100 font-bold text-[10px] ml-1.5 mt-0.5">LP GET!</span>
-                            </div>
-
-                            <!-- アイコン -->
-                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-4 shadow-inner backdrop-blur-sm relative overflow-hidden group">
-                                <div class="absolute inset-0 bg-white/20 transform -translate-y-full group-hover:translate-y-full transition-transform duration-700"></div>
-                                <i id="transition-icon" class="w-10 h-10 sm:w-12 sm:h-12 text-white drop-shadow-md relative z-10"></i>
-                            </div>
-
-                            <!-- メッセージ -->
-                            <h2 id="transition-title" class="text-2xl sm:text-3xl font-black text-white mb-2 drop-shadow-lg tracking-tight leading-tight"></h2>
-                            <p id="transition-message" class="text-white/80 text-xs sm:text-sm font-bold leading-relaxed mb-6"></p>
-
-                            <!-- 次の予定カード -->
-                            <div class="w-full bg-black/30 rounded-3xl p-5 border border-white/10 shadow-inner mb-6 relative overflow-hidden text-left">
-                                <i id="transition-bg-icon" class="absolute -right-4 -bottom-4 w-28 h-28 text-white/5 transform -rotate-12 pointer-events-none"></i>
+                            <!-- Next Step 情報パネル -->
+                            <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-5 mb-6 relative overflow-hidden shadow-2xl">
+                                <i id="transition-bg-icon" class="absolute -right-6 -bottom-6 w-32 h-32 text-white/10 transform -rotate-12 pointer-events-none"></i>
                                 
-                                <div class="relative z-10">
-                                    <div class="flex items-center mb-3">
-                                        <span class="w-2 h-2 rounded-full bg-white animate-pulse mr-2 shadow-[0_0_5px_rgba(255,255,255,0.8)]"></span>
-                                        <span class="text-[10px] text-white font-bold tracking-widest uppercase opacity-80">Next Step</span>
+                                <div class="relative z-10 flex items-center justify-between">
+                                    <div class="flex-grow pr-4 min-w-0">
+                                        <div class="flex items-center mb-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span>
+                                            <span class="text-[10px] text-white/80 font-bold tracking-widest uppercase">Next Step</span>
+                                        </div>
+                                        <h3 id="transition-next-text" class="text-lg font-bold text-white leading-tight truncate"></h3>
                                     </div>
-                                    
-                                    <h3 id="transition-next-text" class="text-xl font-bold text-white leading-tight mb-4 break-words"></h3>
-                                    
-                                    <div class="w-full bg-white/10 rounded-2xl p-3 flex items-center justify-between border border-white/5 backdrop-blur-md">
-                                        <span class="text-xs text-white/70 font-bold ml-1">予定時間</span>
-                                        <div class="flex items-baseline">
-                                            <span id="transition-next-duration" class="text-3xl font-black text-white tabular-nums drop-shadow-sm"></span>
-                                            <span class="text-xs text-white/80 font-bold ml-1">分</span>
+                                    <div class="flex-shrink-0 text-right border-l border-white/20 pl-4">
+                                        <span class="block text-[10px] text-white/60 font-bold uppercase tracking-wider mb-0.5">Time</span>
+                                        <div class="flex items-baseline justify-end">
+                                            <span id="transition-next-duration" class="text-3xl font-black text-white tabular-nums drop-shadow-md"></span>
+                                            <span class="text-xs text-white/80 font-bold ml-1">min</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- サブ機能：延長ボタン -->
-                            <button id="transition-open-extend-btn" class="hidden mb-6 text-xs sm:text-sm text-white/70 hover:text-white font-bold transition-colors flex items-center justify-center bg-white/5 hover:bg-white/10 px-5 py-3 rounded-full border border-white/10 backdrop-blur-md w-full">
+                            <button id="transition-open-extend-btn" class="hidden mb-4 w-full text-sm text-white/70 hover:text-white font-bold transition-colors flex items-center justify-center py-2">
                                 <i data-lucide="rotate-ccw" class="w-4 h-4 mr-2"></i> 前のセクションを延長する
                             </button>
 
-                            <!-- メインアクション：次へ進むボタン -->
-                            <button id="transition-start-btn" class="relative z-10 w-full py-4 rounded-full text-white font-bold text-lg shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/30 overflow-hidden group">
+                            <!-- メインアクションボタン -->
+                            <button id="transition-start-btn" class="relative overflow-hidden w-full py-5 rounded-full text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20">
                                 <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-shine z-0"></div>
-                                <i data-lucide="play" class="w-6 h-6 mr-2 fill-current z-10 relative"></i> 
-                                <span class="z-10 relative tracking-wider">次へ進む</span>
+                                <span class="relative z-10 flex items-center tracking-wider">
+                                    <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> 次へ進む
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -7208,6 +7240,19 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
             function showTransitionScreen(step) {
                 questTransitionView.style.display = 'flex'; 
                 
+                // リフロー強制してフェードイン開始
+                void questTransitionView.offsetWidth;
+                questTransitionView.classList.add('opacity-100');
+
+                // ▼▼▼ 各要素を時間差で浮かび上がらせる演出 ▼▼▼
+                const lpEl = $('#transition-lp-container');
+                const mainEl = $('#transition-main-content');
+                const bottomEl = $('#transition-bottom-content');
+                
+                if (lpEl) { lpEl.classList.remove('show-transition-item'); setTimeout(() => lpEl.classList.add('show-transition-item'), 100); }
+                if (mainEl) { mainEl.classList.remove('show-transition-item'); setTimeout(() => mainEl.classList.add('show-transition-item'), 250); }
+                if (bottomEl) { bottomEl.classList.remove('show-transition-item'); setTimeout(() => bottomEl.classList.add('show-transition-item'), 400); }
+                
                 // 放置監視のリセット
                 if (transitionTimerId) clearInterval(transitionTimerId);
                 transitionStartTime = Date.now();
@@ -7236,14 +7281,14 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 nextDurationEl.textContent = Math.floor(step.duration / 60);
 
                 if (step.type === 'section') {
-                    titleEl.textContent = "学習を始めますか？";
+                    titleEl.textContent = "Ready to Focus?";
                     msgEl.textContent = "準備ができたら次へ進むボタンを押してください";
                     iconEl.setAttribute('data-lucide', 'book-open');
                     bgIconEl.setAttribute('data-lucide', 'book-open');
                     nextTextEl.textContent = step.text;
                     
-                    // ▼ 修正: クラスの構成を新しいHTMLに合わせる
-                    newStartBtn.className = "relative z-10 w-full py-4 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_0_30px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/30 overflow-hidden group";
+                    // 新デザイン用のボタンスタイル
+                    newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
 
                     // 放置監視（学習の待機中のみ）
                     transitionTimerId = setInterval(() => {
@@ -7267,27 +7312,24 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     }, 10000); 
 
                 } else {
-                    titleEl.textContent = "休憩タイム";
+                    titleEl.textContent = "Coffee Break";
                     msgEl.textContent = "お疲れ様でした！少し頭を休めましょう。";
                     iconEl.setAttribute('data-lucide', 'coffee');
                     bgIconEl.setAttribute('data-lucide', 'coffee');
                     nextTextEl.textContent = "ブレイクタイム";
                     
-                    // ▼ 修正: クラスの構成を新しいHTMLに合わせる
-                    newStartBtn.className = "relative z-10 w-full py-4 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg shadow-[0_0_30px_rgba(34,197,94,0.3)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-white/30 overflow-hidden group";
+                    // 新デザイン用のボタンスタイル
+                    newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg shadow-[0_10px_40px_rgba(34,197,94,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
                 }
 
                 // --- 前のステップの延長機能設定 ---
                 const prevStepIndex = quest.currentIndex - 1;
                 const prevStep = prevStepIndex >= 0 ? quest.plan[prevStepIndex] : null;
 
-                // 「前がセクション（学習）」の場合のみ延長ボタンをサブ機能として表示
                 if (prevStep && prevStep.type === 'section') {
                     openExtendBtn.classList.remove('hidden');
-                    
                     const newOpenExtendBtn = openExtendBtn.cloneNode(true);
                     openExtendBtn.parentNode.replaceChild(newOpenExtendBtn, openExtendBtn);
-
                     newOpenExtendBtn.addEventListener('click', () => {
                         openExtendModal(prevStep);
                     });
@@ -7303,6 +7345,12 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                         clearInterval(transitionTimerId);
                         transitionTimerId = null;
                     }
+
+                    // ▼▼▼ 非表示時にアニメーションのクラスを剥がす ▼▼▼
+                    if (lpEl) lpEl.classList.remove('show-transition-item');
+                    if (mainEl) mainEl.classList.remove('show-transition-item');
+                    if (bottomEl) bottomEl.classList.remove('show-transition-item');
+                    questTransitionView.classList.remove('opacity-100');
 
                     const elapsed = Math.floor((Date.now() - transitionStartTime) / 1000);
                     const overMinutes = Math.floor(elapsed / 60);
@@ -7326,14 +7374,18 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                             '学習を始める',
                             'bg-red-500 hover:bg-red-600 text-white',
                             () => {
-                                questTransitionView.style.display = 'none';
-                                executeQuestStep(step);
+                                setTimeout(() => {
+                                    questTransitionView.style.display = 'none';
+                                    executeQuestStep(step);
+                                }, 300); // アニメーション終了待ち
                             },
                             null 
                         );
                     } else {
-                        questTransitionView.style.display = 'none';
-                        executeQuestStep(step);
+                        setTimeout(() => {
+                            questTransitionView.style.display = 'none';
+                            executeQuestStep(step);
+                        }, 500); // フェードアウト終了を待つ
                     }
                 });
             }
