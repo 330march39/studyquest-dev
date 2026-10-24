@@ -2759,8 +2759,8 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                             <i data-lucide="clock" class="w-7 h-7"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">学習時間を延長</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 font-bold">時間を追加して、今の学習を再開します。</p>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">セクションを延長</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 font-bold">時間を追加して、先ほどのセクションを再開します。</p>
                         
                         <div class="flex items-center justify-center gap-6 mb-8">
                             <button id="extend-sub-btn" class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-all active:scale-90 text-gray-700 dark:text-gray-300 shadow-inner">
@@ -7293,7 +7293,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 }
 
                 if (step.type === 'section') {
-                    titleEl.textContent = "Ready to Focus?";
+                    titleEl.textContent = "Good Job!";
                     msgEl.innerHTML = "準備ができたら<br class='hidden landscape:block'>次へ進むボタンを押してください"; // 縦画面と横画面で改行を調整
                     iconEl.setAttribute('data-lucide', 'book-open');
                     bgIconEl.setAttribute('data-lucide', 'book-open');
@@ -7326,7 +7326,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     // ブレイクタイムの場合は「前セクションのお疲れ様メッセージ」を表示
                     if (prevStep && prevStep.type === 'section') {
                         titleEl.textContent = "Good Job!";
-                        msgEl.innerHTML = `<span class="text-xl text-white font-black">${prevDurationMin}</span> 分間の学習、お疲れ様でした！<br>少し頭を休めましょう。`;
+                        msgEl.innerHTML = `<span class="text-xl text-white font-black">${prevDurationMin}</span> 分間のセクション、お疲れ様でした！`;
                     } else {
                         titleEl.textContent = "Coffee Break";
                         msgEl.textContent = "お疲れ様でした！少し頭を休めましょう。";
