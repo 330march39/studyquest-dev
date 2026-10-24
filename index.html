@@ -2682,35 +2682,38 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     <!-- グラスモーフィズムのレイヤーで全体を覆う -->
                     <div class="absolute inset-0 backdrop-blur-[30px] bg-black/30"></div>
 
-                    <!-- コンテンツエリア (全画面を Flexbox で配置) -->
-                    <div class="relative z-10 flex flex-col h-full w-full max-w-lg mx-auto p-6 pt-12 pb-10">
+                    <!-- コンテンツエリア (縦画面は上下、横画面は左右に分割) -->
+                    <div class="relative z-10 flex flex-col landscape:flex-row items-center justify-center h-full w-full max-w-lg landscape:max-w-5xl mx-auto p-6 landscape:p-10 gap-6 landscape:gap-16">
                         
-                        <!-- 上部：LP獲得表示 -->
-                        <div id="transition-lp-container" class="flex flex-col items-center justify-center transform transition-all duration-700 translate-y-8 opacity-0">
-                            <span class="text-yellow-400 font-bold text-xs tracking-widest uppercase mb-1 drop-shadow-md">Reward</span>
-                            <div class="flex items-center justify-center space-x-2">
-                                <img src="coin.png" alt="Coin" class="w-7 h-7 drop-shadow-lg">
-                                <span class="text-white font-black text-4xl tabular-nums tracking-tighter drop-shadow-md flex items-baseline" id="transition-earned-lp">0</span>
-                                <span class="text-yellow-100 font-bold text-sm ml-1 self-end mb-1">LP</span>
-                            </div>
-                        </div>
-
-                        <!-- 中央：メインメッセージとアイコン -->
-                        <div class="flex-grow flex flex-col items-center justify-center text-center transform transition-all duration-700 translate-y-8 opacity-0" id="transition-main-content">
-                            <div class="relative w-28 h-28 sm:w-32 sm:h-32 mb-8">
-                                <!-- アイコンの背景の輪郭線アニメーション -->
-                                <div class="absolute inset-0 rounded-full border border-white/30 animate-[spin_10s_linear_infinite]"></div>
-                                <div class="absolute inset-2 rounded-full border border-white/20 animate-[spin_7s_linear_infinite_reverse]"></div>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <i id="transition-icon" class="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]"></i>
+                        <!-- 左側 (縦画面時は上～中央部) -->
+                        <div class="flex flex-col items-center landscape:items-start text-center landscape:text-left w-full landscape:w-1/2">
+                            
+                            <!-- LP獲得表示 -->
+                            <div id="transition-lp-container" class="inline-flex flex-col items-center landscape:items-start mb-6 transform transition-all duration-700 translate-y-8 opacity-0">
+                                <span class="text-yellow-400 font-bold text-xs tracking-widest uppercase mb-1 drop-shadow-md">Reward</span>
+                                <div class="flex items-center justify-center landscape:justify-start space-x-2">
+                                    <img src="coin.png" alt="Coin" class="w-7 h-7 drop-shadow-lg">
+                                    <span class="text-white font-black text-4xl tabular-nums tracking-tighter drop-shadow-md flex items-baseline" id="transition-earned-lp">0</span>
+                                    <span class="text-yellow-100 font-bold text-sm ml-1 self-end mb-1">LP</span>
                                 </div>
                             </div>
-                            <h2 id="transition-title" class="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tight drop-shadow-lg leading-tight"></h2>
-                            <p id="transition-message" class="text-white/70 text-sm font-bold leading-relaxed max-w-[280px] mx-auto"></p>
+
+                            <!-- メインメッセージとアイコン -->
+                            <div id="transition-main-content" class="flex flex-col items-center landscape:items-start w-full transform transition-all duration-700 translate-y-8 opacity-0">
+                                <div class="relative w-24 h-24 sm:w-32 sm:h-32 mb-6">
+                                    <div class="absolute inset-0 rounded-full border border-white/30 animate-[spin_10s_linear_infinite]"></div>
+                                    <div class="absolute inset-2 rounded-full border border-white/20 animate-[spin_7s_linear_infinite_reverse]"></div>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <i id="transition-icon" class="w-10 h-10 sm:w-14 sm:h-14 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]"></i>
+                                    </div>
+                                </div>
+                                <h2 id="transition-title" class="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tight drop-shadow-lg leading-tight"></h2>
+                                <p id="transition-message" class="text-white/80 text-sm font-bold leading-relaxed max-w-[280px] landscape:max-w-md mx-auto landscape:mx-0"></p>
+                            </div>
                         </div>
 
-                        <!-- 下部：Next Step & ボタン -->
-                        <div class="flex-shrink-0 w-full transform transition-all duration-700 translate-y-8 opacity-0" id="transition-bottom-content">
+                        <!-- 右側 (縦画面時は下部) -->
+                        <div class="flex flex-col w-full landscape:w-1/2 transform transition-all duration-700 translate-y-8 opacity-0" id="transition-bottom-content">
                             
                             <!-- Next Step 情報パネル -->
                             <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-5 mb-6 relative overflow-hidden shadow-2xl">
@@ -2735,7 +2738,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                             </div>
 
                             <!-- サブ機能：延長ボタン -->
-                            <button id="transition-open-extend-btn" class="hidden mb-4 w-full text-sm text-white/70 hover:text-white font-bold transition-colors flex items-center justify-center py-2">
+                            <button id="transition-open-extend-btn" class="hidden mb-4 w-full text-sm text-white/70 hover:text-white font-bold transition-colors flex items-center justify-center py-3 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 backdrop-blur-md">
                                 <i data-lucide="rotate-ccw" class="w-4 h-4 mr-2"></i> 前のセクションを延長する
                             </button>
 
@@ -2743,7 +2746,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                             <button id="transition-start-btn" class="relative overflow-hidden w-full py-5 rounded-full text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20">
                                 <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-shine z-0"></div>
                                 <span class="relative z-10 flex items-center tracking-wider">
-                                    <i data-lucide="play" class="w-6 h-6 mr-2 fill-current"></i> 次へ進む
+                                    <i data-lucide="play" class="w-6 h-6 mr-2 fill-current z-10 relative"></i> 次へ進む
                                 </span>
                             </button>
                         </div>
@@ -7244,7 +7247,7 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 void questTransitionView.offsetWidth;
                 questTransitionView.classList.add('opacity-100');
 
-                // ▼▼▼ 各要素を時間差で浮かび上がらせる演出 ▼▼▼
+                // 各要素を時間差で浮かび上がらせる演出
                 const lpEl = $('#transition-lp-container');
                 const mainEl = $('#transition-main-content');
                 const bottomEl = $('#transition-bottom-content');
@@ -7280,14 +7283,22 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
 
                 nextDurationEl.textContent = Math.floor(step.duration / 60);
 
+                // --- 前のステップ（学習時間など）を取得 ---
+                const prevStepIndex = quest.currentIndex - 1;
+                const prevStep = prevStepIndex >= 0 ? quest.plan[prevStepIndex] : null;
+
+                let prevDurationMin = 0;
+                if (prevStep && prevStep.type === 'section') {
+                    prevDurationMin = Math.floor(prevStep.duration / 60);
+                }
+
                 if (step.type === 'section') {
                     titleEl.textContent = "Ready to Focus?";
-                    msgEl.textContent = "準備ができたら次へ進むボタンを押してください";
+                    msgEl.innerHTML = "準備ができたら<br class='hidden landscape:block'>次へ進むボタンを押してください"; // 縦画面と横画面で改行を調整
                     iconEl.setAttribute('data-lucide', 'book-open');
                     bgIconEl.setAttribute('data-lucide', 'book-open');
                     nextTextEl.textContent = step.text;
                     
-                    // 新デザイン用のボタンスタイル
                     newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full primary-bg primary-bg-hover text-white font-bold text-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
 
                     // 放置監視（学習の待機中のみ）
@@ -7312,19 +7323,21 @@ $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                     }, 10000); 
 
                 } else {
-                    titleEl.textContent = "Coffee Break";
-                    msgEl.textContent = "お疲れ様でした！少し頭を休めましょう。";
+                    // ブレイクタイムの場合は「前セクションのお疲れ様メッセージ」を表示
+                    if (prevStep && prevStep.type === 'section') {
+                        titleEl.textContent = "Good Job!";
+                        msgEl.innerHTML = `<span class="text-xl text-white font-black">${prevDurationMin}</span> 分間の学習、お疲れ様でした！<br>少し頭を休めましょう。`;
+                    } else {
+                        titleEl.textContent = "Coffee Break";
+                        msgEl.textContent = "お疲れ様でした！少し頭を休めましょう。";
+                    }
+
                     iconEl.setAttribute('data-lucide', 'coffee');
                     bgIconEl.setAttribute('data-lucide', 'coffee');
                     nextTextEl.textContent = "ブレイクタイム";
                     
-                    // 新デザイン用のボタンスタイル
                     newStartBtn.className = "relative overflow-hidden w-full py-5 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg shadow-[0_10px_40px_rgba(34,197,94,0.4)] transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center group border border-white/20";
                 }
-
-                // --- 前のステップの延長機能設定 ---
-                const prevStepIndex = quest.currentIndex - 1;
-                const prevStep = prevStepIndex >= 0 ? quest.plan[prevStepIndex] : null;
 
                 if (prevStep && prevStep.type === 'section') {
                     openExtendBtn.classList.remove('hidden');
