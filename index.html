@@ -2385,6 +2385,105 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
     <!-- ===== モーダル ===== -->
 
+    <!-- ▼▼▼ 追加: 利用規約画面 ▼▼▼ -->
+    <div id="tos-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900 z-[150]">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-tos-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">利用規約</h2>
+            <div class="flex-1"></div>
+        </header>
+        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+            <p>本アプリのご利用にあたり、以下の利用規約にご同意いただく必要があります。</p>
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">1. アプリ内アイテム・LPについて</h3>
+            <ul class="list-disc list-inside space-y-1">
+                <li>ストアでLP（Learning Points）と交換したアイテム（テーマ、壁紙、ゲーム、BGMなど）は、本アプリ内でのみ使用可能です。</li>
+                <li>アプリ内で獲得したLPは、現金や他のポイントに換金することは一切できません。</li>
+            </ul>
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">2. コンテンツの変更と保証</h3>
+            <ul class="list-disc list-inside space-y-1">
+                <li>アプリ内のアイテムや機能、交換レートは、予告なく突然変更または削除される可能性があります。</li>
+                <li>データの消失、変更、削除に関して、開発者は一切の保証を行いません。</li>
+            </ul>
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">3. 免責事項</h3>
+            <p>本アプリの利用により生じたいかなる損害についても、開発者は責任を負わないものとします。</p>
+        </div>
+    </div>
+    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
+
+    <!-- ▼▼▼ 追加: プライバシーポリシー画面 ▼▼▼ -->
+    <div id="privacy-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900 z-[150]">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-privacy-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">プライバシーポリシー</h2>
+            <div class="flex-1"></div>
+        </header>
+        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+            <p>本アプリでは、ユーザーの皆様のプライバシーを尊重し、個人情報の保護に努めています。</p>
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">1. 個人情報・学習履歴の取り扱い</h3>
+            <ul class="list-disc list-inside space-y-1">
+                <li>本アプリ内で取得した個人情報や学習履歴などのデータは、すべてお客様の端末メモリ（ブラウザのローカルストレージ等）にのみ保存されます。</li>
+                <li>これらのデータが外部のサーバーに送信されることは一切ありません。</li>
+            </ul>
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">2. 情報の取得と利用について</h3>
+            <ul class="list-disc list-inside space-y-1">
+                <li>開発者はお客様の個人情報や利用状況を一切取得していません。</li>
+                <li>情報を取得していないため、お客様の個人情報を二次利用したり第三者へ提供することは不可能です。</li>
+            </ul>
+            <p class="mt-4">データはアプリ内でのみ使用され、お客様自身がブラウザのキャッシュをクリアすることで完全に削除されます。</p>
+        </div>
+    </div>
+    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
+
+    <!-- ▼▼▼ 追加: クレジット画面 ▼▼▼ -->
+    <div id="credits-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900 z-[150]">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-credits-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">クレジット・素材提供</h2>
+            <div class="flex-1"></div>
+        </header>
+        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+            <p>本アプリは、以下の素晴らしいフリー素材やライブラリを活用して制作されています。製作者の皆様に心より感謝申し上げます。</p>
+            
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">UIアイコン</h3>
+            <p>Lucide Icons (https://lucide.dev/)</p>
+            
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">フォント</h3>
+            <p>LINE Seed JP (LINE株式会社)</p>
+            
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">背景・イラスト素材</h3>
+            <p>OKUMONO (https://sozaino.site/)</p>
+
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">BGM・音楽素材</h3>
+            <p>MusMus (https://musmus.main.jp/)</p>
+            <p>Pixabay (https://pixabay.com/ja/)</p>
+
+            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">利用ライブラリ</h3>
+            <p>Tailwind CSS, Chart.js, SortableJS, PeerJS</p>
+        </div>
+    </div>
+    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
+
    <div id="lp-history-screen" class="screen-layer z-[150] flex flex-col h-full bg-gray-50 dark:bg-gray-900">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
             <div class="flex items-center flex-1">
@@ -4934,6 +5033,12 @@ const controlScreenOrientation = async (mode) => {
                         // --- 4. 「その他」グループ ---
                         settingsPage.appendChild(createSectionTitle('その他'));
                         const otherList = createListContainer();
+                        
+                        // ▼▼▼ ここに3つ追加 ▼▼▼
+                        otherList.appendChild(createListItem('file-text', '利用規約', 'bg-blue-500', () => tosPage.open()));
+                        otherList.appendChild(createListItem('shield', 'プライバシーポリシー', 'bg-green-500', () => privacyPage.open()));
+                        otherList.appendChild(createListItem('info', 'クレジット・素材提供', 'bg-purple-500', () => creditsPage.open()));
+                        // ▲▲▲ 追加ここまで ▲▲▲
                         
                         otherList.appendChild(createListItem('mail', '意見を送る（アイデア・バグ）', 'bg-gray-500', () => {
                             // ▼▼▼ 追加: オフライン時は開かせない ▼▼▼
@@ -8899,6 +9004,17 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     lpHistoryPage.open();
                 });
             }
+
+            // ▼▼▼ 利用規約等のサブページ初期化 ▼▼▼
+            const tosPage = new SubPage('tos-screen');
+            $('#close-tos-btn').addEventListener('click', () => tosPage.close());
+
+            const privacyPage = new SubPage('privacy-screen');
+            $('#close-privacy-btn').addEventListener('click', () => privacyPage.close());
+
+            const creditsPage = new SubPage('credits-screen');
+            $('#close-credits-btn').addEventListener('click', () => creditsPage.close());
+            // ▲▲▲ 追加ここまで ▲▲▲
 
             // ▼▼▼ 追加: 取引詳細画面の描画と表示 ▼▼▼
             const lpHistoryDetailPage = new SubPage('lp-history-detail-screen');
