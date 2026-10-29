@@ -2385,7 +2385,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
     <!-- ===== モーダル ===== -->
 
-    <!-- ▼▼▼ 追加: 利用規約画面 ▼▼▼ -->
+    <!-- ▼▼▼ 修正: 利用規約画面 (一般的な長文フォーマット) ▼▼▼ -->
     <div id="tos-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900 z-[150]">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
             <div class="flex items-center flex-1">
@@ -2399,25 +2399,63 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">利用規約</h2>
             <div class="flex-1"></div>
         </header>
-        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
-            <p>本アプリのご利用にあたり、以下の利用規約にご同意いただく必要があります。</p>
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">1. アプリ内アイテム・LPについて</h3>
-            <ul class="list-disc list-inside space-y-1">
-                <li>ストアでLP（Learning Points）と交換したアイテム（テーマ、壁紙、ゲーム、BGMなど）は、本アプリ内でのみ使用可能です。</li>
-                <li>アプリ内で獲得したLPは、現金や他のポイントに換金することは一切できません。</li>
-            </ul>
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">2. コンテンツの変更と保証</h3>
-            <ul class="list-disc list-inside space-y-1">
-                <li>アプリ内のアイテムや機能、交換レートは、予告なく突然変更または削除される可能性があります。</li>
-                <li>データの消失、変更、削除に関して、開発者は一切の保証を行いません。</li>
-            </ul>
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">3. 免責事項</h3>
-            <p>本アプリの利用により生じたいかなる損害についても、開発者は責任を負わないものとします。</p>
+        <div class="flex-grow overflow-y-auto p-5 pb-safe bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p class="mb-6 text-xs text-gray-500">この利用規約（以下、「本規約」といいます。）は、本アプリの利用条件を定めるものです。ユーザーの皆さまには、本規約に従って本アプリをご利用いただきます。アプリの利用を開始した時点で、本規約に同意したものとみなします。</p>
+
+            <div class="space-y-6">
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-indigo-500 pl-2 mb-2">第1条（適用）</h3>
+                    <p>本規約は、ユーザーと開発者との間の本アプリの利用に関わる一切の関係に適用されるものとします。</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-indigo-500 pl-2 mb-2">第2条（LPおよびアプリ内アイテムの取り扱い）</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>本アプリ内で獲得できるLP（Learning Points）および、LPを消費して交換したアイテム（テーマカラー、壁紙、ゲーム、BGM等の全てのコンテンツ）は、本アプリ内でのみ利用可能なデジタルコンテンツです。</li>
+                        <li>LPおよびアイテムは、いかなる理由があっても現金、財物、その他の経済的利益と交換（換金）することはできません。</li>
+                        <li>ユーザーの端末変更、ブラウザのキャッシュクリア、アプリのアンインストール等に伴いデータが消失した場合、開発者はLPおよびアイテムの復元、補償を一切行いません。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-indigo-500 pl-2 mb-2">第3条（禁止事項）</h3>
+                    <p class="mb-1">ユーザーは、本アプリの利用にあたり、以下の行為をしてはなりません。</p>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>法令または公序良俗に違反する行為</li>
+                        <li>本アプリの機能、データ、システムを不正に改ざん・解析する行為</li>
+                        <li>開発者のサーバーやネットワークの機能を破壊したり、妨害したりする行為</li>
+                        <li>他のユーザーや第三者に不利益、損害、不快感を与える行為</li>
+                        <li>その他、開発者が不適切と判断する行為</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-indigo-500 pl-2 mb-2">第4条（本サービスの提供の停止・内容の変更等）</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>開発者は、保守点検、システムの障害、その他の理由により、ユーザーに事前に通知することなく本アプリの全部または一部の提供を停止または中断することができるものとします。</li>
+                        <li>アプリ内のアイテムや機能、LPの獲得条件、交換レート等のすべての仕様は、ユーザーに予告なく突然変更、追加、または削除される可能性があります。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-indigo-500 pl-2 mb-2">第5条（保証の否認および免責事項）</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>開発者は、本アプリに事実上または法律上の瑕疵（安全性、信頼性、正確性、完全性、有効性、特定の目的への適合性、セキュリティなどに関する欠陥、エラーやバグ、権利侵害などを含みます）がないことを明示的にも黙示的にも保証しておりません。</li>
+                        <li>開発者は、本アプリに起因してユーザーに生じたあらゆる損害について、一切の責任を負いません。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-indigo-500 pl-2 mb-2">第6条（利用規約の変更）</h3>
+                    <p>開発者は、必要と判断した場合には、ユーザーに通知することなくいつでも本規約を変更することができるものとします。変更後の利用規約は、本アプリ内に掲示された時点から効力を生じるものとします。</p>
+                </section>
+            </div>
+            <div class="h-10"></div>
         </div>
     </div>
-    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
+    <!-- ▲▲▲ 修正ここまで ▲▲▲ -->
 
-    <!-- ▼▼▼ 追加: プライバシーポリシー画面 ▼▼▼ -->
+    <!-- ▼▼▼ 修正: プライバシーポリシー画面 (一般的な長文フォーマット) ▼▼▼ -->
     <div id="privacy-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900 z-[150]">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
             <div class="flex items-center flex-1">
@@ -2431,24 +2469,50 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">プライバシーポリシー</h2>
             <div class="flex-1"></div>
         </header>
-        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
-            <p>本アプリでは、ユーザーの皆様のプライバシーを尊重し、個人情報の保護に努めています。</p>
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">1. 個人情報・学習履歴の取り扱い</h3>
-            <ul class="list-disc list-inside space-y-1">
-                <li>本アプリ内で取得した個人情報や学習履歴などのデータは、すべてお客様の端末メモリ（ブラウザのローカルストレージ等）にのみ保存されます。</li>
-                <li>これらのデータが外部のサーバーに送信されることは一切ありません。</li>
-            </ul>
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 border-b-2 border-gray-200 dark:border-gray-700 pb-1">2. 情報の取得と利用について</h3>
-            <ul class="list-disc list-inside space-y-1">
-                <li>開発者はお客様の個人情報や利用状況を一切取得していません。</li>
-                <li>情報を取得していないため、お客様の個人情報を二次利用したり第三者へ提供することは不可能です。</li>
-            </ul>
-            <p class="mt-4">データはアプリ内でのみ使用され、お客様自身がブラウザのキャッシュをクリアすることで完全に削除されます。</p>
+        <div class="flex-grow overflow-y-auto p-5 pb-safe bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p class="mb-6 text-xs text-gray-500">本アプリは、ユーザーの皆様のプライバシーを尊重し、個人情報の保護に最大限の注意を払っています。本アプリにおける個人情報およびデータの取り扱いについて、以下の通りプライバシーポリシーを定めます。</p>
+
+            <div class="space-y-6">
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-green-500 pl-2 mb-2">第1条（個人情報およびデータの保存場所）</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>本アプリにおいてユーザーが入力したプロフィール情報（ニックネーム、学年、アイコン等）、学習履歴、タスク、各種設定データ、および獲得したLPに関するすべての情報は、ユーザーが使用している端末本体（ブラウザのローカルストレージ等）にのみ保存されます。</li>
+                        <li>これらのデータが、開発者の管理する外部のサーバーへ送信、蓄積されることは一切ありません。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-green-500 pl-2 mb-2">第2条（個人情報の利用および第三者提供）</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>前条の通り、開発者はユーザーの個人情報やアプリの利用データを一切取得・収集していません。</li>
+                        <li>そのため、開発者がユーザーの個人情報を二次利用することや、第三者へ提供・開示することは物理的に不可能です。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-green-500 pl-2 mb-2">第3条（データの管理と削除）</h3>
+                    <ul class="list-disc list-inside space-y-1 ml-1 text-sm">
+                        <li>本アプリのデータはユーザーご自身の端末内で管理されます。ユーザーがブラウザのキャッシュやサイトデータを削除した場合、本アプリ内のすべてのデータは完全に消去されます。</li>
+                        <li>端末の紛失、故障、または誤操作によるデータの消失について、開発者側でデータを復元することはできませんのでご了承ください。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-green-500 pl-2 mb-2">第4条（外部サービスへのリンクについて）</h3>
+                    <p class="text-sm">本アプリ内には、外部サービス（SNS、YouTubeチャンネル、お問い合わせ用Googleフォーム等）へのリンクが含まれる場合があります。これらの外部サイトにおける個人情報の取り扱いについては、それぞれのサイトのプライバシーポリシーが適用されます。開発者は外部サイトにおけるプライバシー保護について一切の責任を負いません。</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-base border-l-4 border-green-500 pl-2 mb-2">第5条（プライバシーポリシーの変更）</h3>
+                    <p class="text-sm">本ポリシーの内容は、法令等の変更や本アプリの仕様変更に伴い、ユーザーに通知することなく適宜見直し、改定されることがあります。改定されたプライバシーポリシーは、本アプリ内に掲載された時点から効力を生じるものとします。</p>
+                </section>
+            </div>
+            <div class="h-10"></div>
         </div>
     </div>
-    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
+    <!-- ▲▲▲ 修正ここまで ▲▲▲ -->
 
-    <!-- ▼▼▼ 追加: クレジット画面 ▼▼▼ -->
+    <!-- ▼▼▼ 修正: クレジット画面 (開発者情報追加) ▼▼▼ -->
     <div id="credits-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900 z-[150]">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
             <div class="flex items-center flex-1">
@@ -2459,31 +2523,52 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     </div>
                 </button>
             </div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">クレジット・素材提供</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">クレジット・素材</h2>
             <div class="flex-1"></div>
         </header>
-        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
-            <p>本アプリは、以下の素晴らしいフリー素材やライブラリを活用して制作されています。製作者の皆様に心より感謝申し上げます。</p>
+        <div class="flex-grow overflow-y-auto p-6 pb-safe text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800">
             
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">UIアイコン</h3>
-            <p>Lucide Icons (https://lucide.dev/)</p>
-            
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">フォント</h3>
-            <p>LINE Seed JP (LINE株式会社)</p>
-            
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">背景・イラスト素材</h3>
-            <p>OKUMONO (https://sozaino.site/)</p>
+            <!-- 開発者情報 -->
+            <div class="mb-8 p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 text-center shadow-sm">
+                <h3 class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-[0.2em] uppercase mb-2">Developer</h3>
+                <p class="text-2xl font-black text-gray-900 dark:text-white tracking-widest">MARTEAM</p>
+            </div>
 
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">BGM・音楽素材</h3>
-            <p>MusMus (https://musmus.main.jp/)</p>
-            <p>Pixabay (https://pixabay.com/ja/)</p>
+            <p class="mb-6 text-xs text-gray-500 text-center">本アプリは、以下の素晴らしいフリー素材やオープンソースライブラリを活用して制作されています。製作者の皆様に心より感謝申し上げます。</p>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase mb-1 border-b border-gray-100 dark:border-gray-700 pb-1">UIアイコン</h3>
+                    <p class="text-gray-800 dark:text-gray-200 font-medium">Lucide Icons <span class="text-xs text-gray-400 ml-1 font-normal">(https://lucide.dev/)</span></p>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase mb-1 border-b border-gray-100 dark:border-gray-700 pb-1">フォント</h3>
+                    <p class="text-gray-800 dark:text-gray-200 font-medium">LINE Seed JP <span class="text-xs text-gray-400 ml-1 font-normal">(LINE株式会社)</span></p>
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase mb-1 border-b border-gray-100 dark:border-gray-700 pb-1">背景・イラスト素材</h3>
+                    <p class="text-gray-800 dark:text-gray-200 font-medium">OKUMONO <span class="text-xs text-gray-400 ml-1 font-normal">(https://sozaino.site/)</span></p>
+                </div>
 
-            <h3 class="font-bold text-gray-900 dark:text-white mt-4 text-xs tracking-wider">利用ライブラリ</h3>
-            <p>Tailwind CSS, Chart.js, SortableJS, PeerJS</p>
+                <div>
+                    <h3 class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase mb-1 border-b border-gray-100 dark:border-gray-700 pb-1">BGM・音楽素材</h3>
+                    <p class="text-gray-800 dark:text-gray-200 font-medium">MusMus <span class="text-xs text-gray-400 ml-1 font-normal">(https://musmus.main.jp/)</span></p>
+                    <p class="text-gray-800 dark:text-gray-200 font-medium mt-1">Pixabay <span class="text-xs text-gray-400 ml-1 font-normal">(https://pixabay.com/ja/)</span></p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-400 dark:text-gray-500 text-xs tracking-wider uppercase mb-1 border-b border-gray-100 dark:border-gray-700 pb-1">利用ライブラリ</h3>
+                    <p class="text-gray-800 dark:text-gray-200 font-medium">Tailwind CSS, Chart.js, SortableJS, PeerJS</p>
+                </div>
+            </div>
+            
+            <div class="h-10"></div>
         </div>
     </div>
-    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
-
+    <!-- ▲▲▲ 修正ここまで ▲▲▲ -->
+    
    <div id="lp-history-screen" class="screen-layer z-[150] flex flex-col h-full bg-gray-50 dark:bg-gray-900">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
             <div class="flex items-center flex-1">
@@ -5034,12 +5119,6 @@ const controlScreenOrientation = async (mode) => {
                         settingsPage.appendChild(createSectionTitle('その他'));
                         const otherList = createListContainer();
                         
-                        // ▼▼▼ ここに3つ追加 ▼▼▼
-                        otherList.appendChild(createListItem('file-text', '利用規約', 'bg-blue-500', () => tosPage.open()));
-                        otherList.appendChild(createListItem('shield', 'プライバシーポリシー', 'bg-green-500', () => privacyPage.open()));
-                        otherList.appendChild(createListItem('info', 'クレジット・素材提供', 'bg-purple-500', () => creditsPage.open()));
-                        // ▲▲▲ 追加ここまで ▲▲▲
-                        
                         otherList.appendChild(createListItem('mail', '意見を送る（アイデア・バグ）', 'bg-gray-500', () => {
                             // ▼▼▼ 追加: オフライン時は開かせない ▼▼▼
                             if (!navigator.onLine) {
@@ -5049,15 +5128,21 @@ const controlScreenOrientation = async (mode) => {
                             isFeedbackExternalOpen = true; 
                             window.open('https://forms.gle/5JRuBNTfV65rhvkf7', '_blank');
                         }));
-
-                        otherList.appendChild(createListItem('trash-2', 'キャッシュを削除', 'bg-red-500', () => {
+                        
+                        // ▼▼▼ ここに3つ追加 ▼▼▼
+                        otherList.appendChild(createListItem('file-text', '利用規約', 'bg-blue-500', () => tosPage.open()));
+                        otherList.appendChild(createListItem('shield', 'プライバシーポリシー', 'bg-green-500', () => privacyPage.open()));
+                        otherList.appendChild(createListItem('info', 'クレジット', 'bg-purple-500', () => creditsPage.open()));
+                        // ▲▲▲ 追加ここまで ▲▲▲
+                        
+                        otherList.appendChild(createListItem('trash-2', 'アプリを再起動する', 'bg-red-500', () => {
                             if (!navigator.onLine) {
-                                showToast('オフラインのため削除をすることはできません', 'error');
+                                showToast('オフラインのため再起動をすることはできません', 'error');
                                 return;
                             }
                         
                             openGeneralConfirm(
-                                'キャッシュを削除しますか？',
+                                'キャッシュを削除して再起動しますか？',
                                 'アプリが正しく動作しない場合には、これをお試しください。画像などの一時データを削除し、アプリの最新バージョンを取得します。\n※LPやタスクなどのアカウントデータは消えません。',
                                 'trash-2',
                                 '削除して再起動',
