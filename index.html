@@ -8878,7 +8878,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 const now = new Date();
                 state.user.lastPromotedYear = (now.getMonth() + 1 >= 4) ? now.getFullYear() : now.getFullYear() - 1;
                 
-                addLP(1000, 'はじめまして！', false);
+                addLP(1000, 'ウェルカムボーナス', false);
                 state.lastLogin = new Date().toDateString();
                 
                 saveState();
@@ -8892,7 +8892,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     $('#app-container').classList.remove('hidden');
                     renderEngine.renderAll();
                     showToast(`ようこそ、${state.user.name}さん！`);
-                    showLpPopup(1000, '初回ログインボーナス');
+                    showLpPopup(5000, 'ウェルカムボーナス');
                 }, 300);
             };
 
@@ -9043,7 +9043,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 if (t.includes('クエスト')) return { icon: 'map', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' };
                 if (t.includes('休憩') || t.includes('ブレイク')) return { icon: 'coffee', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' };
                 
-                if (t.includes('ログイン') || t.includes('お礼') || t.includes('開発者') || t.includes('はじめまして')) {
+                if (t.includes('ログイン') || t.includes('お礼') || t.includes('開発者') || t.includes('ウェルカム')) {
                     return { icon: 'coins', bg: 'bg-yellow-100 dark:bg-yellow-900/30', color: 'text-yellow-600 dark:text-yellow-400' };
                 }
                 
