@@ -1872,10 +1872,9 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             </button>
             
             <div class="wizard-step-indicator absolute left-1/2 -translate-x-1/2" id="wizard-steps">
-            </div>
+                </div>
             
-            <div class="w-8"></div> 
-        </header>
+            <div class="w-8"></div> </header>
     
         <div id="wizard-content" class="flex-grow flex flex-col items-center justify-start pt-4 px-6 overflow-y-auto pb-4 w-full max-w-md mx-auto">
             </div>
@@ -8471,7 +8470,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             const wizardData = {
                 step: 0,
-                maxStep: 5, // ★変更: 4から5へ
+                maxStep: 4, // 4に戻す
                 tempProfile: { name: '', icon: '', grade: '' },
                 direction: 'next'
             };
@@ -8522,21 +8521,15 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             const handleNextStep = () => {
                 if (wizardData.step === 3) {
-                    // ★ Step 3 (通知設定) の場合、許可リクエスト後に次へ進む
+                    // Step 3 (通知設定) の完了後、ウィザードを終了する
                     handleNotificationRequest(() => {
-                        performTransition('next', () => {
-                            wizardData.step++;
-                            renderWizardStep();
-                        });
+                        completeWizard();
                     });
-                } else if (wizardData.step < 4) {
+                } else if (wizardData.step < 3) {
                     performTransition('next', () => {
                         wizardData.step++;
                         renderWizardStep();
                     });
-                } else {
-                    // ★ Step 4 (同意画面) の場合は完了処理へ
-                    completeWizard();
                 }
             };
 
@@ -8560,7 +8553,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }, 300);
             };
 
-            // ▼▼▼ コールバック(onComplete)を受け取るように修正 ▼▼▼
             const handleNotificationRequest = async (onComplete) => {
                 if (!('Notification' in window) || Notification.permission === 'granted') {
                     onComplete();
@@ -8608,9 +8600,9 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 void content.offsetWidth;
                 content.classList.add(enterClass);
 
-                // インジケーター更新 (5ステップ分)
-                if (indicator.children.length !== 5) {
-                    indicator.innerHTML = Array(5).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
+                // インジケーター更新 (4ステップ分)
+                if (indicator.children.length !== 4) {
+                    indicator.innerHTML = Array(4).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
                 }
                 Array.from(indicator.children).forEach((dot, i) => {
                     if (i === wizardData.step) dot.classList.add('active');
@@ -8670,7 +8662,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         nextBtn.disabled = !e.target.value.trim();
                     };
                     
-                    // ▼▼▼ キーボードバグ対策: フォーカスが外れたらスクロールを一番上に戻す ▼▼▼
                     nameInput.onblur = () => {
                         window.scrollTo(0, 0);
                         document.body.scrollTop = 0;
@@ -8853,9 +8844,9 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         setTimeout(() => listEl.scrollTop = listEl.scrollHeight, 100);
                     };
                 }
-                // --- Step 3: 通知許可 ---
+                // --- Step 3: 通知許可 (最後) ---
                 else if (wizardData.step === 3) {
-                    nextBtn.innerHTML = '通知を設定して次へ';
+                    nextBtn.innerHTML = '通知を設定して始める';
                     content.innerHTML = `
                         <div class="flex-grow flex flex-col items-center justify-center w-full h-full">
                             <div class="relative w-full h-full mb-8">
@@ -8867,47 +8858,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         </div>
                     `;
                 }
-                // --- Step 4: 規約同意画面 ---
-                else if (wizardData.step === 4) {
-                    nextBtn.innerHTML = '同意して始める';
-                    nextBtn.disabled = true; // チェックされるまで無効化
-                    
-                    content.innerHTML = `
-                        <div class="flex-grow flex flex-col items-center justify-center w-full h-full px-2">
-                            <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm" style="background-color: var(--primary-color);">
-                                <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
-                            </div>
-                            <h2 class="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-white">利用規約等の確認</h2>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center leading-relaxed">
-                                最後に、本アプリの利用規約とプライバシーポリシーをご確認ください。
-                            </p>
-                            
-                            <div class="w-full max-w-sm space-y-4 bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern border border-gray-100 dark:border-gray-700 text-left">
-                                <label class="flex items-center space-x-3 cursor-pointer group">
-                                    <input type="checkbox" id="wiz-tos-check" class="w-5 h-5 rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 outline-none" style="accent-color: var(--primary-color);">
-                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
-                                        <button type="button" class="primary-text hover:opacity-80 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
-                                    </span>
-                                </label>
-                                <label class="flex items-center space-x-3 cursor-pointer group">
-                                    <input type="checkbox" id="wiz-privacy-check" class="w-5 h-5 rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 outline-none" style="accent-color: var(--primary-color);">
-                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
-                                        <button type="button" class="primary-text hover:opacity-80 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                    `;
-
-                    // チェックボックスの制御
-                    const tosCheck = content.querySelector('#wiz-tos-check');
-                    const privCheck = content.querySelector('#wiz-privacy-check');
-                    const updateBtnState = () => {
-                        nextBtn.disabled = !(tosCheck.checked && privCheck.checked);
-                    };
-                    tosCheck.addEventListener('change', updateBtnState);
-                    privCheck.addEventListener('change', updateBtnState);
-                }
 
                 lucide.createIcons();
             };
@@ -8917,7 +8867,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 state.user.icon = wizardData.tempProfile.icon;
                 state.user.grade = wizardData.tempProfile.grade;
                 state.user.isRegistered = true;
-                state.user.agreedTosDate = CURRENT_TOS_DATE; // ★追加: 登録時に同意日を記録
 
                 const now = new Date();
                 state.user.lastPromotedYear = (now.getMonth() + 1 >= 4) ? now.getFullYear() : now.getFullYear() - 1;
@@ -8939,50 +8888,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     showLpPopup(1000, '初回ログインボーナス');
                 }, 300);
             };
-
-            // ▼▼▼ 追加: 起動時の再同意チェック関数 ▼▼▼
-            const checkTermsAgreement = () => {
-                // 登録済みユーザー かつ 同意日が最新の改定日と違う場合
-                if (state.user.isRegistered && state.user.agreedTosDate !== CURRENT_TOS_DATE) {
-                    const modal = $('#tos-update-modal');
-                    const content = $('#tos-update-content');
-                    const tosCheck = $('#tos-agree-check');
-                    const privCheck = $('#privacy-agree-check');
-                    const submitBtn = $('#tos-update-submit-btn');
-
-                    // リセット
-                    tosCheck.checked = false;
-                    privCheck.checked = false;
-                    submitBtn.disabled = true;
-
-                    const updateBtn = () => {
-                        submitBtn.disabled = !(tosCheck.checked && privCheck.checked);
-                    };
-                    tosCheck.addEventListener('change', updateBtn);
-                    privCheck.addEventListener('change', updateBtn);
-
-                    submitBtn.onclick = () => {
-                        state.user.agreedTosDate = CURRENT_TOS_DATE;
-                        saveState();
-                        
-                        modal.classList.remove('opacity-100');
-                        content.classList.remove('scale-100');
-                        content.classList.add('scale-95');
-                        setTimeout(() => modal.classList.add('hidden'), 300);
-                        showToast('利用規約・プライバシーポリシーに同意しました');
-                    };
-
-                    modal.classList.remove('hidden');
-                    requestAnimationFrame(() => {
-                        modal.classList.add('opacity-100');
-                        content.classList.remove('scale-95');
-                        content.classList.add('scale-100');
-                    });
-                    
-                    lucide.createIcons({ root: content });
-                }
-            };
-            // ▲▲▲ 追加ここまで ▲▲▲
 
             $('#wizard-close-btn').addEventListener('click', closeWizard);
             $('#wizard-prev-btn').addEventListener('click', handlePrevStep);
