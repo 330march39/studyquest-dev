@@ -1346,9 +1346,9 @@ html.dark .center-fab {
         /* ▼▼▼ ウェルカム画面・全画面オーバーレイの修正 (セーフティエリア対策) ▼▼▼ */
 #welcome-screen,
 #ios-install-overlay,
-#registration-wizard { /* 👈 ここを修正しました */
-    height: 100dvh; 
-    padding-bottom: env(safe-area-inset-bottom, 20px); 
+#registration-screen {
+    height: 100dvh; /* dvhを使うことでモバイルのアドレスバー挙動に対応 */
+    padding-bottom: env(safe-area-inset-bottom, 20px); /* 下部に安全領域を確保 */
     padding-top: env(safe-area-inset-top, 20px);
     box-sizing: border-box;
 }
@@ -1866,17 +1866,15 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
     <div id="registration-wizard" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 hidden opacity-0 transform scale-95">
         
-        <!-- インラインスタイルで上部セーフエリアを確保し、z-indexで最前面に出す -->
-        <header class="px-6 pb-4 flex-shrink-0 flex items-center justify-between relative z-10" style="padding-top: calc(1rem + env(safe-area-inset-top, 20px));">
-            <button id="wizard-close-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 relative z-20">
+        <header class="px-6 py-4 flex-shrink-0 flex items-center justify-between relative">
+            <button id="wizard-close-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-gray-800">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
             
-            <!-- 点々をど真ん中に配置 -->
-            <div class="wizard-step-indicator absolute inset-0 flex items-center justify-center pointer-events-none !mb-0" style="padding-top: env(safe-area-inset-top, 20px);" id="wizard-steps">
+            <div class="wizard-step-indicator absolute left-1/2 -translate-x-1/2" id="wizard-steps">
             </div>
             
-            <div class="w-8 relative z-20"></div>
+            <div class="w-8"></div> 
         </header>
     
         <div id="wizard-content" class="flex-grow flex flex-col items-center justify-start pt-4 px-6 overflow-y-auto pb-4 w-full max-w-md mx-auto">
