@@ -3955,7 +3955,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     subPageStack.push(this);
 
                     // 後から開いたものが必ず上に来るように z-index を動的に設定
-                    this.el.style.zIndex = 100 + (subPageStack.length * 10);
+                    this.el.style.zIndex = 4000 + (subPageStack.length * 10);
 
                     // スタイルリセット
                     this.resetPosition();
@@ -5538,9 +5538,9 @@ const showToast = (message, type = 'normal') => {
     // ★変更点:
     // 背景色クラスを bg-white... から 'primary-bg' (テーマカラー) に変更
     // ボーダークラスを削除（テーマカラー一色にするため）
-    toast.className = `fixed left-1/2 -translate-x-1/2 z-[3000] 
-                       primary-bg shadow-2xl rounded-full px-2 py-2 
-                       transform translate-y-[-150%] opacity-0 scale-x-50`;
+    toast.className = `fixed left-1/2 -translate-x-1/2 z-[5000] 
+                        primary-bg shadow-2xl rounded-full px-2 py-2 
+                        transform translate-y-[-150%] opacity-0 scale-x-50`;
 
     // 2. リフロー強制 (アニメーションリセットの適用)
     void toast.offsetWidth;
