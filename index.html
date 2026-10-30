@@ -8927,53 +8927,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 lucide.createIcons();
             };
 
-            // ▼▼▼ 修正版: ようこそ画面の通知許可ロジック ▼▼▼
-            const handleNotificationRequest = async () => {
-                if (!('Notification' in window)) {
-                    completeWizard();
-                    return;
-                }
-
-                // 既に許可されている場合
-                if (Notification.permission === 'granted') {
-                    completeWizard();
-                    return;
-                }
-
-                // ブロックされている場合（またはこれから拒否した場合）の共通処理
-                const showDeniedPopup = () => {
-                    openGeneralConfirm(
-                        '通知が拒否されました',
-                        '端末の設定画面で変更することができます。',
-                        'bell-off',
-                        'OK',
-                        'primary-bg',
-                        () => completeWizard(), // OKを押したら完了して進む
-                        null // ★キャンセルボタンなし
-                    );
-                };
-
-                // 以前にブロックされている場合
-                if (Notification.permission === 'denied') {
-                    showDeniedPopup();
-                    return;
-                }
-
-                // まだ未選択の場合 -> ネイティブの許可ダイアログを出す
-                try {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        completeWizard();
-                    } else {
-                        // 今回「許可しない」を選んだ場合
-                        showDeniedPopup();
-                    }
-                } catch (e) {
-                    console.error(e);
-                    completeWizard();
-                }
-            };
-
             const completeWizard = () => {
                 state.user.name = wizardData.tempProfile.name;
                 state.user.icon = wizardData.tempProfile.icon;
