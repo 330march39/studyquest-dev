@@ -2621,28 +2621,30 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
     </div>
     <!-- ▲▲▲ 修正ここまで ▲▲▲ -->
 
-    <!-- ▼▼▼ 追加: 規約改定時の再同意用ポップアップ ▼▼▼ -->
+    <!-- ▼▼▼ 修正: 規約改定時の再同意用ポップアップ (テーマカラー連動) ▼▼▼ -->
     <div id="tos-update-modal" class="hidden fixed inset-0 bg-black/80 z-[3000] flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
         <div id="tos-update-content" class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
-            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="file-text" class="w-8 h-8"></i>
+            
+            <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm" style="background-color: var(--primary-color);">
+                <i data-lucide="file-text" class="w-8 h-8 text-white"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 text-center">利用規約等の改定</h3>
+            
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 text-center">利用規約の改定</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 font-medium leading-relaxed text-center">
                 利用規約およびプライバシーポリシーが改定されました。引き続きアプリをご利用いただくには、新しい内容にご同意いただく必要があります。
             </p>
             
             <div class="space-y-4 mb-8 bg-gray-50 dark:bg-gray-900/30 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 text-left">
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" id="tos-agree-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                    <input type="checkbox" id="tos-agree-check" class="w-5 h-5 rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 outline-none" style="accent-color: var(--primary-color);">
                     <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
-                        <button type="button" class="text-blue-500 hover:text-blue-600 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
+                        <button type="button" class="primary-text hover:opacity-80 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
                     </span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" id="privacy-agree-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                    <input type="checkbox" id="privacy-agree-check" class="w-5 h-5 rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 outline-none" style="accent-color: var(--primary-color);">
                     <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
-                        <button type="button" class="text-green-500 hover:text-green-600 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
+                        <button type="button" class="primary-text hover:opacity-80 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
                     </span>
                 </label>
             </div>
@@ -2652,7 +2654,7 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             </button>
         </div>
     </div>
-    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
+    <!-- ▲▲▲ 修正ここまで ▲▲▲ -->
     
    <div id="lp-history-screen" class="screen-layer z-[150] flex flex-col h-full bg-gray-50 dark:bg-gray-900">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
@@ -8881,15 +8883,15 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         </div>
                     `;
                 }
-                // ▼▼▼ 追加: Step 4 規約同意画面 ▼▼▼
+                // ▼▼▼ 修正: Step 4 規約同意画面 (テーマカラー連動) ▼▼▼
                 else if (wizardData.step === 4) {
                     nextBtn.innerHTML = '同意して始める';
                     nextBtn.disabled = true; // チェックされるまで無効化
                     
                     content.innerHTML = `
                         <div class="flex-grow flex flex-col items-center justify-center w-full h-full px-2">
-                            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i data-lucide="shield-check" class="w-8 h-8"></i>
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm" style="background-color: var(--primary-color);">
+                                <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
                             </div>
                             <h2 class="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-white">利用規約等の確認</h2>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center leading-relaxed">
@@ -8898,15 +8900,15 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             
                             <div class="w-full max-w-sm space-y-4 bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern border border-gray-100 dark:border-gray-700 text-left">
                                 <label class="flex items-center space-x-3 cursor-pointer group">
-                                    <input type="checkbox" id="wiz-tos-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="checkbox" id="wiz-tos-check" class="w-5 h-5 rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 outline-none" style="accent-color: var(--primary-color);">
                                     <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
-                                        <button type="button" class="text-blue-500 hover:text-blue-600 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
+                                        <button type="button" class="primary-text hover:opacity-80 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
                                     </span>
                                 </label>
                                 <label class="flex items-center space-x-3 cursor-pointer group">
-                                    <input type="checkbox" id="wiz-privacy-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="checkbox" id="wiz-privacy-check" class="w-5 h-5 rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 outline-none" style="accent-color: var(--primary-color);">
                                     <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
-                                        <button type="button" class="text-green-500 hover:text-green-600 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
+                                        <button type="button" class="primary-text hover:opacity-80 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
                                     </span>
                                 </label>
                             </div>
@@ -8922,7 +8924,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     tosCheck.addEventListener('change', updateBtnState);
                     privCheck.addEventListener('change', updateBtnState);
                 }
-                // ▲▲▲ 追加ここまで ▲▲▲
+                // ▲▲▲ 修正ここまで ▲▲▲
 
                 lucide.createIcons();
             };
