@@ -2620,6 +2620,39 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
         </div>
     </div>
     <!-- ▲▲▲ 修正ここまで ▲▲▲ -->
+
+    <!-- ▼▼▼ 追加: 規約改定時の再同意用ポップアップ ▼▼▼ -->
+    <div id="tos-update-modal" class="hidden fixed inset-0 bg-black/80 z-[3000] flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="tos-update-content" class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="file-text" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 text-center">利用規約等の改定</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 font-medium leading-relaxed text-center">
+                利用規約およびプライバシーポリシーが改定されました。引き続きアプリをご利用いただくには、新しい内容にご同意いただく必要があります。
+            </p>
+            
+            <div class="space-y-4 mb-8 bg-gray-50 dark:bg-gray-900/30 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 text-left">
+                <label class="flex items-center space-x-3 cursor-pointer group">
+                    <input type="checkbox" id="tos-agree-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
+                        <button type="button" class="text-blue-500 hover:text-blue-600 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
+                    </span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer group">
+                    <input type="checkbox" id="privacy-agree-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
+                        <button type="button" class="text-green-500 hover:text-green-600 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
+                    </span>
+                </label>
+            </div>
+            
+            <button id="tos-update-submit-btn" class="w-full py-4 rounded-full primary-bg text-white font-bold shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                同意して続ける
+            </button>
+        </div>
+    </div>
+    <!-- ▲▲▲ 追加ここまで ▲▲▲ -->
     
    <div id="lp-history-screen" class="screen-layer z-[150] flex flex-col h-full bg-gray-50 dark:bg-gray-900">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
@@ -3991,6 +4024,9 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
             const breakIframe = $('#break-iframe');
             const closeIframeBtn = $('#close-iframe-btn');
             const breakIconGrid = $('#break-icon-grid');
+
+            // ▼▼▼ 追加: 規約改定日（日付を変えるとユーザーに再同意を求める）▼▼▼
+            const CURRENT_TOS_DATE = "2026-10-30";
             
             const loadState = () => {
                 const defaultState = {
@@ -4001,7 +4037,8 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                         grade: '',
                         id: Math.random().toString(36).substring(2, 9), // 簡易ID
                         feedbackRewardClaimed: false,
-                        lastPromotedYear: null // ★これを追加: 最後に自動進級処理を行った年
+                        lastPromotedYear: null, // ★これを追加: 最後に自動進級処理を行った年
+                        agreedTosDate: "" // ★追加: 規約に同意した日付
                     },
                     profile: { 
                         lp: 0, 
@@ -8431,7 +8468,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             const wizardData = {
                 step: 0,
-                maxStep: 4, 
+                maxStep: 5, 
                 tempProfile: { name: '', icon: '', grade: '' },
                 direction: 'next'
             };
@@ -8490,13 +8527,22 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             };
 
             const handleNextStep = () => {
-                if (wizardData.step < 3) {
+                if (wizardData.step === 3) {
+                    // ★ Step 3 (通知) の場合は許可フローを実行し、終わったら Step 4 へ
+                    handleNotificationRequest(() => {
+                        performTransition('next', () => {
+                            wizardData.step++;
+                            renderWizardStep();
+                        });
+                    });
+                } else if (wizardData.step < 4) {
                     performTransition('next', () => {
                         wizardData.step++;
                         renderWizardStep();
                     });
                 } else {
-                    handleNotificationRequest();
+                    // ★ Step 4 (規約) なら完了
+                    completeWizard();
                 }
             };
 
@@ -8520,29 +8566,68 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }, 300);
             };
 
+            // ▼▼▼ 修正: コールバックを受け取って次のステップへ進むように変更 ▼▼▼
+            const handleNotificationRequest = async (onComplete) => {
+                if (!('Notification' in window)) {
+                    onComplete();
+                    return;
+                }
+
+                if (Notification.permission === 'granted') {
+                    onComplete();
+                    return;
+                }
+
+                const showDeniedPopup = () => {
+                    openGeneralConfirm(
+                        '通知が拒否されました',
+                        '端末の設定画面で変更することができます。',
+                        'bell-off',
+                        'OK',
+                        'primary-bg',
+                        () => onComplete(), // ★ 完了して進む
+                        null // ★キャンセルボタンなし
+                    );
+                };
+
+                if (Notification.permission === 'denied') {
+                    showDeniedPopup();
+                    return;
+                }
+
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        onComplete();
+                    } else {
+                        showDeniedPopup();
+                    }
+                } catch (e) {
+                    console.error(e);
+                    onComplete();
+                }
+            };
+
             const renderWizardStep = () => {
                 const content = $('#wizard-content');
                 const nextBtn = $('#wizard-next-btn');
                 const prevBtn = $('#wizard-prev-btn');
                 const indicator = $('#wizard-steps');
 
-                // アニメーションクラス適用
                 const enterClass = wizardData.direction === 'next' ? 'wizard-anim-next-enter' : 'wizard-anim-prev-enter';
                 content.classList.remove('wizard-anim-next-enter', 'wizard-anim-prev-enter');
                 void content.offsetWidth;
                 content.classList.add(enterClass);
 
-                // インジケーター更新
-                if (indicator.children.length !== 4) {
-                    indicator.innerHTML = Array(4).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
+                // インジケーター更新 (★ 4から5へ変更)
+                if (indicator.children.length !== 5) { 
+                    indicator.innerHTML = Array(5).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
                 }
                 Array.from(indicator.children).forEach((dot, i) => {
                     if (i === wizardData.step) dot.classList.add('active');
                     else dot.classList.remove('active');
                 });
 
-                // ボタン制御
-                // 戻るボタンのデザイン修正 (shadow-modern適用)
                 prevBtn.className = "w-14 h-14 flex-shrink-0 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full shadow-modern flex items-center justify-center transition-transform active:scale-95 border-none";
                 prevBtn.classList.remove('hidden');
                 
@@ -8559,10 +8644,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 nextBtn.innerHTML = '次へ';
                 nextBtn.onclick = handleNextStep;
                 nextBtn.disabled = false;
-
                 content.innerHTML = '';
 
-                // --- Step 0: プロフィール設定 ---
                 if (wizardData.step === 0) {
                     content.innerHTML = `
                         <div class="flex-grow flex flex-col items-center justify-center w-full">
@@ -8584,14 +8667,12 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             </div>
                         </div>
                     `;
-
                     const iconEl = content.querySelector('#wiz-icon-picker .text-6xl');
                     content.querySelector('#wiz-icon-picker').onclick = () => {
                         const emojis = ['🎓','✏️','🔥','🐱','🐶','🚀','⭐','🍎','⚽','🎵','🎨','💻'];
                         wizardData.tempProfile.icon = emojis[Math.floor(Math.random() * emojis.length)];
                         iconEl.textContent = wizardData.tempProfile.icon;
                     };
-                    
                     const nameInput = content.querySelector('#wiz-name-input');
                     nameInput.oninput = (e) => {
                         wizardData.tempProfile.name = e.target.value;
@@ -8599,9 +8680,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     };
                     nextBtn.disabled = !wizardData.tempProfile.name;
                 }
-
-                // --- Step 1: 学年設定 ---
                 else if (wizardData.step === 1) {
+                    // (※Step 1 学年設定のコード。既存のものをそのまま入れてください)
                     content.innerHTML = `
                         <div class="w-full">
                             <h2 class="text-2xl font-bold mb-2 text-center text-gray-800 dark:text-white">学年を選択</h2>
@@ -8609,16 +8689,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             <div id="grade-accordion-area" class="w-full space-y-3"></div>
                         </div>
                     `;
-                    
                     const area = content.querySelector('#grade-accordion-area');
                     nextBtn.disabled = !wizardData.tempProfile.grade;
 
                     Object.entries(gradeCategories).forEach(([key, data]) => {
-                        // デザイン統一: rounded-super, shadow-modern
                         const container = document.createElement('div');
                         container.className = "bg-white dark:bg-gray-800 rounded-super shadow-modern overflow-hidden transition-all duration-300 border border-transparent";
                         const isContainsSelected = data.grades.includes(wizardData.tempProfile.grade);
-                        
                         if (isContainsSelected) container.classList.add('primary-border', 'border-2');
 
                         const headerBtn = document.createElement('button');
@@ -8644,23 +8721,18 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             const selectedClass = isSelected 
                                 ? 'primary-bg text-white shadow-md transform scale-[1.02]' 
                                 : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600';
-
                             btn.className = `p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn ${selectedClass}`;
                             btn.textContent = g;
-                            
                             btn.onclick = (e) => {
-                                // クラス付け替えのみ（画面再描画しない）
                                 area.querySelectorAll('.grade-btn').forEach(b => {
                                     b.className = 'p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600';
                                 });
                                 e.currentTarget.className = 'p-3 rounded-xl text-sm font-bold transition-all text-center grade-btn primary-bg text-white shadow-md transform scale-[1.02]';
-                                
                                 wizardData.tempProfile.grade = g;
                                 nextBtn.disabled = false;
                             };
                             grid.appendChild(btn);
                         });
-
                         listDiv.appendChild(grid);
                         container.appendChild(headerBtn);
                         container.appendChild(listDiv);
@@ -8672,7 +8744,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                 area.querySelectorAll('.grade-list').forEach(el => el.style.maxHeight = "0px");
                                 area.querySelectorAll('.accordion-icon').forEach(el => el.style.transform = "rotate(0deg)");
                                 area.querySelectorAll('.border-2').forEach(el => el.classList.remove('primary-border', 'border-2'));
-                                
                                 listDiv.style.maxHeight = "500px";
                                 headerBtn.querySelector('.accordion-icon').style.transform = "rotate(180deg)";
                                 container.classList.add('primary-border', 'border-2');
@@ -8682,15 +8753,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                 container.classList.remove('primary-border', 'border-2');
                             }
                         };
-                        
                         if (isContainsSelected) {
                             headerBtn.querySelector('.accordion-icon').style.transform = "rotate(180deg)";
                         }
                     });
                 }
-
-                // --- Step 2: ルーティン設定 (説明エリアのコンパクト化) ---
                 else if (wizardData.step === 2) {
+                    // (※Step 2 ルーティン設定のコード。既存のものをそのまま入れてください)
                     content.innerHTML = `
                         <div class="w-full h-full flex flex-col">
                             <div class="flex-shrink-0 text-center mb-2">
@@ -8699,7 +8768,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                     ドラッグで並び替え・スワイプで削除
                                 </p>
                             </div>
-                
                             <div class="flex-shrink-0 bg-white dark:bg-gray-800 p-4 rounded-super border-2 mb-3 shadow-sm" style="border-color: var(--primary-color);">
                                 <div class="flex items-start gap-3">
                                     <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm text-white mt-1" style="background-color: var(--primary-color);">
@@ -8725,7 +8793,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             </div>
                             <div class="flex-grow overflow-hidden flex flex-col bg-white dark:bg-gray-800 rounded-super shadow-modern p-1 border border-gray-100 dark:border-gray-700 mb-2">
                                 <div id="wiz-routine-list" class="flex-grow overflow-y-auto p-1 space-y-2"></div>
-                                
                                 <div class="flex items-center justify-between p-2 gap-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-[20px]">
                                     <button id="wiz-add-section" class="flex-1 py-3 rounded-xl hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-sm transition-all flex items-center justify-center active:scale-95 shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
                                         <i data-lucide="plus" class="w-4 h-4 mr-1"></i> セクション
@@ -8764,7 +8831,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             </div>
                         `).join('');
                         lucide.createIcons({ root: listEl });
-
                         listEl.querySelectorAll('.wiz-routine-item').forEach(itemEl => {
                             const idx = parseInt(itemEl.dataset.index);
                             itemEl.querySelector('.wiz-duration-input').addEventListener('change', (e) => {
@@ -8781,40 +8847,29 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         });
                     };
                     renderList();
-
                     if (window.Sortable) {
                         Sortable.create(listEl, {
-                            handle: '.wiz-handle',
-                            animation: 150,
-                            ghostClass: 'sortable-ghost',
-                            delay: 150, 
-                            delayOnTouchOnly: true,
-                            touchStartThreshold: 5,
-                            filter: '.swiped-open, .is-swiping, .swipe-deleting',
+                            handle: '.wiz-handle', animation: 150, ghostClass: 'sortable-ghost', delay: 150, delayOnTouchOnly: true, touchStartThreshold: 5, filter: '.swiped-open, .is-swiping, .swipe-deleting',
                             onEnd: (evt) => {
                                 const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
                                 state.profile.routineTemplate.splice(evt.newIndex, 0, item);
-                                wizardData.isRoutineEdited = true;
                             }
                         });
                     }
-
                     content.querySelector('#wiz-add-section').onclick = () => {
-                        state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: getDefaultDuration('section') }); // ★変更
+                        state.profile.routineTemplate.push({ id: Date.now(), type: 'section', duration: getDefaultDuration('section') });
                         renderList();
                         setTimeout(() => listEl.scrollTop = listEl.scrollHeight, 100);
                     };
                     content.querySelector('#wiz-add-break').onclick = () => {
-                        state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: getDefaultDuration('break') }); // ★変更
+                        state.profile.routineTemplate.push({ id: Date.now(), type: 'break', duration: getDefaultDuration('break') });
                         renderList();
                         setTimeout(() => listEl.scrollTop = listEl.scrollHeight, 100);
                     };
                 }
-
-                // --- Step 3: 通知許可 ---
                 else if (wizardData.step === 3) {
-                    nextBtn.innerHTML = '通知を許可して始める';
-                    
+                    // ★ Step 3: 次へボタンの文字を変更
+                    nextBtn.innerHTML = '通知を設定して次へ';
                     content.innerHTML = `
                         <div class="flex-grow flex flex-col items-center justify-center w-full h-full">
                             <div class="relative w-full h-full mb-8">
@@ -8826,6 +8881,48 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         </div>
                     `;
                 }
+                // ▼▼▼ 追加: Step 4 規約同意画面 ▼▼▼
+                else if (wizardData.step === 4) {
+                    nextBtn.innerHTML = '同意して始める';
+                    nextBtn.disabled = true; // チェックされるまで無効化
+                    
+                    content.innerHTML = `
+                        <div class="flex-grow flex flex-col items-center justify-center w-full h-full px-2">
+                            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="shield-check" class="w-8 h-8"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-white">利用規約等の確認</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center leading-relaxed">
+                                最後に、本アプリの利用規約とプライバシーポリシーをご確認ください。
+                            </p>
+                            
+                            <div class="w-full max-w-sm space-y-4 bg-white dark:bg-gray-800 p-6 rounded-super shadow-modern border border-gray-100 dark:border-gray-700 text-left">
+                                <label class="flex items-center space-x-3 cursor-pointer group">
+                                    <input type="checkbox" id="wiz-tos-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
+                                        <button type="button" class="text-blue-500 hover:text-blue-600 underline active:scale-95 transition-transform" onclick="window.tosPage.open();">利用規約</button> に同意する
+                                    </span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer group">
+                                    <input type="checkbox" id="wiz-privacy-check" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-300 flex-grow">
+                                        <button type="button" class="text-green-500 hover:text-green-600 underline active:scale-95 transition-transform" onclick="window.privacyPage.open();">プライバシーポリシー</button> に同意する
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+
+                    // チェックボックスの制御
+                    const tosCheck = content.querySelector('#wiz-tos-check');
+                    const privCheck = content.querySelector('#wiz-privacy-check');
+                    const updateBtnState = () => {
+                        nextBtn.disabled = !(tosCheck.checked && privCheck.checked);
+                    };
+                    tosCheck.addEventListener('change', updateBtnState);
+                    privCheck.addEventListener('change', updateBtnState);
+                }
+                // ▲▲▲ 追加ここまで ▲▲▲
 
                 lucide.createIcons();
             };
@@ -8882,8 +8979,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 state.user.icon = wizardData.tempProfile.icon;
                 state.user.grade = wizardData.tempProfile.grade;
                 state.user.isRegistered = true;
+                state.user.agreedTosDate = CURRENT_TOS_DATE; // ★追加: 登録時に同意日を記録
 
-                // ▼▼▼ これを追加: 登録時の年を記録（1〜3月なら「去年の4月に進級した」扱いにする） ▼▼▼
                 const now = new Date();
                 state.user.lastPromotedYear = (now.getMonth() + 1 >= 4) ? now.getFullYear() : now.getFullYear() - 1;
                 
@@ -8904,6 +9001,50 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     showLpPopup(1000, '初回ログインボーナス');
                 }, 300);
             };
+
+            // ▼▼▼ 追加: 起動時の再同意チェック関数 ▼▼▼
+            const checkTermsAgreement = () => {
+                // 登録済みユーザー かつ 同意日が最新の改定日と違う場合
+                if (state.user.isRegistered && state.user.agreedTosDate !== CURRENT_TOS_DATE) {
+                    const modal = $('#tos-update-modal');
+                    const content = $('#tos-update-content');
+                    const tosCheck = $('#tos-agree-check');
+                    const privCheck = $('#privacy-agree-check');
+                    const submitBtn = $('#tos-update-submit-btn');
+
+                    // リセット
+                    tosCheck.checked = false;
+                    privCheck.checked = false;
+                    submitBtn.disabled = true;
+
+                    const updateBtn = () => {
+                        submitBtn.disabled = !(tosCheck.checked && privCheck.checked);
+                    };
+                    tosCheck.addEventListener('change', updateBtn);
+                    privCheck.addEventListener('change', updateBtn);
+
+                    submitBtn.onclick = () => {
+                        state.user.agreedTosDate = CURRENT_TOS_DATE;
+                        saveState();
+                        
+                        modal.classList.remove('opacity-100');
+                        content.classList.remove('scale-100');
+                        content.classList.add('scale-95');
+                        setTimeout(() => modal.classList.add('hidden'), 300);
+                        showToast('利用規約・プライバシーポリシーに同意しました');
+                    };
+
+                    modal.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        modal.classList.add('opacity-100');
+                        content.classList.remove('scale-95');
+                        content.classList.add('scale-100');
+                    });
+                    
+                    lucide.createIcons({ root: content });
+                }
+            };
+            // ▲▲▲ 追加ここまで ▲▲▲
 
             $('#wizard-close-btn').addEventListener('click', closeWizard);
             $('#wizard-prev-btn').addEventListener('click', handlePrevStep);
@@ -9143,11 +9284,11 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
             }
 
             // ▼▼▼ 利用規約等のサブページ初期化 ▼▼▼
-            const tosPage = new SubPage('tos-screen');
-            $('#close-tos-btn').addEventListener('click', () => tosPage.close());
+            window.tosPage = new SubPage('tos-screen');
+            $('#close-tos-btn').addEventListener('click', () => window.tosPage.close());
 
-            const privacyPage = new SubPage('privacy-screen');
-            $('#close-privacy-btn').addEventListener('click', () => privacyPage.close());
+            window.privacyPage = new SubPage('privacy-screen');
+            $('#close-privacy-btn').addEventListener('click', () => window.privacyPage.close());
 
             const creditsPage = new SubPage('credits-screen');
             $('#close-credits-btn').addEventListener('click', () => creditsPage.close());
@@ -10314,6 +10455,7 @@ const checkQuestResume = () => {
                 updateAppearance();
 
                 checkUserRegistration();
+                checkTermsAgreement(); // ★これを追加
                 
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
