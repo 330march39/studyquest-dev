@@ -8878,7 +8878,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 const now = new Date();
                 state.user.lastPromotedYear = (now.getMonth() + 1 >= 4) ? now.getFullYear() : now.getFullYear() - 1;
                 
-                addLP(1000, 'ウェルカムボーナス', false);
+                addLP(5000, 'ウェルカムボーナス', false);
                 state.lastLogin = new Date().toDateString();
                 
                 saveState();
