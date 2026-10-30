@@ -1346,9 +1346,9 @@ html.dark .center-fab {
         /* ▼▼▼ ウェルカム画面・全画面オーバーレイの修正 (セーフティエリア対策) ▼▼▼ */
 #welcome-screen,
 #ios-install-overlay,
-#registration-screen {
-    height: 100dvh; /* dvhを使うことでモバイルのアドレスバー挙動に対応 */
-    padding-bottom: env(safe-area-inset-bottom, 20px); /* 下部に安全領域を確保 */
+#registration-wizard { /* 👈 ここを修正しました */
+    height: 100dvh; 
+    padding-bottom: env(safe-area-inset-bottom, 20px); 
     padding-top: env(safe-area-inset-top, 20px);
     box-sizing: border-box;
 }
@@ -1866,15 +1866,17 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
     <div id="registration-wizard" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 hidden opacity-0 transform scale-95">
         
-        <header class="px-6 py-4 flex-shrink-0 flex items-center justify-between relative">
-            <button id="wizard-close-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-gray-800">
+        <header class="px-6 py-4 flex-shrink-0 flex items-center justify-between relative z-10">
+            <button id="wizard-close-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 relative z-20">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
             
-            <div class="wizard-step-indicator absolute left-1/2 -translate-x-1/2" id="wizard-steps">
-                </div>
+            <!-- インジケーターをど真ん中に配置し、余分なマージンを打ち消す (!mb-0) -->
+            <div class="wizard-step-indicator absolute inset-0 flex items-center justify-center pointer-events-none !mb-0" id="wizard-steps">
+            </div>
             
-            <div class="w-8"></div> </header>
+            <div class="w-8 relative z-20"></div>
+        </header>
     
         <div id="wizard-content" class="flex-grow flex flex-col items-center justify-start pt-4 px-6 overflow-y-auto pb-4 w-full max-w-md mx-auto">
             </div>
@@ -8680,6 +8682,12 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         wizardData.tempProfile.name = e.target.value;
                         nextBtn.disabled = !e.target.value.trim();
                     };
+                    // ▼▼▼ 追加: キーボードを閉じたときに画面スクロールを一番上に戻す対策 ▼▼▼
+                    nameInput.onblur = () => {
+                        window.scrollTo(0, 0);
+                        document.body.scrollTop = 0;
+                    };
+                    // ▲▲▲ 追加ここまで ▲▲▲
                     nextBtn.disabled = !wizardData.tempProfile.name;
                 }
                 else if (wizardData.step === 1) {
