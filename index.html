@@ -4034,6 +4034,46 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
             // ▼▼▼ 追加: 規約改定日（日付を変えるとユーザーに再同意を求める）▼▼▼
             const CURRENT_TOS_DATE = "2026-10-30";
+
+            // ▼▼▼ 追加: 規約改定同意ポップアップの制御ロジック ▼▼▼
+            const tosAgreeCheck = document.getElementById('tos-agree-check');
+            const privacyAgreeCheck = document.getElementById('privacy-agree-check');
+            const tosSubmitBtn = document.getElementById('tos-update-submit-btn');
+
+            if (tosAgreeCheck && privacyAgreeCheck && tosSubmitBtn) {
+                const updateSubmitBtnState = () => {
+                    if (tosAgreeCheck.checked && privacyAgreeCheck.checked) {
+                        tosSubmitBtn.disabled = false;
+                        tosSubmitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        tosSubmitBtn.disabled = true;
+                        tosSubmitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                };
+
+                tosAgreeCheck.addEventListener('change', updateSubmitBtnState);
+                privacyAgreeCheck.addEventListener('change', updateSubmitBtnState);
+
+                tosSubmitBtn.addEventListener('click', () => {
+                    // 同意した日付を保存
+                    state.user.agreedTosDate = CURRENT_TOS_DATE;
+                    saveState();
+
+                    // モーダルを閉じるアニメーション
+                    const tosModal = document.getElementById('tos-update-modal');
+                    const tosContent = document.getElementById('tos-update-content');
+                    
+                    tosModal.classList.add('opacity-0');
+                    if (tosContent) tosContent.classList.add('scale-95');
+                    
+                    setTimeout(() => {
+                        tosModal.classList.add('hidden');
+                    }, 300);
+                    
+                    showToast('最新の利用規約に同意しました', 'success');
+                });
+            }
+            // ▲▲▲ 追加ここまで ▲▲▲
             
             const loadState = () => {
                 const defaultState = {
@@ -9561,9 +9601,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 });
             }
 
-            // ==========================================
-            // ▼▼▼ 追加: 起動時の登録チェック関数 ▼▼▼
-            // ==========================================
             const checkUserRegistration = () => {
                 const appContainer = document.getElementById('app-container');
                 const welcomeScreen = document.getElementById('welcome-screen');
@@ -9574,6 +9611,22 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     appContainer.classList.remove('hidden');
                     if(welcomeScreen) welcomeScreen.classList.add('hidden');
                     if(wizardScreen) wizardScreen.classList.add('hidden');
+
+                    // ▼▼▼ 追加: 規約改定チェックとポップアップ表示 ▼▼▼
+                    if (state.user.agreedTosDate !== CURRENT_TOS_DATE) {
+                        const tosModal = document.getElementById('tos-update-modal');
+                        const tosContent = document.getElementById('tos-update-content');
+                        if (tosModal && tosContent) {
+                            tosModal.classList.remove('hidden');
+                            // 少し遅らせてアニメーションを発火
+                            requestAnimationFrame(() => {
+                                tosModal.classList.remove('opacity-0');
+                                tosContent.classList.remove('scale-95');
+                            });
+                        }
+                    }
+                    // ▲▲▲ 追加ここまで ▲▲▲
+
                 } else {
                     // 未登録の場合: アプリ本体を隠し、ウェルカム画面を表示
                     appContainer.classList.add('hidden');
