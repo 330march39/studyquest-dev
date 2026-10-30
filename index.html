@@ -3950,8 +3950,19 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     if (index > -1) subPageStack.splice(index, 1);
                     subPageStack.push(this);
 
+                    // ▼▼▼ 修正: 臨機応変な z-index の計算 ▼▼▼
+                    let baseZIndex = 100; // 通常のベース階層
+                    
+                    // 規約同意ポップアップ(z-[3000])が表示されているかチェック
+                    const tosModal = document.getElementById('tos-update-modal');
+                    if (tosModal && !tosModal.classList.contains('hidden')) {
+                        // ポップアップが開いている時だけ、その上(3100)に表示させる
+                        baseZIndex = 3100; 
+                    }
+                    
                     // 後から開いたものが必ず上に来るように z-index を動的に設定
-                    this.el.style.zIndex = this.baseZIndex + (subPageStack.length * 10);
+                    this.el.style.zIndex = baseZIndex + (subPageStack.length * 10);
+                    // ▲▲▲ 修正ここまで ▲▲▲
 
                     // スタイルリセット
                     this.resetPosition();
