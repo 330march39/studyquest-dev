@@ -3950,18 +3950,17 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     if (index > -1) subPageStack.splice(index, 1);
                     subPageStack.push(this);
 
-                    // ▼▼▼ 修正: 臨機応変な z-index の計算 ▼▼▼
-                    let baseZIndex = 100; // 通常のベース階層
+                    // ▼▼▼ 修正: 同意ポップアップ表示中だけ特例で階層を上げる ▼▼▼
+                    let zIndexBase = 100; // 通常のサブページの階層（購入確認などの300より下）
                     
-                    // 規約同意ポップアップ(z-[3000])が表示されているかチェック
+                    // 規約同意ポップアップ(z-[3000])が開いているかチェック
                     const tosModal = document.getElementById('tos-update-modal');
                     if (tosModal && !tosModal.classList.contains('hidden')) {
-                        // ポップアップが開いている時だけ、その上(3100)に表示させる
-                        baseZIndex = 3100; 
+                        zIndexBase = 3100; // ポップアップより上に表示させる特例
                     }
                     
                     // 後から開いたものが必ず上に来るように z-index を動的に設定
-                    this.el.style.zIndex = baseZIndex + (subPageStack.length * 10);
+                    this.el.style.zIndex = zIndexBase + (subPageStack.length * 10);
                     // ▲▲▲ 修正ここまで ▲▲▲
 
                     // スタイルリセット
