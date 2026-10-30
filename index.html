@@ -10298,7 +10298,6 @@ const checkQuestResume = () => {
                 updateAppearance();
 
                 checkUserRegistration();
-                checkTermsAgreement(); // ★これを追加
                 
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
@@ -10356,7 +10355,7 @@ const checkQuestResume = () => {
                         // ※これをしないと永遠にフリーズ画面を見続けることになるため
                         localStorage.removeItem('quizAppUltimateV8'); // アプリのデータを削除
                         localStorage.removeItem('SQ_CrashCount');     // クラッシュカウントをリセット
-                        alert("致命的なエラーが継続したため、アプリのデータを初期化して復旧しました。");
+                        alert("致命的なエラーが発生したため、アプリのデータを初期化して復旧しました。それでも読み込めない状態が続く場合には、開発者にお知らせください。");
                         location.reload(true);
                     }
                     // ▲▲▲ 追加ここまで ▲▲▲
