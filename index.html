@@ -8475,6 +8475,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 direction: 'next'
             };
 
+            const gradeCategories = {
+                elementary: { label: '小学生', grades: ['小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生'] },
+                juniorHigh: { label: '中学生', grades: ['中学1年生', '中学2年生', '中学3年生'] },
+                highSchool: { label: '高校生', grades: ['高校1年生', '高校2年生', '高校3年生'] },
+                other: { label: 'その他', grades: ['大学・専門学生', '社会人・その他'] }
+            };
+
             const startRegistrationWizard = () => {
                 const wizard = $('#registration-wizard');
                 $('#welcome-screen').classList.add('hidden');
