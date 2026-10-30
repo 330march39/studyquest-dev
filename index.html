@@ -10351,14 +10351,28 @@ const checkQuestResume = () => {
                         }, 1000);
                         
                     } else {
-                        // 3回連続で失敗した場合は、ローカルデータを初期化（究極の最終手段）
-                        // ※これをしないと永遠にフリーズ画面を見続けることになるため
-                        localStorage.removeItem('quizAppUltimateV8'); // アプリのデータを削除
+                        // 3回連続で失敗した場合でも、ユーザーデータ(LP・タスク等)は絶対に削除しない
                         localStorage.removeItem('SQ_CrashCount');     // クラッシュカウントをリセット
-                        alert("致命的なエラーが発生したため、アプリのデータを初期化して復旧しました。それでも読み込めない状態が続く場合には、開発者にお知らせください。");
-                        location.reload(true);
+                        
+                        // キャッシュとService Workerのみを再度クリアして復旧を試みる
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistrations().then(registrations => {
+                                for (let reg of registrations) {
+                                    reg.unregister();
+                                }
+                            });
+                        }
+                        if ('caches' in window) {
+                            caches.keys().then(cacheNames => {
+                                Promise.all(cacheNames.map(name => caches.delete(name)));
+                            });
+                        }
+
+                        alert("エラーが発生したため、再度読み込みを行い、復旧を試みました。それでも読み込めない状態が続く場合には、開発者にお知らせください。");
+                        setTimeout(() => {
+                            location.reload(true);
+                        }, 500);
                     }
-                    // ▲▲▲ 追加ここまで ▲▲▲
                 }
             };
 
