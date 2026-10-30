@@ -1866,13 +1866,14 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
 
     <div id="registration-wizard" class="fixed inset-0 z-[200] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 hidden opacity-0 transform scale-95">
         
-        <header class="px-6 py-4 flex-shrink-0 flex items-center justify-between relative z-10">
+        <!-- インラインスタイルで上部セーフエリアを確保し、z-indexで最前面に出す -->
+        <header class="px-6 pb-4 flex-shrink-0 flex items-center justify-between relative z-10" style="padding-top: calc(1rem + env(safe-area-inset-top, 20px));">
             <button id="wizard-close-btn" class="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 transition-colors rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 relative z-20">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
             
-            <!-- インジケーターをど真ん中に配置し、余分なマージンを打ち消す (!mb-0) -->
-            <div class="wizard-step-indicator absolute inset-0 flex items-center justify-center pointer-events-none !mb-0" id="wizard-steps">
+            <!-- 点々をど真ん中に配置 -->
+            <div class="wizard-step-indicator absolute inset-0 flex items-center justify-center pointer-events-none !mb-0" style="padding-top: env(safe-area-inset-top, 20px);" id="wizard-steps">
             </div>
             
             <div class="w-8 relative z-20"></div>
@@ -8472,16 +8473,9 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
 
             const wizardData = {
                 step: 0,
-                maxStep: 5, 
+                maxStep: 5, // ★変更: 4から5へ
                 tempProfile: { name: '', icon: '', grade: '' },
                 direction: 'next'
-            };
-
-            const gradeCategories = {
-                'elementary': { label: '小学生', color: 'text-orange-500 bg-orange-50 dark:bg-orange-900/20', grades: ['小学1年生', '小学2年生', '小学3年生', '小学4年生', '小学5年生', '小学6年生'] },
-                'middle': { label: '中学生', color: 'text-green-500 bg-green-50 dark:bg-green-900/20', grades: ['中学1年生', '中学2年生', '中学3年生'] },
-                'high': { label: '高校生', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', grades: ['高校1年生', '高校2年生', '高校3年生'] },
-                'other': { label: 'その他', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', grades: ['大学・専門学生', '社会人・その他'] }
             };
 
             const startRegistrationWizard = () => {
@@ -8511,7 +8505,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     const welcome = $('#welcome-screen');
                     welcome.classList.remove('hidden');
                     
-                    // アニメーションリセット
                     const slides = welcome.querySelectorAll('.welcome-slide-item');
                     slides.forEach(el => {
                         el.style.animation = 'none';
@@ -8526,13 +8519,12 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         el.offsetHeight;
                         el.classList.add('animate-fadeIn');
                     });
-
                 }, 300);
             };
 
             const handleNextStep = () => {
                 if (wizardData.step === 3) {
-                    // ★ Step 3 (通知) の場合は許可フローを実行し、終わったら Step 4 へ
+                    // ★ Step 3 (通知設定) の場合、許可リクエスト後に次へ進む
                     handleNotificationRequest(() => {
                         performTransition('next', () => {
                             wizardData.step++;
@@ -8545,7 +8537,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         renderWizardStep();
                     });
                 } else {
-                    // ★ Step 4 (規約) なら完了
+                    // ★ Step 4 (同意画面) の場合は完了処理へ
                     completeWizard();
                 }
             };
@@ -8570,14 +8562,9 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 }, 300);
             };
 
-            // ▼▼▼ 修正: コールバックを受け取って次のステップへ進むように変更 ▼▼▼
+            // ▼▼▼ コールバック(onComplete)を受け取るように修正 ▼▼▼
             const handleNotificationRequest = async (onComplete) => {
-                if (!('Notification' in window)) {
-                    onComplete();
-                    return;
-                }
-
-                if (Notification.permission === 'granted') {
+                if (!('Notification' in window) || Notification.permission === 'granted') {
                     onComplete();
                     return;
                 }
@@ -8589,8 +8576,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         'bell-off',
                         'OK',
                         'primary-bg',
-                        () => onComplete(), // ★ 完了して進む
-                        null // ★キャンセルボタンなし
+                        () => onComplete(), // OKで次へ進む
+                        null
                     );
                 };
 
@@ -8623,8 +8610,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 void content.offsetWidth;
                 content.classList.add(enterClass);
 
-                // インジケーター更新 (★ 4から5へ変更)
-                if (indicator.children.length !== 5) { 
+                // インジケーター更新 (5ステップ分)
+                if (indicator.children.length !== 5) {
                     indicator.innerHTML = Array(5).fill(0).map((_, i) => `<div class="step-dot"></div>`).join('');
                 }
                 Array.from(indicator.children).forEach((dot, i) => {
@@ -8650,6 +8637,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 nextBtn.disabled = false;
                 content.innerHTML = '';
 
+                // --- Step 0: プロフィール設定 ---
                 if (wizardData.step === 0) {
                     content.innerHTML = `
                         <div class="flex-grow flex flex-col items-center justify-center w-full">
@@ -8671,6 +8659,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                             </div>
                         </div>
                     `;
+
                     const iconEl = content.querySelector('#wiz-icon-picker .text-6xl');
                     content.querySelector('#wiz-icon-picker').onclick = () => {
                         const emojis = ['🎓','✏️','🔥','🐱','🐶','🚀','⭐','🍎','⚽','🎵','🎨','💻'];
@@ -8682,16 +8671,17 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         wizardData.tempProfile.name = e.target.value;
                         nextBtn.disabled = !e.target.value.trim();
                     };
-                    // ▼▼▼ 追加: キーボードを閉じたときに画面スクロールを一番上に戻す対策 ▼▼▼
+                    
+                    // ▼▼▼ キーボードバグ対策: フォーカスが外れたらスクロールを一番上に戻す ▼▼▼
                     nameInput.onblur = () => {
                         window.scrollTo(0, 0);
                         document.body.scrollTop = 0;
                     };
-                    // ▲▲▲ 追加ここまで ▲▲▲
+                    
                     nextBtn.disabled = !wizardData.tempProfile.name;
                 }
+                // --- Step 1: 学年設定 ---
                 else if (wizardData.step === 1) {
-                    // (※Step 1 学年設定のコード。既存のものをそのまま入れてください)
                     content.innerHTML = `
                         <div class="w-full">
                             <h2 class="text-2xl font-bold mb-2 text-center text-gray-800 dark:text-white">学年を選択</h2>
@@ -8768,15 +8758,13 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         }
                     });
                 }
+                // --- Step 2: ルーティン設定 ---
                 else if (wizardData.step === 2) {
-                    // (※Step 2 ルーティン設定のコード。既存のものをそのまま入れてください)
                     content.innerHTML = `
                         <div class="w-full h-full flex flex-col">
                             <div class="flex-shrink-0 text-center mb-2">
                                 <h2 class="text-2xl font-bold mb-1 text-gray-800 dark:text-white">学習スタイル</h2>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold mb-3">
-                                    ドラッグで並び替え・スワイプで削除
-                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold mb-3">ドラッグで並び替え・スワイプで削除</p>
                             </div>
                             <div class="flex-shrink-0 bg-white dark:bg-gray-800 p-4 rounded-super border-2 mb-3 shadow-sm" style="border-color: var(--primary-color);">
                                 <div class="flex items-start gap-3">
@@ -8788,16 +8776,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                                         <p class="text-[10px] text-gray-600 dark:text-gray-300 leading-tight mb-2">
                                             今日のタスクなどを「学習」と「休憩」のセットで行うことで、メリハリをつけて進めることができます。
                                         </p>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1.5">
-                                                <i data-lucide="book-open" class="w-3 h-3 primary-text mr-1.5 flex-shrink-0"></i>
-                                                <span class="text-[10px] font-bold truncate primary-text">BGMをかけて学習</span>
-                                            </div>
-                                            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1.5">
-                                                <i data-lucide="coffee" class="w-3 h-3 text-green-500 mr-1.5 flex-shrink-0"></i>
-                                                <span class="text-[10px] text-green-600 dark:text-green-400 font-bold truncate">SNS・ゲームで休憩</span>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -8877,8 +8855,8 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         setTimeout(() => listEl.scrollTop = listEl.scrollHeight, 100);
                     };
                 }
+                // --- Step 3: 通知許可 ---
                 else if (wizardData.step === 3) {
-                    // ★ Step 3: 次へボタンの文字を変更
                     nextBtn.innerHTML = '通知を設定して次へ';
                     content.innerHTML = `
                         <div class="flex-grow flex flex-col items-center justify-center w-full h-full">
@@ -8891,7 +8869,7 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                         </div>
                     `;
                 }
-                // ▼▼▼ 修正: Step 4 規約同意画面 (テーマカラー連動) ▼▼▼
+                // --- Step 4: 規約同意画面 ---
                 else if (wizardData.step === 4) {
                     nextBtn.innerHTML = '同意して始める';
                     nextBtn.disabled = true; // チェックされるまで無効化
@@ -8932,7 +8910,6 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                     tosCheck.addEventListener('change', updateBtnState);
                     privCheck.addEventListener('change', updateBtnState);
                 }
-                // ▲▲▲ 修正ここまで ▲▲▲
 
                 lucide.createIcons();
             };
