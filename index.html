@@ -3951,8 +3951,8 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                     if (index > -1) subPageStack.splice(index, 1);
                     subPageStack.push(this);
 
-                    // ▼▼▼ 修正: 同意ポップアップ表示中だけ特例で階層を上げる ▼▼▼
-                    let zIndexBase = 100; // 通常のサブページの階層（購入確認などの300より下）
+                    // ▼▼▼ 修正: 個別設定の階層を優先し、同意ポップアップ表示中は特例で上げる ▼▼▼
+                    let zIndexBase = this.baseZIndex || 100; // ★個別に baseZIndex が設定されていればそれを優先する
                     
                     // 規約同意ポップアップ(z-[3000])が開いているかチェック
                     const tosModal = document.getElementById('tos-update-modal');
